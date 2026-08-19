@@ -47,8 +47,8 @@ public struct RootView: View {
                 )
             }
         }
-        .sheet(item: $selectedSlotForEditBinding) { slot in
-            QuickEditModalView(store: store, slotId: slot)
+        .sheet(item: selectedSlotForEditBinding) { item in
+            QuickEditModalView(store: store, slotId: item)
         }
         .sheet(item: $selectedHotspotForEdit) { spot in
             HotspotEditorModalView(store: store, hotspot: spot)

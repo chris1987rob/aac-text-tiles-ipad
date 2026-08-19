@@ -82,14 +82,14 @@ public class AACStore: ObservableObject {
                 type: .scene,
                 gridSize: 4,
                 bgHex: "#FFFFFF",
-                scenePresetKey: "living-room",
                 hotspots: [
                     HotspotModel(id: 1, x: 18, y: 50, w: 46, h: 36, label: "Sofa / Couch", tts: "I want to sit on the couch and relax."),
                     HotspotModel(id: 2, x: 66, y: 20, w: 28, h: 35, label: "Television", tts: "Can we turn on the TV to watch a show?"),
                     HotspotModel(id: 3, x: 28, y: 64, w: 18, h: 18, label: "Sleeping Cat", tts: "Look at the cute orange cat sleeping!"),
                     HotspotModel(id: 4, x: 5, y: 35, w: 14, h: 50, label: "Lamp Light", tts: "Please turn on the lamp light."),
                     HotspotModel(id: 5, x: 21, y: 12, w: 31, h: 35, label: "Window", tts: "Look out the window, it is nice outside.")
-                ]
+                ],
+                scenePresetKey: "living-room"
             ),
             // Page 5: Talking Keyboard Page
             PageModel(
