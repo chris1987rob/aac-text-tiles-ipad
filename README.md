@@ -41,9 +41,32 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
 
 ---
 
-## 📱 Step-by-Step iPad Installation (Add to Home Screen)
+## 📱 Step-by-Step iPad Installation Options
 
-### Method 1: Local Network Delivery (Recommended)
+### Option 1: Native Xcode Build via MacBook Pro (Recommended for Native App)
+
+1. **Clone this repository on your MacBook Pro**:
+   ```bash
+   git clone https://github.com/chris1987rob/aac-text-tiles-ipad.git
+   cd aac-text-tiles-ipad
+   ```
+2. **Open the project in Xcode**:
+   ```bash
+   open AACTextTilesiPad.xcodeproj
+   ```
+3. **Configure Free Signing**:
+   * Select the `AACTextTilesiPad` project in the left pane -> **Signing & Capabilities**.
+   * Under **Team**, select your Apple ID Personal Team.
+4. **Connect iPad & Run**:
+   * Plug your iPad into your MacBook Pro (or select iPad Simulator).
+   * Press **`⌘R`** (Command + R) or tap the **Play (▶)** button.
+   * The app installs and opens natively on your iPad!
+
+*See [XCODE_GUIDE.md](XCODE_GUIDE.md) for full detailed step-by-step instructions.*
+
+---
+
+### Option 2: Safari PWA "Add to Home Screen" (No Mac Required)
 
 1. **Start the local delivery server on this computer**:
    ```bash
@@ -62,7 +85,7 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
    * The app icon will appear on your iPad home screen!
 
 > [!NOTE]
-> Once installed, the iPad runs 100% offline from its local CacheStorage and IndexedDB. You can turn off your computer and use the app anywhere without Wi-Fi!
+> Once installed via either method, the iPad runs 100% offline from its local storage. You can take the iPad anywhere without Wi-Fi!
 
 ---
 
