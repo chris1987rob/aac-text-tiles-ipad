@@ -15,21 +15,31 @@ cd aac-text-tiles-ipad
 
 ---
 
-### Step 2: Open the Project in Xcode
-Double-click `AACTextTilesiPad.xcodeproj` or run from Terminal:
-```bash
-open AACTextTilesiPad.xcodeproj
-```
+### Step 2: Open Either Native Xcode Project
+
+You have two ready-to-run Xcode projects depending on your preferred Apple stack:
+
+* **Choice 1: 100% Pure Native Apple SwiftUI Edition (Recommended)**
+  ```bash
+  open AACTextTilesSwiftUI.xcodeproj
+  ```
+  *(Written completely in modern Apple SwiftUI, Combine, and AVFoundation)*
+
+* **Choice 2: Swift + WebKit Container Edition**
+  ```bash
+  open AACTextTilesiPad.xcodeproj
+  ```
+  *(Native Swift host with bundled 3,436 Mulberry SVG vector library in `www/`)*
 
 ---
 
 ### Step 3: Configure Free Apple Developer Signing
-1. In the Xcode left navigator, click the top **`AACTextTilesiPad`** blue project icon.
-2. Select the **`AACTextTilesiPad`** target under **TARGETS**.
+1. In the Xcode left navigator, click the top blue project icon.
+2. Select the target under **TARGETS**.
 3. Go to the **Signing & Capabilities** tab.
 4. Check **Automatically manage signing**.
 5. Under **Team**, select your Personal Apple ID team (or tap **Add Account...** and sign in with your free Apple ID).
-6. Set the **Bundle Identifier** (e.g., `com.yourname.aactexttiles.ipad`).
+6. Set your **Bundle Identifier** (e.g., `com.yourname.aactexttiles.ipad`).
 
 ---
 

@@ -50,17 +50,16 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
    git clone https://github.com/chris1987rob/aac-text-tiles-ipad.git
    cd aac-text-tiles-ipad
    ```
-2. **Open the project in Xcode**:
-   ```bash
-   open AACTextTilesiPad.xcodeproj
-   ```
+2. **Open Either Native Xcode Project**:
+   * **Pure Native Apple SwiftUI**: `open AACTextTilesSwiftUI.xcodeproj` (Modern Apple SwiftUI + AVFoundation)
+   * **Native Swift Container**: `open AACTextTilesiPad.xcodeproj` (Swift + WebKit bundle with 3,436 SVGs)
 3. **Configure Free Signing**:
-   * Select the `AACTextTilesiPad` project in the left pane -> **Signing & Capabilities**.
+   * Select the project in the left pane -> **Signing & Capabilities**.
    * Under **Team**, select your Apple ID Personal Team.
 4. **Connect iPad & Run**:
    * Plug your iPad into your MacBook Pro (or select iPad Simulator).
    * Press **`⌘R`** (Command + R) or tap the **Play (▶)** button.
-   * The app installs and opens natively on your iPad!
+   * The app compiles and installs directly onto your iPad!
 
 *See [XCODE_GUIDE.md](XCODE_GUIDE.md) for full detailed step-by-step instructions.*
 
