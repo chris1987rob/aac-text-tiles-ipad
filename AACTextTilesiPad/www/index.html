@@ -1054,23 +1054,102 @@
       padding: 0 2px;
     }
 
-    /* --- GoTalk Now 7.0 Quick Edit Styles --- */
-    .quick-edit-modal-card {
+    /* The editor now carries a symbol strip; give it more room so more than
+       three or four cards are visible at once on a 7-8" tablet. */
+    #editor-modal .modal-card {
+      max-width: 640px;
+    }
+
+    /* --- Inline symbol picker inside the tile editor ---------------------
+       A horizontally scrolling strip rather than a grid: the editor modal is
+       already tall, and on a 7-8" tablet a single row of big cards costs one
+       row of height instead of four. Cards are 96px so they stay a comfortable
+       thumb target. --------------------------------------------------------- */
+    .editor-symbol-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .editor-symbol-searchrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    .editor-symbol-searchrow .text-input {
+      flex: 1;
+      padding-left: 34px;
+    }
+
+    .editor-symbol-searchrow .editor-sym-search-icon {
+      position: absolute;
+      left: 9px;
+      width: 18px;
+      height: 18px;
+      fill: #94a3b8;
+      pointer-events: none;
+    }
+
+    #btn-editor-sym-clear {
+      position: absolute;
+      right: 8px;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #475569;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .editor-symbol-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 4px 2px 8px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      min-height: 108px;
+    }
+
+    .editor-symbol-strip .sym-card {
+      flex: 0 0 96px;
+      width: 96px;
+      scroll-snap-align: start;
+    }
+
+    .editor-symbol-strip .sym-card.selected {
+      border-color: #008369;
+      background: #e6f4ea;
+      box-shadow: 0 0 0 2px rgba(0, 131, 105, 0.35);
+    }
+
+    .editor-symbol-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
-      max-width: 660px;
-      max-height: 90vh;
+      min-height: 96px;
+      color: #64748b;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 0 12px;
     }
 
-    .quick-edit-layout {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 12px;
-    }
-
-    @media (max-width: 600px) {
-      .quick-edit-layout {
-        grid-template-columns: 1fr;
-      }
+    .editor-symbol-hint {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #64748b;
     }
 
     .quick-words-bar {
@@ -1097,252 +1176,6 @@
       color: #ffffff;
       border-color: #006853;
       transform: scale(0.96);
-    }
-
-    .quick-image-strip {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 4px 2px 8px;
-      min-height: 84px;
-      align-items: center;
-      scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .quick-image-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      width: 68px;
-      height: 78px;
-      background: #ffffff;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 4px 2px;
-      flex-shrink: 0;
-      cursor: pointer;
-      transition: transform 0.1s, border-color 0.1s, box-shadow 0.1s;
-      user-select: none;
-    }
-
-    .quick-image-card:active {
-      transform: scale(0.95);
-    }
-
-    .quick-image-card.active {
-      border-color: #008369 !important;
-      background: #f0fdf4 !important;
-      box-shadow: 0 0 0 2px #008369 !important;
-    }
-
-    .quick-image-card .quick-img-box {
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8rem;
-    }
-
-    .quick-image-card .quick-img-source {
-      font-size: 0.62rem;
-      font-weight: 700;
-      color: #64748b;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-
-    .speech-suggestions-bar {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
-
-    .speech-suggestion-chip {
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
-      padding: 4px 10px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #1e293b;
-      cursor: pointer;
-      transition: background 0.1s, transform 0.1s;
-    }
-
-    .speech-suggestion-chip:active {
-      background: #008369;
-      color: #ffffff;
-      transform: scale(0.96);
-    }
-
-    /* Save Options Popover Menu */
-    .save-options-menu {
-      position: absolute;
-      top: 36px;
-      right: 0;
-      background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-      border: 1px solid #cbd5e1;
-      z-index: 300;
-      min-width: 230px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      animation: modal-pop 0.12s ease-out;
-    }
-
-    .save-menu-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      cursor: pointer;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #1e293b;
-      border-bottom: 1px solid #f1f5f9;
-      transition: background 0.1s;
-      user-select: none;
-    }
-
-    .save-menu-item:last-child {
-      border-bottom: none;
-    }
-
-    .save-menu-item:hover, .save-menu-item:active {
-      background: #f0fdf4;
-      color: #008369;
-    }
-
-    .save-menu-icon {
-      font-size: 1rem;
-      color: #008369;
-      font-weight: 700;
-    }
-
-    /* Schemes Dropdown */
-    .schemes-dropdown {
-      position: absolute;
-      top: 34px;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      z-index: 200;
-      max-height: 180px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .scheme-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #1e293b;
-      transition: background 0.1s;
-    }
-
-    .scheme-option:hover {
-      background: #f1f5f9;
-    }
-
-    /* Sound It Out Syllable Chips */
-    .syllable-chip {
-      padding: 6px 12px;
-      background: #ffffff;
-      border: 2px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 800;
-      color: #1e293b;
-      transition: all 0.15s ease;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .syllable-chip.active {
-      border-color: #008369 !important;
-      background: #dcfce7 !important;
-      color: #008369 !important;
-      transform: scale(1.08);
-      box-shadow: 0 4px 10px rgba(0, 131, 105, 0.25);
-    }
-
-    /* Sound It Out Full-Screen Player Overlay */
-    .sounditout-player-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 450;
-      padding: 20px;
-      animation: fade-in 0.15s ease-out;
-    }
-
-    .sounditout-player-card {
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 32px 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
-      max-width: 90vw;
-      animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .sio-player-word {
-      font-size: 2.8rem;
-      font-weight: 900;
-      color: #0f172a;
-      letter-spacing: -0.02em;
-    }
-
-    .sio-player-syllables {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .sio-syllable-pill {
-      padding: 10px 20px;
-      background: #f1f5f9;
-      border: 3px solid #cbd5e1;
-      border-radius: 14px;
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #334155;
-      transition: all 0.18s ease;
-    }
-
-    .sio-syllable-pill.active {
-      background: #dcfce7 !important;
-      border-color: #008369 !important;
-      color: #008369 !important;
-      transform: scale(1.15);
-      box-shadow: 0 8px 20px rgba(0, 131, 105, 0.35);
     }
 
     /* --- Keyboard Communication Page Styles --- */
@@ -1787,6 +1620,17 @@
       fill: currentColor;
       flex-shrink: 0;
     }
+
+    /* Scan cursor: the highlight that walks the buttons when page-specific
+       scanning is on. Deliberately loud -- it is the only thing a switch user
+       has to track. */
+    .scan-active {
+      outline: 6px solid #f59e0b !important;
+      outline-offset: -3px;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35), 0 0 18px rgba(245, 158, 11, 0.6) !important;
+      z-index: 5;
+    }
+    .scene-hotspot.scan-active { background: rgba(245, 158, 11, 0.25) !important; }
   </style>
   <script src="symbols_data.js"></script>
 </head>
@@ -2033,11 +1877,6 @@
           </button>
 
           <!-- User Mode: Action / Jump icon -->
-          <button id="btn-bar-jump" class="btn-bar" onclick="showToast('Jump Action')" title="Action Jump" style="display: none;">
-            <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: #ffffff;">
-              <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/>
-            </svg>
-          </button>
 
           <!-- Speech bubble with ! -->
           <button id="btn-bar-auditory" class="btn-bar" onclick="openAuditoryCueModal()" title="Auditory Cues">
@@ -2070,7 +1909,7 @@
       <div class="popover-card" onclick="event.stopPropagation()">
         <div class="popover-header">
           <span class="popover-title">Page Options</span>
-          <svg class="icon" viewBox="0 0 24 24" style="cursor: pointer; width: 22px; height: 22px;" onclick="showToast('Share Page')">
+          <svg class="icon" viewBox="0 0 24 24" style="cursor: pointer; width: 22px; height: 22px;" onclick="sharePage()">
             <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
           </svg>
         </div>
@@ -2090,9 +1929,11 @@
             <button class="segment-btn" data-grid="2" onclick="setGridSize(2)">2</button>
             <button class="segment-btn active" data-grid="4" onclick="setGridSize(4)">4</button>
             <button class="segment-btn" data-grid="9" onclick="setGridSize(9)">9</button>
+            <button class="segment-btn" data-grid="12" onclick="setGridSize(12)">12</button>
             <button class="segment-btn" data-grid="16" onclick="setGridSize(16)">16</button>
             <button class="segment-btn" data-grid="25" onclick="setGridSize(25)">25</button>
             <button class="segment-btn" data-grid="36" onclick="setGridSize(36)">36</button>
+            <button class="segment-btn" data-grid="48" onclick="setGridSize(48)">48</button>
           </div>
         </div>
 
@@ -2278,9 +2119,9 @@
           </div>
 
           <div style="display: flex; gap: 8px; justify-content: space-between;">
-            <button class="btn btn-primary" onclick="showToast('Voice selected')">Voice</button>
+            <button class="btn btn-primary" onclick="openVoicePicker('primary')">Voice</button>
             <button id="btn-preview-cue" class="btn" style="background: #006853; color: #fff;" onclick="previewAuditoryCue()">Preview</button>
-            <button class="btn" style="background: #006853; color: #fff;" onclick="showToast('Second voice set')">Use Second Voice</button>
+            <button class="btn" style="background: #006853; color: #fff;" onclick="useSecondVoice()">Use Second Voice</button>
           </div>
         </div>
         <div class="modal-footer">
@@ -2290,256 +2131,149 @@
       </div>
     </div>
 
+    <div id="modal-voice-picker" class="modal-backdrop" onclick="if(event.target===this) closeVoicePicker()">
+      <div class="modal-card" style="max-width: 440px;" onclick="event.stopPropagation()">
+        <div class="modal-header dark">
+          <button class="modal-close-btn" onclick="closeVoicePicker()">
+            <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #ffffff;"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+          </button>
+          <span class="modal-title" id="voice-picker-title">Choose Voice</span>
+          <div style="width: 32px;"></div>
+        </div>
+        <div class="modal-body" style="max-height: 50vh; overflow-y: auto;">
+          <div id="voice-picker-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeVoicePicker()">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ========================================================================
-         MODAL: TILE EDITOR (GoTalk Now 7.0 Quick Edit Style)
+         MODAL: TILE EDITOR (Full Editing for Individual Buttons)
          ======================================================================== -->
     <div id="editor-modal" class="modal-backdrop">
-      <div class="modal-card quick-edit-modal-card" role="dialog" aria-modal="true">
+      <div class="modal-card" role="dialog" aria-modal="true">
         <div class="modal-header">
-          <button class="btn" style="border: none; background: transparent; color: #008369; font-weight: 700; font-size: 1rem; padding: 0 4px;" onclick="closeEditor()">Cancel</button>
-          <div style="display: flex; flex-direction: column; align-items: center;">
-            <span class="modal-title" style="font-size: 1.15rem; font-weight: 800;">Quick Edit</span>
-            <span id="modal-slot-title" style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Button 1 of 4</span>
-          </div>
-          <div style="position: relative; display: flex; align-items: center;">
-            <button id="btn-save-tile-header" class="btn btn-primary" style="height: 32px; padding: 0 10px; font-weight: 700; border-top-right-radius: 0; border-bottom-right-radius: 0;" onclick="saveEditorTile()">Save</button>
-            <button id="btn-save-menu-toggle" class="btn btn-primary" style="height: 32px; padding: 0 6px; border-left: 1px solid rgba(255,255,255,0.3); border-top-left-radius: 0; border-bottom-left-radius: 0;" onclick="toggleSaveMenu(event)">▾</button>
+          <h2 id="modal-title-text" class="modal-title">
+            <span id="modal-slot-title">Edit Button #1</span>
+          </h2>
+          <button class="modal-close-btn" onclick="closeEditor()" title="Close editor">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+          </button>
+        </div>
 
-            <!-- Save Options Popover Menu (R1) -->
-            <div id="save-options-menu" class="save-options-menu" style="display: none;">
-              <div class="save-menu-item" onclick="handleSaveOption('save')">
-                <span class="save-menu-label">Save</span>
-                <span class="save-menu-icon">✓</span>
+        <div class="modal-body">
+          <!-- Label & Text Reposition Section -->
+          <div class="editor-section">
+            <div class="section-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/></svg>
+              <span>Tile Label &amp; Text</span>
+            </div>
+            <input type="text" id="modal-label-input" class="text-input" placeholder="e.g. eat, water, yes, help..." oninput="onEditorLabelInput()">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Text Position:</span>
+              <div class="segmented-control" style="width: 180px;">
+                <button id="pos-btn-top" class="segment-btn" onclick="setLabelPosition('top')">Top</button>
+                <button id="pos-btn-bottom" class="segment-btn active" onclick="setLabelPosition('bottom')">Bottom</button>
               </div>
-              <div class="save-menu-item" onclick="handleSaveOption('save_prev')">
-                <span class="save-menu-label">Save &amp; Previous</span>
-                <span class="save-menu-icon">←</span>
+            </div>
+
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; color: #475569;">
+              <span>Word size on the tile: <b id="label-size-value">1.0&times;</b></span>
+              <input id="modal-label-size" type="range" min="0.6" max="3" step="0.1" value="1" oninput="onLabelSizeInput()" style="width: 100%;">
+            </label>
+            <div style="display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px dashed #cbd5e1; border-radius: 6px; background: #ffffff;">
+              <span id="label-size-preview-text" style="font-weight: 700;">Label</span>
+            </div>
+          </div>
+
+          <!-- Color Styling Section -->
+          <div class="editor-section">
+            <div class="section-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.28 19.58 10.59 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+              <span>Colors (Background &amp; Border)</span>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+                <span>Tile BG:</span>
+                <input type="color" id="modal-tile-bgcolor" value="#ffffff" style="width: 40px; height: 32px; border: none; cursor: pointer;">
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+                <span>Border:</span>
+                <input type="color" id="modal-tile-bordercolor" value="#000000" style="width: 40px; height: 32px; border: none; cursor: pointer;">
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+                <span>Text Color:</span>
+                <input type="color" id="modal-tile-textcolor" value="#111111" style="width: 40px; height: 32px; border: none; cursor: pointer;">
+              </label>
+            </div>
+          </div>
+
+          <!-- Photo / Symbol Section -->
+          <div class="editor-section">
+            <div class="section-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+              <span>Photo / Symbol</span>
+            </div>
+
+            <div class="photo-preview-box" id="photo-preview-container">
+              <img id="modal-photo-img" class="photo-preview-img" alt="Tile Preview" style="display: none;">
+              <div id="modal-symbol-preview" style="display: none;"></div>
+              <div id="modal-photo-placeholder" style="color: #64748b; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" style="width: 44px; height: 44px; fill: currentColor;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                <span style="font-size: 0.85rem; font-weight: 600;">No photo or symbol set</span>
               </div>
-              <div class="save-menu-item" onclick="handleSaveOption('save_next')">
-                <span class="save-menu-label">Save &amp; Next</span>
-                <span class="save-menu-icon">→</span>
+            </div>
+
+            <!-- Inline symbol picker: the library, in the editor. Typing a
+                 label filters it live; tapping a card sets the symbol without
+                 leaving the editor. -->
+            <div id="editor-symbol-picker" class="editor-symbol-picker">
+              <div class="editor-symbol-searchrow">
+                <svg class="editor-sym-search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="editor-symbol-search" class="text-input" placeholder="Search 3,600+ symbols — eat, water, happy, dog..." oninput="filterEditorSymbolStrip()">
+                <button id="btn-editor-sym-clear" type="button" onclick="clearEditorSymbolSearch()" title="Clear symbol search">&times;</button>
               </div>
-              <div class="save-menu-item" onclick="handleSaveOption('save_classic')">
-                <span class="save-menu-label">Save &amp; Open Classic Editor</span>
-                <span class="save-menu-icon">☰</span>
-              </div>
+              <div id="editor-symbol-strip" class="editor-symbol-strip"></div>
+              <div id="editor-symbol-hint" class="editor-symbol-hint"></div>
+            </div>
+
+            <div id="photo-controls-default" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-primary" type="button" onclick="openSymbolLibrary()" style="background: #008369; color: #ffffff; font-weight: 700; border-color: #006853;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <span>Browse All Symbols</span>
+              </button>
+              <button class="btn" type="button" onclick="startCamera()">Take Photo</button>
+              <button class="btn" type="button" onclick="triggerFileInput()">Upload Image</button>
+              <button id="btn-remove-photo" class="btn btn-danger" type="button" onclick="removePhoto()" style="display: none;">Remove</button>
+              <input type="file" id="photo-file-input" accept="image/*" style="display: none;" onchange="handleFileSelected(event)">
+            </div>
+          </div>
+
+          <!-- Auditory Cue / Voice Recording Section -->
+          <div class="editor-section">
+            <div class="section-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+              <span>Auditory Cue (Voice / TTS)</span>
+            </div>
+            <input type="text" id="modal-tts-input" class="text-input" placeholder="TTS speech (defaults to label)...">
+            <div id="audio-status-text" style="font-size: 0.85rem; font-weight: 600; color: #475569;">No voice recording</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button id="btn-record-voice" class="btn" type="button" onclick="startRecording()"><span id="btn-record-text">Record Voice</span></button>
+              <button id="btn-stop-record" class="btn btn-danger" type="button" onclick="stopRecording()" style="display: none;">Stop</button>
+              <button id="btn-play-preview" class="btn" type="button" onclick="togglePlayAudioPreview()" style="display: none;"><span id="play-preview-text">Play Test</span></button>
+              <button id="btn-remove-audio" class="btn btn-danger" type="button" onclick="removeAudio()" style="display: none;">Remove</button>
             </div>
           </div>
         </div>
 
-        <div class="modal-body" style="padding: 14px 16px; gap: 12px;">
-          <!-- 2-Column Responsive Layout -->
-          <div class="quick-edit-layout">
-            <!-- Left Column: PREVIEW & BUTTON TEXT & COLOR SCHEME -->
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <div class="editor-section" style="padding: 10px;">
-                <div class="section-title" style="font-size: 0.8rem; color: #64748b;">PREVIEW</div>
-                <div class="photo-preview-box" id="photo-preview-container" style="height: 130px;">
-                  <img id="modal-photo-img" class="photo-preview-img" alt="Tile Preview" style="display: none;">
-                  <div id="modal-symbol-preview" style="display: none;"></div>
-                  <div id="modal-photo-placeholder" style="color: #64748b; display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                    <svg viewBox="0 0 24 24" style="width: 36px; height: 36px; fill: currentColor;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                    <span style="font-size: 0.8rem; font-weight: 600;">No Image</span>
-                  </div>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; min-height: 28px; margin-top: 4px;">
-                  <span id="label-size-preview-text" style="font-weight: 800; font-size: 1.1rem; color: #111111;">Label</span>
-                </div>
-              </div>
-
-              <!-- BUTTON TEXT -->
-              <div class="editor-section" style="padding: 10px;">
-                <div class="section-title" style="font-size: 0.8rem; color: #64748b;">BUTTON TEXT</div>
-                <div style="position: relative; display: flex; align-items: center;">
-                  <input type="text" id="modal-label-input" class="text-input" placeholder="e.g. tree, eat, water, yes..." oninput="onQuickEditLabelInput()" style="padding-right: 32px;">
-                  <button type="button" id="btn-label-clear" onclick="clearEditorLabelInput()" style="position: absolute; right: 6px; width: 22px; height: 22px; border: none; background: #e2e8f0; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; color: #475569;">✕</button>
-                </div>
-
-                <!-- Popular with other SLPs -->
-                <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-top: 6px;">Popular with other SLPs</div>
-                <div class="quick-words-bar">
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('go')">go</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('help')">help</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('I')">I</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('it')">it</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('more')">more</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('no')">no</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('that')">that</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('want')">want</button>
-                  <button type="button" class="quick-word-chip" onclick="setQuickWord('what')">what</button>
-                </div>
-              </div>
-
-              <!-- Quick Color Scheme · Classic (R3) -->
-              <div class="editor-section" style="padding: 10px;">
-                <div style="font-size: 0.75rem; font-weight: 800; color: #64748b; margin-bottom: 6px;">QUICK COLOR SCHEME · CLASSIC</div>
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <div id="quick-scheme-swatch" style="width: 20px; height: 20px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f97316;"></div>
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #334155;">SUGGESTED: <b id="quick-scheme-name">Orange</b></span>
-                  </div>
-                  <button type="button" class="btn btn-primary" id="btn-apply-scheme" onclick="applySuggestedColorScheme()" style="padding: 2px 10px; height: 28px; font-size: 0.78rem; font-weight: 700; background: #008369;">Apply</button>
-                </div>
-                
-                <div style="position: relative; margin-top: 6px;">
-                  <button type="button" class="btn" onclick="toggleColorSchemesPicker(event)" style="width: 100%; justify-content: space-between; font-size: 0.8rem; padding: 4px 8px; height: 30px; background: #f8fafc;">
-                    <span>🔤 Choose another scheme...</span>
-                    <span>▾</span>
-                  </button>
-                  <div id="color-schemes-picker" class="schemes-dropdown" style="display: none;"></div>
-                </div>
-
-                <div style="margin-top: 6px;">
-                  <button type="button" class="btn" onclick="toggleFontsAndColors()" style="width: 100%; justify-content: space-between; font-size: 0.8rem; padding: 4px 8px; height: 30px; background: #f8fafc; border: none;">
-                    <span>🎨 Fonts and Colors</span>
-                    <span>›</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column: IMAGE & ACTION & Tools -->
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <!-- IMAGE: Live Image Suggestion Strip -->
-              <div class="editor-section" style="padding: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                  <span class="section-title" style="font-size: 0.8rem; color: #64748b;">IMAGE</span>
-                  <span id="quick-image-count-badge" style="font-size: 0.72rem; color: #008369; font-weight: 700;">Live Suggestions</span>
-                </div>
-                <div id="quick-image-strip" class="quick-image-strip"></div>
-                <div id="quick-image-empty" style="display: none; padding: 10px; font-size: 0.82rem; color: #64748b; text-align: center; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 8px;">
-                  No images for '<span id="quick-image-query"></span>' — tap Search Symbols below
-                </div>
-              </div>
-
-              <!-- ACTION: Speak Text vs Sound It Out (R2) -->
-              <div class="editor-section" style="padding: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span class="section-title" style="font-size: 0.8rem; color: #64748b;">ACTION</span>
-                  <select id="modal-action-type" onchange="onActionTypeChange()" style="font-weight: 700; color: #008369; background: #e6f4ea; padding: 3px 8px; border-radius: 6px; font-size: 0.82rem; border: 1px solid #b8e8db; cursor: pointer;">
-                    <option value="speak">💬 Speak Text</option>
-                    <option value="sounditout">🔤 Sound It Out</option>
-                  </select>
-                </div>
-
-                <!-- Mode 1: Speak Text -->
-                <div id="action-speak-container">
-                  <div style="display: flex; gap: 6px; align-items: center;">
-                    <input type="text" id="modal-tts-input" class="text-input" placeholder="TTS speech (defaults to label)..." style="flex: 1;">
-                    <button type="button" class="btn" onclick="previewAuditoryTTS()" title="Test speech" style="flex-shrink: 0; padding: 0 8px; height: 38px;">▶ 🗣️</button>
-                  </div>
-                  <!-- Speech suggestions -->
-                  <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-top: 6px;">Suggestions</div>
-                  <div id="speech-suggestions-bar" class="speech-suggestions-bar"></div>
-                </div>
-
-                <!-- Mode 2: Sound It Out (R2) -->
-                <div id="action-sounditout-container" style="display: none; flex-direction: column; gap: 8px;">
-                  <p style="font-size: 0.74rem; color: #64748b; line-height: 1.35; margin: 0;">Sound It Out: Highlights each word segment as it is spoken, supporting decoding practice and early literacy skills.</p>
-                  
-                  <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <span style="font-size: 0.8rem; font-weight: 700; color: #475569; width: 45px;">Word:</span>
-                      <input type="text" id="sounditout-word-input" class="text-input" placeholder="e.g. butterfly..." oninput="onSoundItOutWordInput()" style="flex: 1; height: 32px; font-weight: 700;">
-                    </div>
-
-                    <!-- Syllables row -->
-                    <div id="sounditout-syllables-bar" style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap; min-height: 38px;"></div>
-                  </div>
-
-                  <!-- Action buttons -->
-                  <div style="display: flex; gap: 8px; margin-top: 4px;">
-                    <button type="button" class="btn btn-primary" id="btn-preview-sounditout" onclick="previewSoundItOutAnimation()" style="flex: 1; background: #008369; font-weight: 700; font-size: 0.82rem; height: 34px;">
-                      <span id="preview-anim-text">▶ Preview Animation</span>
-                    </button>
-                    <button type="button" class="btn" id="btn-record-sounditout" onclick="recordWithAnimation()" style="flex: 1; font-size: 0.82rem; height: 34px;">
-                      ⏺ Record with Animation
-                    </button>
-                  </div>
-
-                  <!-- Progress Tracker -->
-                  <div style="margin-top: 6px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
-                    <span style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Progress</span>
-                    <div class="segmented-control" id="sounditout-progress-tracker" style="width: 100%; margin-top: 4px;">
-                      <button type="button" class="segment-btn active" data-progress="none" onclick="setSoundItOutProgress('none')">—</button>
-                      <button type="button" class="segment-btn" data-progress="learning" onclick="setSoundItOutProgress('learning')">Learning</button>
-                      <button type="button" class="segment-btn" data-progress="learned" onclick="setSoundItOutProgress('learned')">Learned</button>
-                    </div>
-                    <span style="font-size: 0.7rem; color: #64748b; margin-top: 2px; display: block;">Track your progress — doesn't change how the button works</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- More Options Accordion / Controls -->
-              <details id="editor-details-styling" class="editor-section" style="padding: 8px 10px; cursor: pointer;">
-                <summary style="font-size: 0.85rem; font-weight: 700; color: #334155; user-select: none;">⚙️ Tile Styling &amp; Media Tools</summary>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; cursor: default;">
-                  <!-- Color Styling -->
-                  <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between;">
-                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 600;">
-                      <span>Tile BG:</span>
-                      <input type="color" id="modal-tile-bgcolor" value="#ffffff" style="width: 32px; height: 28px; border: none; cursor: pointer;">
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 600;">
-                      <span>Border:</span>
-                      <input type="color" id="modal-tile-bordercolor" value="#000000" style="width: 32px; height: 28px; border: none; cursor: pointer;">
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 600;">
-                      <span>Text:</span>
-                      <input type="color" id="modal-tile-textcolor" value="#111111" style="width: 32px; height: 28px; border: none; cursor: pointer;">
-                    </label>
-                  </div>
-
-                  <!-- Text Position & Word Size -->
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.82rem; font-weight: 600; color: #475569;">Position:</span>
-                    <div class="segmented-control" style="width: 150px;">
-                      <button id="pos-btn-top" class="segment-btn" onclick="setLabelPosition('top')">Top</button>
-                      <button id="pos-btn-bottom" class="segment-btn active" onclick="setLabelPosition('bottom')">Bottom</button>
-                    </div>
-                  </div>
-
-                  <label style="display: flex; flex-direction: column; gap: 2px; font-size: 0.82rem; font-weight: 600; color: #475569;">
-                    <span>Word size: <b id="label-size-value">1.0&times;</b></span>
-                    <input id="modal-label-size" type="range" min="0.6" max="3" step="0.1" value="1" oninput="onLabelSizeInput()" style="width: 100%;">
-                  </label>
-
-                  <!-- Photo & Symbols Buttons -->
-                  <div id="photo-controls-default" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" type="button" onclick="openSymbolLibrary()" style="background: #008369; color: #ffffff; font-weight: 700; border-color: #006853; font-size: 0.82rem;">
-                      <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                      <span>Full Symbol Library</span>
-                    </button>
-                    <button class="btn" type="button" onclick="startCamera()" style="font-size: 0.82rem;">📷 Camera</button>
-                    <button class="btn" type="button" onclick="triggerFileInput()" style="font-size: 0.82rem;">🖼️ Upload</button>
-                    <button id="btn-remove-photo" class="btn btn-danger" type="button" onclick="removePhoto()" style="display: none; font-size: 0.82rem;">Remove</button>
-                    <input type="file" id="photo-file-input" accept="image/*" style="display: none;" onchange="handleFileSelected(event)">
-                  </div>
-
-                  <!-- Voice Recording -->
-                  <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
-                    <div id="audio-status-text" style="font-size: 0.8rem; font-weight: 600; color: #475569;">No voice recording</div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                      <button id="btn-record-voice" class="btn" type="button" onclick="startRecording()"><span id="btn-record-text">Record Voice</span></button>
-                      <button id="btn-stop-record" class="btn btn-danger" type="button" onclick="stopRecording()" style="display: none;">Stop</button>
-                      <button id="btn-play-preview" class="btn" type="button" onclick="togglePlayAudioPreview()" style="display: none;"><span id="play-preview-text">Play Test</span></button>
-                      <button id="btn-remove-audio" class="btn btn-danger" type="button" onclick="removeAudio()" style="display: none;">Remove</button>
-                    </div>
-                  </div>
-                </div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer" style="padding: 10px 16px;">
+        <div class="modal-footer">
           <button class="btn btn-danger" type="button" onclick="clearTileWithConfirm()">Clear Tile</button>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-            <div style="display: flex; gap: 8px;">
-              <button class="btn" type="button" onclick="closeEditor()">Cancel</button>
-              <button id="btn-save-tile" class="btn btn-primary" type="button" onclick="saveEditorTile()">Save</button>
-            </div>
-            <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Hold to save &amp; continue</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn" type="button" onclick="closeEditor()">Cancel</button>
+            <button id="btn-save-tile" class="btn btn-primary" type="button" onclick="saveEditorTile()">Save</button>
           </div>
         </div>
       </div>
@@ -2768,7 +2502,7 @@
           <button class="btn btn-primary" onclick="saveCurrentPageAsTemplate()" style="padding: 12px; font-weight: 700; width: 100%;">
             💾 Save Current Page as New Template
           </button>
-          <div style="font-weight: 700; font-size: 0.95rem; color: #334155; margin-top: 6px;">Saved Custom Templates:</div>
+          <div style="font-weight: 700; font-size: 0.95rem; color: #334155; margin-top: 6px;">Built-in &amp; Saved Templates:</div>
           <div id="my-templates-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto;"></div>
         </div>
 
@@ -2941,15 +2675,6 @@
       </div>
     </div>
 
-    <!-- ========================================================================
-         SOUND IT OUT PLAYER OVERLAY (R2)
-         ======================================================================== -->
-    <div id="sounditout-player-overlay" class="sounditout-player-overlay" onclick="dismissSoundItOutPlayer()">
-      <div class="sounditout-player-card" onclick="event.stopPropagation()">
-        <div id="sio-player-word" class="sio-player-word">butterfly</div>
-        <div id="sio-player-syllables" class="sio-player-syllables"></div>
-      </div>
-    </div>
 
     <!-- ========================================================================
          FULL-SCREEN CAMERA CAPTURE
@@ -2998,13 +2723,23 @@
        ========================================================================== */
 
     const DB_NAME = 'aac-board';
-    const DB_VERSION = 1;
-    const STORE_NAME = 'tiles';
+    const DB_VERSION = 2;
+    const STORE_NAME = 'tiles_v2';        // keyed by `pageId:slot`
+    const LEGACY_STORE_NAME = 'tiles';    // v1 store, keyed by slot alone
     const STORAGE_PAGES_KEY = 'talk_tiles_pages_v2';
+    const MIGRATION_FLAG = 'talk_tiles_tilestore_migrated';
+
+    // Page ids must be unique for the lifetime of the book: they key the tile
+    // store (`pageId:slot`), so a reused id makes two pages share their photos.
+    // `pages.length + 1` collided the moment a page was deleted.
+    function nextPageId() {
+      const ids = pages.map(p => Number(p && p.id)).filter(n => Number.isFinite(n));
+      return (ids.length ? Math.max(...ids) : 0) + 1;
+    }
 
     let dbInstance = null;
-    let cachedTiles = new Map(); // id -> tile record
-    let activeObjectURLs = new Map();
+    let cachedTiles = new Map(); // `pageId:slot` -> tile record
+    let blobUrlMap = new WeakMap();
 
     const DEFAULT_PAGES = [
       {
@@ -3115,50 +2850,107 @@
     window.__spokenHistory = [];
     window.__lastSpoken = "";
 
+    // Two selectable voices, as on the reference app: a primary voice and a
+    // second one an adult can switch to. These used to be buttons that raised a
+    // toast and changed nothing.
+    const VOICE_PRIMARY_KEY = 'talk_tiles_voice_primary';
+    const VOICE_SECOND_KEY = 'talk_tiles_voice_second';
+    let activeVoiceSlot = 'primary';
+
+    function availableVoices() {
+      if (!window.speechSynthesis || !window.speechSynthesis.getVoices) return [];
+      return window.speechSynthesis.getVoices() || [];
+    }
+
+    function getVoiceName(slot) {
+      try { return localStorage.getItem(slot === 'second' ? VOICE_SECOND_KEY : VOICE_PRIMARY_KEY) || ''; }
+      catch (e) { return ''; }
+    }
+
+    function setVoiceName(slot, name) {
+      try { localStorage.setItem(slot === 'second' ? VOICE_SECOND_KEY : VOICE_PRIMARY_KEY, name || ''); }
+      catch (e) {}
+    }
+
+    function resolveVoice() {
+      const name = getVoiceName(activeVoiceSlot);
+      if (!name) return null;
+      return availableVoices().find(v => v.name === name) || null;
+    }
+
     function speakText(text) {
       if (!text) return;
       const clean = String(text).trim();
       window.__lastSpoken = clean;
       window.__spokenHistory.push(clean);
 
-      // 1. Native iOS WKWebView Swift Bridge (if running inside Xcode native app)
-      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.speakText) {
-        try {
-          window.webkit.messageHandlers.speakText.postMessage(clean);
-          return;
-        } catch (e) {
-          console.warn('Native iOS speech bridge fallback', e);
-        }
-      }
-
-      // 2. iOS Safari Web Speech API
       if (window.speechSynthesis) {
-        try {
-          window.speechSynthesis.cancel();
-          const utter = new SpeechSynthesisUtterance(clean);
-          utter.rate = 0.92;
-          utter.pitch = 1.0;
-          utter.volume = 1.0;
-
-          // Pick best English voice if available
-          const voices = window.speechSynthesis.getVoices();
-          if (voices && voices.length > 0) {
-            const preferredVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Siri') || v.name.includes('Karen') || (v.lang && v.lang.startsWith('en-US')));
-            if (preferredVoice) utter.voice = preferredVoice;
-          }
-
-          window.speechSynthesis.speak(utter);
-        } catch (err) {
-          console.error('Speech synthesis error', err);
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(clean);
+        utter.rate = 0.95;
+        const v = resolveVoice();
+        // A stored voice name can resolve to something the engine will not
+        // accept (a stale voice after a system update). Fall back to the
+        // default rather than letting the board go silent.
+        if (v) {
+          try { utter.voice = v; if (v.lang) utter.lang = v.lang; }
+          catch (e) { console.warn('Voice not usable, using default', e); }
         }
+        window.__lastVoice = v ? v.name : '(default)';
+        window.speechSynthesis.speak(utter);
       }
     }
 
     /* --- Storage Helpers --- */
+
+    // Photos and voice recordings are Blobs. `JSON.stringify` turns a Blob into
+    // `{}`, so writing a page straight to localStorage used to store `"photo":{}`
+    // and the next launch died in `URL.createObjectURL({})` mid-render, taking
+    // every tile after it with it. localStorage now carries only the tile's
+    // plain fields plus `hasPhoto` / `hasAudio`; the Blobs themselves live in
+    // IndexedDB and are re-attached by `hydratePagesFromCache()` after load.
+    const BLOB_TILE_FIELDS = ['photo', 'audio'];
+
+    function isBlobLike(v) {
+      return v && typeof v === 'object' && typeof v.size === 'number' && typeof v.type === 'string';
+    }
+
+    function stripTileBlobs(tile) {
+      if (!tile || typeof tile !== 'object') return tile;
+      const out = {};
+      for (const k of Object.keys(tile)) {
+        if (BLOB_TILE_FIELDS.includes(k)) continue;
+        out[k] = tile[k];
+      }
+      // A data: URL is a string and survives JSON, so keep it on the page.
+      for (const k of BLOB_TILE_FIELDS) {
+        const v = tile[k];
+        if (typeof v === 'string' && v) out[k] = v;
+        else if (isBlobLike(v)) out[k === 'photo' ? 'hasPhoto' : 'hasAudio'] = true;
+      }
+      return out;
+    }
+
+    function pagesForStorage() {
+      return pages.map(p => {
+        if (!p || !p.tiles) return p;
+        const tiles = {};
+        for (const slot of Object.keys(p.tiles)) tiles[slot] = stripTileBlobs(p.tiles[slot]);
+        return Object.assign({}, p, { tiles });
+      });
+    }
+
     function savePagesToStorage() {
       try {
-        localStorage.setItem(STORAGE_PAGES_KEY, JSON.stringify(pages));
-      } catch (e) { console.error('Save pages error', e); }
+        localStorage.setItem(STORAGE_PAGES_KEY, JSON.stringify(pagesForStorage()));
+      } catch (e) {
+        console.error('Save pages error', e);
+        // A comms board that silently stops saving is the worst failure mode
+        // there is -- say so out loud.
+        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+          showToast('Storage is full — changes may not be saved', 'danger');
+        }
+      }
     }
 
     function loadPagesFromStorage() {
@@ -3170,13 +2962,28 @@
       } catch (e) { console.error('Load pages error', e); }
     }
 
+    // The tile store is keyed by page *and* slot. Keying it by slot alone made
+    // slot 4 on page 1 and slot 4 on page 7 the same record, so a photo taken
+    // for one page overwrote the other's.
+    function tileKey(pageId, slot) { return `${pageId}:${slot}`; }
+
+    function currentPageId() {
+      const p = pages[currentPageIndex];
+      return p && p.id != null ? p.id : 1;
+    }
+
     function openDatabase() {
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onupgradeneeded = (e) => {
           const db = e.target.result;
+          // Legacy slot-keyed store. Left in place on purpose: it is the only
+          // copy of an existing board's photos until migration has copied them.
+          if (!db.objectStoreNames.contains(LEGACY_STORE_NAME)) {
+            db.createObjectStore(LEGACY_STORE_NAME, { keyPath: 'id' });
+          }
           if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            db.createObjectStore(STORE_NAME, { keyPath: 'key' });
           }
         };
         req.onsuccess = () => resolve(req.result);
@@ -3184,8 +2991,42 @@
       });
     }
 
+    // One-time copy of slot-keyed records onto the first page. Copies rather
+    // than moves: if anything here is wrong, the original records are still
+    // sitting in the legacy store.
+    function migrateLegacyTiles(db) {
+      return new Promise((resolve) => {
+        if (!db.objectStoreNames.contains(LEGACY_STORE_NAME)) return resolve(0);
+        if (localStorage.getItem(MIGRATION_FLAG) === 'done') return resolve(0);
+        let tx;
+        try { tx = db.transaction([LEGACY_STORE_NAME, STORE_NAME], 'readwrite'); }
+        catch (e) { return resolve(0); }
+        const legacy = tx.objectStore(LEGACY_STORE_NAME);
+        const target = tx.objectStore(STORE_NAME);
+        const req = legacy.getAll();
+        req.onsuccess = () => {
+          const items = req.result || [];
+          const homeId = (pages[0] && pages[0].id != null) ? pages[0].id : 1;
+          let n = 0;
+          for (const item of items) {
+            if (!item || item.id == null) continue;
+            const key = tileKey(homeId, item.id);
+            target.put(Object.assign({}, item, { key, pageId: homeId, id: item.id }));
+            n++;
+          }
+          tx.oncomplete = () => {
+            try { localStorage.setItem(MIGRATION_FLAG, 'done'); } catch (e) {}
+            resolve(n);
+          };
+        };
+        req.onerror = () => resolve(0);
+        tx.onerror = () => resolve(0);
+      });
+    }
+
     async function loadAllTilesFromDB() {
       if (!dbInstance) dbInstance = await openDatabase();
+      await migrateLegacyTiles(dbInstance);
       return new Promise((resolve, reject) => {
         const tx = dbInstance.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
@@ -3194,28 +3035,58 @@
           cachedTiles.clear();
           const items = req.result || [];
           for (const item of items) {
-            cachedTiles.set(item.id, item);
+            if (item && item.key) cachedTiles.set(item.key, item);
           }
+          hydratePagesFromCache();
           resolve(cachedTiles);
         };
         req.onerror = () => reject(req.error);
       });
     }
 
+    // Put the Blobs back onto the page tiles that localStorage could not carry.
+    function hydratePagesFromCache() {
+      for (const p of pages) {
+        if (!p || !p.tiles) continue;
+        for (const slot of Object.keys(p.tiles)) {
+          const tile = p.tiles[slot];
+          if (!tile || typeof tile !== 'object') continue;
+          const rec = cachedTiles.get(tileKey(p.id, Number(slot)));
+          for (const k of BLOB_TILE_FIELDS) {
+            if (typeof tile[k] === 'string' && tile[k]) continue;
+            if (rec && isBlobLike(rec[k])) tile[k] = rec[k];
+            else if (!isBlobLike(tile[k])) delete tile[k];
+          }
+          delete tile.hasPhoto;
+          delete tile.hasAudio;
+        }
+      }
+    }
+
+    function getTileRecord(page, slot) {
+      if (!page) return null;
+      const onPage = page.tiles && page.tiles[slot];
+      if (onPage) return onPage;
+      return cachedTiles.get(tileKey(page.id, slot)) || null;
+    }
+
     async function saveTileToDB(tile) {
       if (!dbInstance) dbInstance = await openDatabase();
+      const pageId = currentPageId();
+      const record = Object.assign({}, tile, { key: tileKey(pageId, tile.id), pageId });
       return new Promise((resolve, reject) => {
         const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
-        const req = store.put(tile);
+        const req = store.put(record);
         req.onsuccess = () => {
-          cachedTiles.set(tile.id, tile);
+          cachedTiles.set(record.key, record);
           const p = pages[currentPageIndex];
-          if (p && p.tiles) {
-            p.tiles[tile.id] = tile;
+          if (p) {
+            if (!p.tiles) p.tiles = {};
+            p.tiles[tile.id] = record;
             savePagesToStorage();
           }
-          resolve(tile);
+          resolve(record);
         };
         req.onerror = () => reject(req.error);
       });
@@ -3223,12 +3094,14 @@
 
     async function deleteTileFromDB(id) {
       if (!dbInstance) dbInstance = await openDatabase();
+      const pageId = currentPageId();
+      const key = tileKey(pageId, id);
       return new Promise((resolve, reject) => {
         const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
-        const req = store.delete(id);
+        const req = store.delete(key);
         req.onsuccess = () => {
-          cachedTiles.delete(id);
+          cachedTiles.delete(key);
           const p = pages[currentPageIndex];
           if (p && p.tiles) {
             delete p.tiles[id];
@@ -3238,6 +3111,14 @@
         };
         req.onerror = () => reject(req.error);
       });
+    }
+
+    // Titles and voice names are user/system supplied and get interpolated
+    // into innerHTML in a few places; escape them.
+    function escapeHtmlText(v) {
+      return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     /* --- Toast Notification --- */
@@ -3283,7 +3164,7 @@
               <span>High Contrast Borders:</span>
               <input type="checkbox" checked>
             </label>
-            <p style="font-size: 0.85rem; color: #64748b;">talk tiles AAC Communication Book v2.3 &copy; 2026</p>
+            <p style="font-size: 0.85rem; color: #64748b;">talk tiles AAC Communication Book v2.4.1 &copy; 2026</p>
           </div>
         `;
       } else if (title === 'Downloads') {
@@ -3383,7 +3264,6 @@
       document.getElementById('btn-bar-sliders').style.display = isEditMode ? 'inline-flex' : 'none';
       document.getElementById('btn-bar-undo').style.display = isEditMode ? 'none' : 'inline-flex';
       document.getElementById('btn-bar-layers').style.display = isEditMode ? 'inline-flex' : 'none';
-      document.getElementById('btn-bar-jump').style.display = isEditMode ? 'none' : 'inline-flex';
       document.getElementById('btn-bar-add').style.display = isEditMode ? 'inline-flex' : 'none';
       document.getElementById('btn-bar-play').style.display = isEditMode ? 'none' : 'inline-flex';
 
@@ -3527,7 +3407,7 @@
     }
 
     function addNewButtonPage() {
-      const newId = pages.length + 1;
+      const newId = nextPageId();
       pages.push({
         id: newId,
         title: `Page ${newId}`,
@@ -3546,7 +3426,7 @@
     }
 
     function addNewScenePage() {
-      const newId = pages.length + 1;
+      const newId = nextPageId();
       pages.push({
         id: newId,
         title: `Page ${newId}`,
@@ -3567,7 +3447,7 @@
 
     function duplicateCurrentPage() {
       const current = pages[currentPageIndex];
-      const newId = pages.length + 1;
+      const newId = nextPageId();
       const dup = JSON.parse(JSON.stringify(current));
       dup.id = newId;
       dup.title = `${current.title} (Copy)`;
@@ -3653,6 +3533,7 @@
       const p = pages[currentPageIndex];
       if (p) p.scanning = enable;
       savePagesToStorage();
+      syncScanningState();
       showCompleteHUD();
     }
 
@@ -3661,10 +3542,101 @@
       renderCurrentPage();
     }
 
+    // A page's auditory cue announces the page when a user lands on it. It was
+    // being saved to `p.auditoryCue` and never read back by anything.
+    let lastCuedPageId = null;
+
+    function playPageAuditoryCue(p) {
+      if (!p || isEditMode) { lastCuedPageId = null; return; }
+      if (p.id === lastCuedPageId) return;      // only on arrival, not re-render
+      lastCuedPageId = p.id;
+      if (!p.auditoryCue || p.auditoryMode === 'none') return;
+      if (p.auditoryMode === 'recorded' && p.auditoryAudio) {
+        playAuditoryCueRecording(p);
+        return;
+      }
+      speakText(p.auditoryCue);
+    }
+
+    function playAuditoryCueRecording(p) {
+      try {
+        const url = URL.createObjectURL(p.auditoryAudio);
+        const a = new Audio(url);
+        a.onended = () => URL.revokeObjectURL(url);
+        a.play().catch(() => { URL.revokeObjectURL(url); speakText(p.auditoryCue); });
+      } catch (e) { speakText(p.auditoryCue); }
+    }
+
+    /* --- Page-specific scanning ------------------------------------------
+       The Page Options toggle used to store `p.scanning` and stop there: no
+       timer, no cursor, no way to select. It now runs a real step scan --
+       a highlight walks the page's buttons and any tap (or Space/Enter)
+       activates the highlighted one, which is how a switch user drives an
+       AAC board. */
+    const SCAN_INTERVAL_MS = 1200;
+    let scanTimer = null;
+    let scanIndex = -1;
+    let scanTargets = [];
+
+    function scanCandidates() {
+      const p = pages[currentPageIndex];
+      if (!p) return [];
+      if (p.type === 'scene') return [...document.querySelectorAll('#scene-hotspots-container .scene-hotspot')];
+      return [...document.querySelectorAll('#tiles-grid .tile')];
+    }
+
+    function clearScanHighlight() {
+      document.querySelectorAll('.scan-active').forEach(el => el.classList.remove('scan-active'));
+    }
+
+    function stopScanning() {
+      if (scanTimer) { clearInterval(scanTimer); scanTimer = null; }
+      scanIndex = -1;
+      scanTargets = [];
+      clearScanHighlight();
+      document.body.classList.remove('scanning-on');
+    }
+
+    function scanStep() {
+      clearScanHighlight();
+      if (!scanTargets.length) { stopScanning(); return; }
+      scanIndex = (scanIndex + 1) % scanTargets.length;
+      const el = scanTargets[scanIndex];
+      if (el) el.classList.add('scan-active');
+    }
+
+    function startScanning() {
+      stopScanning();
+      const p = pages[currentPageIndex];
+      if (!p || !p.scanning || isEditMode) return;
+      scanTargets = scanCandidates();
+      if (!scanTargets.length) return;
+      document.body.classList.add('scanning-on');
+      scanStep();
+      scanTimer = setInterval(scanStep, SCAN_INTERVAL_MS);
+    }
+
+    function selectScannedTarget() {
+      if (!scanTimer || scanIndex < 0) return false;
+      const el = scanTargets[scanIndex];
+      if (!el) return false;
+      el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      el.click();
+      return true;
+    }
+
+    function syncScanningState() {
+      const p = pages[currentPageIndex];
+      if (p && p.scanning && !isEditMode) startScanning();
+      else stopScanning();
+    }
+
     function renderCurrentPage() {
       const p = pages[currentPageIndex] || pages[0];
       const barLabel = document.getElementById('bar-page-label');
       barLabel.textContent = isEditMode ? `Page ${p.id}` : p.title;
+
+      playPageAuditoryCue(p);
 
       const expressContainer = document.getElementById('express-bar-container');
       expressContainer.classList.toggle('open', !!p.express);
@@ -3683,16 +3655,20 @@
       } else if (p.type === 'keyboard') {
         gridView.style.display = 'none';
         sceneView.classList.remove('active');
+        clearSceneView();
         if (keyboardView) {
           keyboardView.style.display = 'flex';
           renderKeyboardPage(p);
         }
       } else {
         sceneView.classList.remove('active');
+        clearSceneView();
         if (keyboardView) keyboardView.style.display = 'none';
         gridView.style.display = 'grid';
         renderGridPage(p);
       }
+
+      syncScanningState();
     }
 
     /* --- Feature 1: Keyboard Communication Page --- */
@@ -3707,7 +3683,7 @@
         showToast('Switched to Keyboard Page');
         return;
       }
-      const newPageId = pages.length + 1;
+      const newPageId = nextPageId();
       const newPage = {
         id: newPageId,
         title: 'Keyboard',
@@ -3940,7 +3916,7 @@
       feelings: [
         { label: 'Happy', tts: 'I feel happy', color: '#fff59d', symbol: 'happy' },
         { label: 'Sad', tts: 'I feel sad', color: '#90caf9', symbol: 'sad' },
-        { label: 'Mad', tts: 'I am angry', color: '#ef9a9a', symbol: 'angry' },
+        { label: 'Mad', tts: 'I am angry', color: '#ef9a9a', symbol: 'angry_man' },
         { label: 'Tired', tts: 'I am tired', color: '#ce93d8', symbol: 'tired' },
         { label: 'Scared', tts: 'I am scared', color: '#b39ddb', symbol: 'scared' },
         { label: 'Sick', tts: 'I feel sick', color: '#a5d6a7', symbol: 'sick' },
@@ -3949,8 +3925,8 @@
         { label: 'Need Break', tts: 'I need a break', color: '#b0bec5', symbol: 'sleep' }
       ],
       social: [
-        { label: 'Hello', tts: 'Hello, how are you?', color: '#ffeb3b', symbol: 'wave' },
-        { label: 'Goodbye', tts: 'Goodbye, see you later', color: '#ffcc80', symbol: 'wave' },
+        { label: 'Hello', tts: 'Hello, how are you?', color: '#ffeb3b', symbol: 'hello' },
+        { label: 'Goodbye', tts: 'Goodbye, see you later', color: '#ffcc80', symbol: 'hello' },
         { label: 'Please', tts: 'Please', color: '#81c784', symbol: 'please' },
         { label: 'Thank you', tts: 'Thank you very much', color: '#81c784', symbol: 'give' },
         { label: 'My Turn', tts: 'It is my turn', color: '#90caf9', symbol: 'me' },
@@ -3971,7 +3947,7 @@
 
     function createPageFromWizard() {
       const title = document.getElementById('wiz-page-name').value.trim() || `Page ${pages.length + 1}`;
-      const newPageId = pages.length + 1;
+      const newPageId = nextPageId();
 
       if (wizardPageType === 'scene') {
         const newPage = {
@@ -4002,7 +3978,7 @@
           const slot = i + 1;
           if (presetItems[i]) {
             const item = presetItems[i];
-            newPage.tiles[slot] = {
+            newPage.tiles[slot] = normalizeTemplateTile({
               id: slot,
               label: item.label,
               tts: item.tts,
@@ -4010,7 +3986,7 @@
               symbol: item.symbol,
               wordSize: 1.0,
               labelPosition: 'bottom'
-            };
+            });
           }
         }
         pages.push(newPage);
@@ -4025,6 +4001,57 @@
     }
 
     /* --- Feature 3: Online Gallery --- */
+    // Gallery and wizard tile literals were written against key names the
+    // renderer does not read: `color` (it reads `bgColor`) and `wordSize` (it
+    // reads `labelSize`), so every downloaded board came out plain white at
+    // default text size. Their `symbol` values are also bare words like 'me'
+    // or 'take', which match neither an .svg path nor a case in getSymbolSvg,
+    // so the default branch printed the word itself where the picture belongs.
+    // Every template tile goes through here on the way onto a page.
+    const EMOJI_SYMBOL_CASES = ['smile','frown','eat','water','yes','no','help','home','bus','book','heart','star'];
+    let symbolIdIndex = null;
+
+    function resolveSymbolToken(sym) {
+      if (!sym || typeof sym !== 'string') return sym || null;
+      if (sym.endsWith('.svg') || sym.includes('/')) return sym;      // already a path
+      if (EMOJI_SYMBOL_CASES.includes(sym)) return sym;               // handled by getSymbolSvg
+      if (!/^[\w-]+$/.test(sym)) return sym;                          // an actual emoji glyph
+      if (!symbolIdIndex) {
+        symbolIdIndex = new Map();
+        for (const e of AAC_SYMBOL_LIBRARY) {
+          if (e.svgPath) {
+            symbolIdIndex.set(e.id.toLowerCase(), e.svgPath);
+            const lbl = String(e.label || '').toLowerCase();
+            if (lbl && !symbolIdIndex.has(lbl)) symbolIdIndex.set(lbl, e.svgPath);
+          } else if (e.emoji && !symbolIdIndex.has(e.id.toLowerCase())) {
+            symbolIdIndex.set(e.id.toLowerCase(), e.emoji);
+          }
+        }
+      }
+      const k = sym.toLowerCase();
+      return symbolIdIndex.get(k) || symbolIdIndex.get(k.replace(/_/g, ' ')) || null;
+    }
+
+    function normalizeTemplateTile(tile) {
+      if (!tile || typeof tile !== 'object') return tile;
+      const t = Object.assign({}, tile);
+      if (t.color && !t.bgColor) t.bgColor = t.color;
+      if (t.wordSize && !t.labelSize) t.labelSize = t.wordSize;
+      delete t.color; delete t.wordSize;
+      if ('symbol' in t) {
+        const resolved = resolveSymbolToken(t.symbol);
+        if (resolved) t.symbol = resolved; else delete t.symbol;
+      }
+      return t;
+    }
+
+    function normalizeTemplateTiles(tiles) {
+      if (!tiles || typeof tiles !== 'object') return tiles;
+      const out = {};
+      for (const slot of Object.keys(tiles)) out[slot] = normalizeTemplateTile(tiles[slot]);
+      return out;
+    }
+
     const ONLINE_GALLERY_TEMPLATES = [
       {
         id: 'gal-core-16',
@@ -4062,11 +4089,11 @@
         tiles: {
           1: { label: 'Hurt', tts: 'It hurts here', color: '#ef9a9a', symbol: 'hurt' },
           2: { label: 'Sick', tts: 'I feel sick', color: '#ffcdd2', symbol: 'sick' },
-          3: { label: 'Doctor', tts: 'I need the doctor', color: '#b3e5fc', symbol: 'symbols/en/doctor.svg' },
+          3: { label: 'Doctor', tts: 'I need the doctor', color: '#b3e5fc', symbol: 'symbols/en/doctor_1a.svg' },
           4: { label: 'Medicine', tts: 'I need my medicine', color: '#fff9c4', symbol: 'medicine' },
           5: { label: 'Headache', tts: 'My head hurts', color: '#ffcc80', symbol: 'symbols/en/headache.svg' },
           6: { label: 'Tummy Ache', tts: 'My stomach hurts', color: '#ffcc80', symbol: 'symbols/en/stomach_ache.svg' },
-          7: { label: 'Too Loud', tts: 'It is too loud', color: '#e1bee7', symbol: 'symbols/en/ear_protectors.svg' },
+          7: { label: 'Too Loud', tts: 'It is too loud', color: '#e1bee7', symbol: 'symbols/en/ear_muffs.svg' },
           8: { label: 'Rest', tts: 'I need to lie down and rest', color: '#c8e6c9', symbol: 'sleep' },
           9: { label: 'Emergency', tts: 'Emergency! Please help me right now', color: '#e57373', symbol: 'symbols/en/ambulance.svg' }
         }
@@ -4081,12 +4108,12 @@
         tiles: {
           1: { label: 'Happy', tts: 'I feel happy today', color: '#fff59d', symbol: 'happy' },
           2: { label: 'Sad', tts: 'I am feeling sad', color: '#90caf9', symbol: 'sad' },
-          3: { label: 'Angry', tts: 'I am angry', color: '#ef9a9a', symbol: 'angry' },
+          3: { label: 'Angry', tts: 'I am angry', color: '#ef9a9a', symbol: 'angry_man' },
           4: { label: 'Tired', tts: 'I am very tired', color: '#d1c4e9', symbol: 'tired' },
           5: { label: 'Scared', tts: 'I feel scared', color: '#b39ddb', symbol: 'scared' },
           6: { label: 'Silly', tts: 'I feel silly', color: '#ffcc80', symbol: 'silly' },
           7: { label: 'Excited', tts: 'I am so excited!', color: '#ffe082', symbol: 'excited' },
-          8: { label: 'Calm', tts: 'I feel calm and ready', color: '#c8e6c9', symbol: 'symbols/en/calm.svg' },
+          8: { label: 'Calm', tts: 'I feel calm and ready', color: '#c8e6c9', symbol: 'symbols/en/relax_,_to.svg' },
           9: { label: 'Need a Break', tts: 'I need a sensory break please', color: '#cfd8dc', symbol: 'sleep' }
         }
       },
@@ -4103,10 +4130,10 @@
           3: { label: 'Fries', tts: 'French fries please', color: '#fff9c4', symbol: 'symbols/en/chips.svg' },
           4: { label: 'Water', tts: 'Water with ice please', color: '#b3e5fc', symbol: 'water' },
           5: { label: 'Juice', tts: 'Apple juice please', color: '#ffcc80', symbol: 'juice' },
-          6: { label: 'Napkin', tts: 'I need a napkin', color: '#ffffff', symbol: 'symbols/en/napkin.svg' },
+          6: { label: 'Napkin', tts: 'I need a napkin', color: '#ffffff', symbol: 'symbols/en/serviette.svg' },
           7: { label: 'More', tts: 'Can I have more please?', color: '#c8e6c9', symbol: 'more' },
           8: { label: 'Delicious', tts: 'This food is delicious', color: '#f8bbd0', symbol: 'smile' },
-          9: { label: 'Check Please', tts: 'Can we have the bill please?', color: '#cfd8dc', symbol: 'symbols/en/receipt.svg' }
+          9: { label: 'Check Please', tts: 'Can we have the bill please?', color: '#cfd8dc', symbol: 'symbols/en/money.svg' }
         }
       },
       {
@@ -4124,7 +4151,7 @@
           5: { label: 'Recess', tts: 'Time for recess and playground', color: '#a5d6a7', symbol: 'play_act' },
           6: { label: 'Lunch', tts: 'Time for lunch', color: '#ffe082', symbol: 'eat' },
           7: { label: 'Quiet', tts: 'Quiet listening time', color: '#e1bee7', symbol: 'listen' },
-          8: { label: 'Teacher', tts: 'Teacher, can you help me?', color: '#ffcc80', symbol: 'symbols/en/teacher.svg' },
+          8: { label: 'Teacher', tts: 'Teacher, can you help me?', color: '#ffcc80', symbol: 'symbols/en/teacher_1a.svg' },
           9: { label: 'Finished', tts: 'I am finished with my school work', color: '#cfd8dc', symbol: 'close' }
         }
       }
@@ -4175,7 +4202,7 @@
       const tpl = ONLINE_GALLERY_TEMPLATES.find(t => t.id === templateId);
       if (!tpl) return;
 
-      const newPageId = pages.length + 1;
+      const newPageId = nextPageId();
       const newPage = {
         id: newPageId,
         title: tpl.title.replace(/\s*\([^)]*\)/, ''),
@@ -4184,7 +4211,7 @@
         bg: '#ffffff',
         enabled: true,
         express: true,
-        tiles: JSON.parse(JSON.stringify(tpl.tiles))
+        tiles: normalizeTemplateTiles(JSON.parse(JSON.stringify(tpl.tiles)))
       };
 
       pages.push(newPage);
@@ -4198,6 +4225,184 @@
 
     /* --- Feature 4: My Templates --- */
     const STORAGE_TEMPLATES_KEY = 'talk_tiles_custom_templates';
+
+    /* --- Built-in templates (v2.4) -------------------------------------------
+       "Core Words (Classic)" reproduces the board in Chris's reference video
+       (TEMPLATE-REF.png / TEMPLATE-REF-ZOOM.png): a navy control row across the
+       top, a lavender pronoun column down the left, green verb columns through
+       the middle, blue describers, white function words, and a teal social
+       column on the right. The filmed board is roughly 10 columns x 8 rows and
+       is clipped by the video frame; 8 x 6 (gridSize 48) is the densest grid
+       Talk Tiles can render with a legible label. The colours below are the
+       Fitzgerald-key families sampled off the crop and white-balanced.
+
+       Built-ins are code, not storage: they are never written to
+       localStorage, and renderMyTemplatesList() shows them ahead of the user's
+       own saved templates with no delete button.
+    ------------------------------------------------------------------------ */
+    const CORE_WORD_COLORS = {
+      navy:     { bgColor: '#1a237e', labelColor: '#ffffff' }, // control row
+      lavender: { bgColor: '#9fa8da', labelColor: '#1a1a2e' }, // pronouns
+      green:    { bgColor: '#4caf50', labelColor: '#ffffff' }, // verbs
+      blue:     { bgColor: '#64b5f6', labelColor: '#0d1b2a' }, // describers
+      white:    { bgColor: '#f5f5f7', labelColor: '#212121' }, // function words
+      teal:     { bgColor: '#00897b', labelColor: '#ffffff' }  // social words
+    };
+
+    // [label, colour family, symbol] in slot order: 8 across, 6 down.
+    // A null symbol is deliberate -- abstract words are text-only on the
+    // reference board too ("to", "be", "the", "and" all read as plain text).
+    const CORE_WORDS_LAYOUT = [
+      // row 1 - navy control row
+      ['back', 'navy', '⬅️'],
+      ['go', 'navy', '➡️'],
+      ['stop', 'navy', '✋'],
+      ['yes', 'navy', '👍'],
+      ['no', 'navy', '👎'],
+      ['help', 'navy', 'symbols/en/help_,_to.svg'],
+      ['more', 'navy', '➕'],
+      ['all done', 'navy', '🏁'],
+      // row 2
+      ['I', 'lavender', 'symbols/en/I.svg'],
+      ['want', 'green', 'symbols/en/want_,_to.svg'],
+      ['eat', 'green', 'symbols/en/eat_,_to.svg'],
+      ['drink', 'green', 'symbols/en/drink_,_to.svg'],
+      ['play', 'green', 'symbols/en/play_,_to.svg'],
+      ['good', 'blue', 'symbols/en/good.svg'],
+      ['my', 'white', null],
+      ['please', 'teal', '🙏'],
+      // row 3
+      ['you', 'lavender', null],
+      ['need', 'green', null],
+      ['come', 'green', 'symbols/en/come_,_to.svg'],
+      ['get', 'green', 'symbols/en/get_,_to.svg'],
+      ['look', 'green', 'symbols/en/look_,_to.svg'],
+      ['bad', 'blue', 'symbols/en/bad.svg'],
+      ['in', 'white', 'symbols/en/in.svg'],
+      ['thank you', 'teal', '🤝'],
+      // row 4
+      ['it', 'lavender', null],
+      ['like', 'green', null],
+      ['make', 'green', 'symbols/en/make_,_to.svg'],
+      ['put', 'green', 'symbols/en/put_,_to.svg'],
+      ['open', 'green', 'symbols/en/open_,_to.svg'],
+      ['little', 'blue', 'symbols/en/little.svg'],
+      ['on', 'white', 'symbols/en/on.svg'],
+      ['hello', 'teal', 'symbols/en/hello.svg'],
+      // row 5
+      ['we', 'lavender', null],
+      ['have', 'green', null],
+      ['read', 'green', 'symbols/en/read_,_to.svg'],
+      ['sing', 'green', 'symbols/en/sing_,_to.svg'],
+      ['turn', 'green', 'symbols/en/turn_,_to.svg'],
+      ['big', 'blue', null],
+      ['up', 'white', 'symbols/en/up.svg'],
+      ['bye', 'teal', '👋'],
+      // row 6
+      ['they', 'lavender', null],
+      ['feel', 'green', null],
+      ['give', 'green', 'symbols/en/give_,_to.svg'],
+      ['do', 'green', null],
+      ['finished', 'green', 'symbols/en/finish.svg'],
+      ['different', 'blue', null],
+      ['not', 'white', null],
+      ['again', 'teal', '🔁']
+    ];
+
+    function buildCoreWordsTiles() {
+      const tiles = {};
+      CORE_WORDS_LAYOUT.forEach((entry, i) => {
+        const slot = i + 1;
+        const tile = Object.assign(
+          { id: slot, label: entry[0], tts: entry[0], labelSize: 0.9 },
+          CORE_WORD_COLORS[entry[1]]
+        );
+        if (entry[2]) tile.symbol = entry[2];
+        tiles[slot] = tile;
+      });
+      return tiles;
+    }
+
+    function blankGridTemplate(count) {
+      return {
+        title: 'Blank ' + count,
+        type: 'grid',
+        gridSize: count,
+        bg: '#ffffff',
+        tiles: {},
+        hotspots: [],
+        builtin: true,
+        date: 'Built-in'
+      };
+    }
+
+    const BUILTIN_TEMPLATES = [
+      {
+        title: 'Core Words (Classic)',
+        type: 'grid',
+        gridSize: 48,
+        bg: '#ffffff',
+        // The reference board has a message window across the top; that is what
+        // an express page is.
+        express: true,
+        tiles: buildCoreWordsTiles(),
+        hotspots: [],
+        builtin: true,
+        date: 'Built-in'
+      },
+      {
+        // Mirrors DEFAULT_PAGES entry 2 so the classic two-choice board can be
+        // added to any book without hunting for the original page.
+        title: 'Yes/No Board',
+        type: 'grid',
+        gridSize: 2,
+        bg: '#004838',
+        tiles: {
+          1: { id: 1, label: 'yes', tts: 'yes', bgColor: '#ffffff', labelColor: '#111111', symbol: 'smile', labelSize: 1.5 },
+          2: { id: 2, label: 'no', tts: 'no', bgColor: '#ffffff', labelColor: '#111111', symbol: 'frown', labelSize: 1.5 }
+        },
+        hotspots: [],
+        builtin: true,
+        date: 'Built-in'
+      },
+      blankGridTemplate(1),
+      blankGridTemplate(2),
+      blankGridTemplate(4),
+      blankGridTemplate(9),
+      blankGridTemplate(16),
+      blankGridTemplate(25),
+      blankGridTemplate(36),
+      {
+        title: 'Visual Scene (Blank)',
+        type: 'scene',
+        gridSize: 4,
+        bg: '#00a699',
+        sceneBg: null,
+        tiles: {},
+        hotspots: [],
+        builtin: true,
+        date: 'Built-in'
+      },
+      {
+        // addNewKeyboardPage() builds {id,title,type,bg,enabled,express} and
+        // renderCurrentPage() dispatches on type alone, so the keyboard page
+        // shape survives the template round trip unchanged.
+        title: 'Keyboard Page',
+        type: 'keyboard',
+        gridSize: 4,
+        bg: '#f1f5f9',
+        tiles: {},
+        hotspots: [],
+        builtin: true,
+        date: 'Built-in'
+      }
+    ];
+
+    // Built-ins first, then the user's saved templates. Indices into this
+    // merged array are what the +Use / delete buttons pass back.
+    function getAllTemplates() {
+      return BUILTIN_TEMPLATES.concat(getCustomTemplates());
+    }
 
     function getCustomTemplates() {
       try {
@@ -4221,38 +4426,51 @@
       document.getElementById('modal-my-templates').classList.remove('open');
     }
 
+    function templateSubtitle(tpl) {
+      if (tpl.type === 'scene') return 'Visual Scene';
+      if (tpl.type === 'keyboard') return 'Keyboard Page';
+      return tpl.gridSize + (tpl.gridSize === 1 ? ' Button' : ' Buttons');
+    }
+
     function renderMyTemplatesList() {
       const listEl = document.getElementById('my-templates-list');
-      const templates = getCustomTemplates();
+      const templates = getAllTemplates();
       listEl.innerHTML = '';
 
-      if (templates.length === 0) {
-        listEl.innerHTML = `
-          <div style="padding: 20px; text-align: center; color: #64748b; font-size: 0.9rem; background: #f8fafc; border-radius: 8px;">
-            No saved templates yet. Click above to save the current page as your first template!
-          </div>
-        `;
-        return;
-      }
-
       templates.forEach((tpl, idx) => {
+        const isBuiltin = !!tpl.builtin;
         const row = document.createElement('div');
         row.className = 'editor-section';
+        row.dataset.templateIndex = idx;
+        if (isBuiltin) row.dataset.builtin = 'true';
         row.style.display = 'flex';
+        // .editor-section is flex-direction: column; these rows want a row.
+        row.style.flexDirection = 'row';
         row.style.justifyContent = 'space-between';
         row.style.alignItems = 'center';
         row.innerHTML = `
           <div>
-            <div style="font-weight: 700; font-size: 1rem; color: #0f172a;">${tpl.title}</div>
-            <div style="font-size: 0.8rem; color: #64748b;">${tpl.type === 'scene' ? 'Visual Scene' : tpl.gridSize + ' Buttons'} • Saved on ${tpl.date || 'Recent'}</div>
+            <div class="template-title" style="font-weight: 700; font-size: 1rem; color: #0f172a;">
+              ${tpl.title}
+              ${isBuiltin ? '<span class="template-builtin-badge" style="margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: #e0f2f1; color: #00695c; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle;">Built-in</span>' : ''}
+            </div>
+            <div class="template-subtitle" style="font-size: 0.8rem; color: #64748b;">${templateSubtitle(tpl)} • ${isBuiltin ? 'Built-in' : 'Saved on ' + (tpl.date || 'Recent')}</div>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-primary" onclick="useCustomTemplate(${idx})" style="padding: 6px 12px; font-size: 0.85rem; font-weight: 700;">+ Use</button>
-            <button class="btn btn-danger" onclick="deleteCustomTemplate(${idx})" style="padding: 6px 10px; font-size: 0.85rem;">🗑</button>
+            ${isBuiltin ? '' : `<button class="btn btn-danger" onclick="deleteCustomTemplate(${idx})" style="padding: 6px 10px; font-size: 0.85rem;">🗑</button>`}
           </div>
         `;
         listEl.appendChild(row);
       });
+
+      if (getCustomTemplates().length === 0) {
+        const hint = document.createElement('div');
+        hint.id = 'my-templates-empty-hint';
+        hint.style.cssText = 'padding: 16px; text-align: center; color: #64748b; font-size: 0.9rem; background: #f8fafc; border-radius: 8px;';
+        hint.textContent = 'No templates of your own yet. Click above to save the current page as your first one.';
+        listEl.appendChild(hint);
+      }
     }
 
     function saveCurrentPageAsTemplate() {
@@ -4265,6 +4483,10 @@
         bg: curPage.bg || '#ffffff',
         tiles: JSON.parse(JSON.stringify(curPage.tiles || {})),
         hotspots: JSON.parse(JSON.stringify(curPage.hotspots || [])),
+        // A scene template without its photo is not a template.
+        sceneBg: curPage.sceneBg || null,
+        express: !!curPage.express,
+        enabled: curPage.enabled !== false,
         date: new Date().toLocaleDateString()
       };
       templates.push(newTemplate);
@@ -4274,20 +4496,24 @@
     }
 
     function useCustomTemplate(idx) {
-      const templates = getCustomTemplates();
+      const templates = getAllTemplates();
       const tpl = templates[idx];
       if (!tpl) return;
 
-      const newPageId = pages.length + 1;
+      const newPageId = nextPageId();
       const newPage = {
         id: newPageId,
         title: tpl.title.replace(/\s*Template$/, ''),
         type: tpl.type || 'grid',
         gridSize: tpl.gridSize || 4,
         bg: tpl.bg || '#ffffff',
-        enabled: true,
-        express: true,
-        tiles: JSON.parse(JSON.stringify(tpl.tiles || {})),
+        // Carry the template's own flags instead of forcing every page it makes
+        // into an express page, and keep the sceneBg key present even when null
+        // so a template scene page has the same shape as addNewScenePage()'s.
+        enabled: tpl.enabled !== false,
+        express: !!tpl.express,
+        sceneBg: tpl.sceneBg || null,
+        tiles: normalizeTemplateTiles(JSON.parse(JSON.stringify(tpl.tiles || {}))),
         hotspots: JSON.parse(JSON.stringify(tpl.hotspots || []))
       };
 
@@ -4301,8 +4527,16 @@
     }
 
     function deleteCustomTemplate(idx) {
+      // idx indexes the merged list; only the user's own templates are stored,
+      // so shift past the built-ins and refuse anything that lands on one.
+      const customIdx = idx - BUILTIN_TEMPLATES.length;
+      if (customIdx < 0) {
+        showToast('Built-in templates cannot be deleted');
+        return;
+      }
       const templates = getCustomTemplates();
-      templates.splice(idx, 1);
+      if (customIdx >= templates.length) return;
+      templates.splice(customIdx, 1);
       saveCustomTemplates(templates);
       renderMyTemplatesList();
       showToast('Template removed');
@@ -4328,7 +4562,7 @@
           if (Array.isArray(data.pages)) {
             // Full Book import
             data.pages.forEach(p => {
-              p.id = pages.length + 1;
+              p.id = nextPageId();
               pages.push(p);
             });
             savePagesToStorage();
@@ -4336,7 +4570,7 @@
             showToast(`Imported ${data.pages.length} pages from book`);
           } else if (data.tiles || data.type) {
             // Single page import
-            data.id = pages.length + 1;
+            data.id = nextPageId();
             pages.push(data);
             savePagesToStorage();
             currentPageIndex = pages.length - 1;
@@ -4358,7 +4592,7 @@
     }
 
     function exportCurrentPageJSON() {
-      const p = pages[currentPageIndex] || pages[0];
+      const p = pagesForStorage()[currentPageIndex] || pagesForStorage()[0];
       const json = JSON.stringify(p, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -4366,7 +4600,7 @@
       a.href = url;
       a.download = `talk_tiles_page_${p.id}_${(p.title || 'page').toLowerCase().replace(/\s+/g, '_')}.json`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('Exported page JSON');
     }
 
@@ -4375,7 +4609,7 @@
         title: 'Talk Tiles Communication Book',
         version: '2.3',
         exportDate: new Date().toISOString(),
-        pages: pages
+        pages: pagesForStorage()
       };
       const json = JSON.stringify(bookData, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -4384,7 +4618,7 @@
       a.href = url;
       a.download = `talk_tiles_full_book_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('Exported entire communication book JSON');
     }
 
@@ -4397,12 +4631,14 @@
       grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
       grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
 
-      activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
-      activeObjectURLs.clear();
-
       for (let slotId = 1; slotId <= count; slotId++) {
-        const tileData = cachedTiles.get(slotId) || (page.tiles && page.tiles[slotId]) || null;
-        const tileEl = createTileElement(slotId, tileData);
+        let tileEl;
+        try {
+          tileEl = createTileElement(slotId, getTileRecord(page, slotId));
+        } catch (e) {
+          console.error('Tile ' + slotId + ' failed to render', e);
+          tileEl = createTileElement(slotId, null);
+        }
         grid.appendChild(tileEl);
       }
 
@@ -4420,7 +4656,27 @@
         case 16: return { cols: 4, rows: 4 };
         case 25: return { cols: 5, rows: 5 };
         case 36: return { cols: 6, rows: 6 };
+        // Dense landscape core board, added in v2.4 for "Core Words (Classic)".
+        // The reference board it is modelled on is roughly 10 x 8; 8 x 6 is the
+        // densest grid that still leaves a readable tile on a phone.
+        case 48: return { cols: 8, rows: 6 };
         default: return { cols: 2, rows: 2 };
+      }
+    }
+
+    function tilePhotoUrl(data, slotId) {
+      const photo = data && data.photo;
+      if (!photo) return null;
+      if (typeof photo === 'string') return photo;
+      if (!isBlobLike(photo)) return null;
+      try {
+        if (blobUrlMap.has(photo)) return blobUrlMap.get(photo);
+        const url = URL.createObjectURL(photo);
+        blobUrlMap.set(photo, url);
+        return url;
+      } catch (e) {
+        console.error('Unreadable tile photo on slot ' + slotId, e);
+        return null;
       }
     }
 
@@ -4447,12 +4703,14 @@
       const imgWrap = document.createElement('div');
       imgWrap.className = 'tile-image-wrap';
 
-      if (data && data.photo) {
+      // A tile whose photo is neither a URL string nor a real Blob is skipped
+      // rather than thrown on: one unreadable record used to abort
+      // `renderGridPage` mid-loop and blank every tile after it.
+      const photoUrl = tilePhotoUrl(data, slotId);
+      if (photoUrl) {
         const img = document.createElement('img');
         img.className = 'tile-image';
         img.alt = data.label || `Tile ${slotId}`;
-        const photoUrl = (typeof data.photo === 'string') ? data.photo : URL.createObjectURL(data.photo);
-        if (typeof data.photo !== 'string') activeObjectURLs.set(slotId, photoUrl);
         img.src = photoUrl;
         imgWrap.appendChild(img);
       } else if (data && data.symbol) {
@@ -4556,6 +4814,21 @@
     let hotspotActionMode = 'tts';
     let hotspotStyleMode = 'invisible';
 
+    // The scene <img> and the hotspot container are singletons shared by every
+    // scene page, so anything left in them outlives the page that put it there:
+    // hidden but still in the DOM, still id-addressable, still clickable. Wipe
+    // them whenever a non-scene page renders, and whenever a scene has no
+    // background of its own.
+    function clearSceneView() {
+      const imgEl = document.getElementById('scene-image');
+      if (imgEl) {
+        imgEl.removeAttribute('src');
+        imgEl.style.display = 'none';
+      }
+      const container = document.getElementById('scene-hotspots-container');
+      if (container) container.innerHTML = '';
+    }
+
     function renderScenePage(page) {
       const imgEl = document.getElementById('scene-image');
       const placeholderEl = document.getElementById('scene-empty-placeholder');
@@ -4565,6 +4838,7 @@
         imgEl.style.display = 'block';
         if (placeholderEl) placeholderEl.style.display = 'none';
       } else {
+        imgEl.removeAttribute('src');
         imgEl.style.display = 'none';
         if (placeholderEl) placeholderEl.style.display = 'flex';
       }
@@ -4842,7 +5116,9 @@
       }
       const audioUrl = (typeof hotspotVoiceBlob === 'string') ? hotspotVoiceBlob : URL.createObjectURL(hotspotVoiceBlob);
       const audio = new Audio(audioUrl);
-      audio.play();
+      // A preview that is cut short by pause()/navigation rejects; swallow it so
+      // it does not surface as an unhandled rejection.
+      audio.play().catch(() => {});
     }
 
     /* --- Visual Scene Picker --- */
@@ -4935,14 +5211,10 @@
         addExpressChip(data);
       }
 
-      if (data && data.actionType === 'sounditout') {
-        playSoundItOutPlayer(data.soundItOutWord || data.label, slotId);
-      } else if (data && data.audio) {
+      if (data && data.audio) {
         playTileAudio(slotId, data.audio);
       } else if (data && (data.tts || data.label)) {
         speakText(data.tts || data.label);
-      } else {
-        openEditor(slotId);
       }
     }
 
@@ -5012,14 +5284,35 @@
       expressCollectedChips.forEach((item, idx) => {
         const chip = document.createElement('div');
         chip.className = 'express-chip';
-        if (item.symbol) {
-          chip.innerHTML = `${item.symbol === 'smile' ? '😊' : item.symbol === 'frown' ? '☹️' : '⭐'} <span>${item.label}</span>`;
+        // BEHAVIOR-SPEC B7 wants label + thumbnail. Every symbol that was not
+        // 'smile' or 'frown' used to collapse to a star, which on a 48-button
+        // core board meant 48 identical stars.
+        const thumb = expressChipThumb(item);
+        if (thumb) {
+          chip.innerHTML = thumb;
+          const label = document.createElement('span');
+          label.textContent = item.label;
+          chip.appendChild(label);
         } else {
           chip.textContent = item.label;
         }
         container.appendChild(chip);
       });
       container.scrollLeft = container.scrollWidth;
+    }
+
+    function expressChipThumb(item) {
+      if (item.photo && typeof item.photo === 'string') {
+        return `<img class="express-chip-thumb" src="${item.photo}" alt="">`;
+      }
+      const sym = item.symbol;
+      if (!sym) return '';
+      if (typeof sym === 'string' && (sym.endsWith('.svg') || sym.includes('/'))) {
+        return `<img class="express-chip-thumb" src="${sym}" alt="">`;
+      }
+      if (sym === 'smile') return '<span>😊</span>';
+      if (sym === 'frown') return '<span>☹️</span>';
+      return `<span>${sym}</span>`;
     }
 
     function clearExpressChips() {
@@ -5058,6 +5351,76 @@
       document.getElementById('tab-cue-none').classList.toggle('active', mode === 'none');
     }
 
+    // "Voice" and "Use Second Voice" used to be `showToast(...)` and nothing
+    // else. They now pick a real SpeechSynthesis voice, which `speakText()`
+    // applies to every utterance the board makes.
+    function openVoicePicker(slot) {
+      activeVoiceSlot = slot;
+      const voices = availableVoices();
+      const host = document.getElementById('voice-picker-list');
+      const modal = document.getElementById('modal-voice-picker');
+      const title = document.getElementById('voice-picker-title');
+      title.textContent = slot === 'second' ? 'Choose Second Voice' : 'Choose Voice';
+      host.innerHTML = '';
+
+      if (!voices.length) {
+        host.innerHTML = '<div style="padding:16px; color:#64748b;">No speech voices are installed on this device. The board will use the system default.</div>';
+      } else {
+        const current = getVoiceName(slot);
+        voices.forEach(v => {
+          const row = document.createElement('button');
+          row.className = 'btn voice-row' + (v.name === current ? ' btn-primary' : '');
+          row.style.cssText = 'display:flex; justify-content:space-between; width:100%; margin-bottom:6px; text-align:left;';
+          row.innerHTML = `<span>${escapeHtmlText(v.name)}</span><span style="opacity:.65;">${escapeHtmlText(v.lang || '')}</span>`;
+          row.onclick = () => chooseVoice(slot, v.name);
+          host.appendChild(row);
+        });
+      }
+      modal.classList.add('open');
+    }
+
+    function chooseVoice(slot, name) {
+      setVoiceName(slot, name);
+      activeVoiceSlot = slot;
+      closeVoicePicker();
+      showToast((slot === 'second' ? 'Second voice: ' : 'Voice: ') + name);
+      speakText('This is the ' + (slot === 'second' ? 'second' : 'main') + ' voice');
+    }
+
+    function closeVoicePicker() {
+      document.getElementById('modal-voice-picker').classList.remove('open');
+    }
+
+    // Switch the board onto the second voice (and back) without reopening the list.
+    function useSecondVoice() {
+      if (!getVoiceName('second')) { openVoicePicker('second'); return; }
+      activeVoiceSlot = activeVoiceSlot === 'second' ? 'primary' : 'second';
+      showToast(activeVoiceSlot === 'second' ? 'Using second voice' : 'Using main voice');
+      speakText('This is the ' + (activeVoiceSlot === 'second' ? 'second' : 'main') + ' voice');
+    }
+
+    // The share icon raised a "Share Page" toast and did nothing. It now hands
+    // the page to the OS share sheet where there is one, and falls back to the
+    // export that already exists.
+    async function sharePage() {
+      const p = pagesForStorage()[currentPageIndex] || pagesForStorage()[0];
+      const json = JSON.stringify(p, null, 2);
+      const filename = `talk_tiles_page_${p.id}_${(p.title || 'page').toLowerCase().replace(/\s+/g, '_')}.json`;
+      try {
+        if (navigator.canShare && navigator.share) {
+          const file = new File([json], filename, { type: 'application/json' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: p.title || 'Talk Tiles page' });
+            showToast('Page shared');
+            return;
+          }
+        }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;   // user dismissed the sheet
+      }
+      exportCurrentPageJSON();
+    }
+
     function previewAuditoryCue() {
       const text = document.getElementById('cue-text-input').value.trim();
       speakText(text || "Preview Auditory Cue");
@@ -5075,7 +5438,7 @@
       closeAuditoryCueModal();
     }
 
-    /* --- Tile Editor Modal Implementation (GoTalk Now 7.0 Quick Edit) --- */
+    /* --- Tile Editor Modal Implementation --- */
     function openEditor(slotId) {
       if (isPinned) {
         showToast('Editing locked while app is pinned');
@@ -5085,52 +5448,29 @@
       currentEditingSlot = slotId;
 
       const p = pages[currentPageIndex];
-      const totalSlots = p ? p.gridSize || 4 : 4;
-      const existingData = cachedTiles.get(slotId) || (p && p.tiles && p.tiles[slotId]) || null;
+      const existingData = getTileRecord(p, slotId);
 
       pendingPhotoBlob = (existingData && existingData.photo) || null;
       pendingAudioBlob = (existingData && existingData.audio) || null;
       pendingSymbol = (existingData && existingData.symbol) || null;
       pendingLabelPosition = (existingData && existingData.labelPosition) || 'bottom';
 
-      document.getElementById('modal-slot-title').textContent = `Button ${slotId} of ${totalSlots}`;
-      const labelVal = (existingData && existingData.label) || '';
-      document.getElementById('modal-label-input').value = labelVal;
+      document.getElementById('modal-slot-title').textContent = `Edit Button #${slotId}`;
+      document.getElementById('modal-label-input').value = (existingData && existingData.label) || '';
       document.getElementById('modal-tts-input').value = (existingData && existingData.tts) || '';
       document.getElementById('modal-tile-bgcolor').value = (existingData && existingData.bgColor) || '#ffffff';
       document.getElementById('modal-tile-bordercolor').value = (existingData && existingData.borderColor) || '#000000';
       document.getElementById('modal-tile-textcolor').value = (existingData && existingData.labelColor) || '#111111';
       document.getElementById('modal-label-size').value = String(normalizeLabelSize(existingData && existingData.labelSize));
       
+      const symSearch = document.getElementById('editor-symbol-search');
+      if (symSearch) symSearch.value = '';
+
       setLabelPosition(pendingLabelPosition);
-
-      // Initialize Action Type & Sound It Out (R2)
-      currentActionType = (existingData && existingData.actionType) || 'speak';
-      const actionSelect = document.getElementById('modal-action-type');
-      if (actionSelect) actionSelect.value = currentActionType;
-
-      const sioInput = document.getElementById('sounditout-word-input');
-      if (sioInput) {
-        sioInput.value = (existingData && existingData.soundItOutWord) || labelVal || '';
-        sioInput.dataset.autofilled = (existingData && existingData.soundItOutWord && existingData.soundItOutWord !== existingData.label) ? 'false' : 'true';
-      }
-      setSoundItOutProgress((existingData && existingData.soundItOutProgress) || 'none');
-      onActionTypeChange();
-
-      // Initialize Suggested Color Scheme (R3)
-      updateSuggestedColorSchemeUI(labelVal || 'Orange');
-
-      onQuickEditLabelInput();
+      onLabelSizeInput();
+      refreshEditorSymbolStrip();
       updateModalPhotoPreview();
       updateModalAudioPreview();
-
-      // Render live image strip & speech suggestions
-      renderQuickImageStrip(labelVal || 'tree');
-      renderSpeechSuggestions(labelVal);
-
-      // Bind long-press save listeners
-      bindSaveButtonHold(document.getElementById('btn-save-tile'));
-      bindSaveButtonHold(document.getElementById('btn-save-tile-header'));
 
       document.getElementById('editor-modal').classList.add('open');
     }
@@ -5467,26 +5807,175 @@
       showToast(`Selected "${symbolObj.label}"`);
     }
 
-    function filterSymbolLibrary() {
-      const q = document.getElementById('sym-search-input').value.trim().toLowerCase();
-      document.getElementById('btn-sym-clear-search').style.display = q ? 'flex' : 'none';
+    /* --- Inline symbol picker (tile editor) ---------------------------------
+       The library, showcased inside the editor. It seeds from the tile's own
+       label, re-filters as the label is typed, and sets the symbol in place --
+       no second modal on top of the editor. -------------------------------- */
+    const EDITOR_STRIP_LIMIT = 40;
 
+    function editorSymbolQuery() {
+      const own = document.getElementById('editor-symbol-search');
+      if (own && own.value.trim()) return { text: own.value.trim(), from: 'search' };
+      const label = document.getElementById('modal-label-input');
+      if (label && label.value.trim()) return { text: label.value.trim(), from: 'label' };
+      return { text: '', from: 'default' };
+    }
+
+    function refreshEditorSymbolStrip() {
+      const strip = document.getElementById('editor-symbol-strip');
+      const hint = document.getElementById('editor-symbol-hint');
+      if (!strip) return;
+      if (!AAC_SYMBOL_LIBRARY.length) initSymbolLibrary();
+
+      const clearBtn = document.getElementById('btn-editor-sym-clear');
+      const ownSearch = document.getElementById('editor-symbol-search');
+      if (clearBtn) clearBtn.style.display = (ownSearch && ownSearch.value.trim()) ? 'flex' : 'none';
+
+      const q = editorSymbolQuery();
+      // With nothing to go on, lead with the starter set: the friendly, widely
+      // recognised core icons rather than an alphabetical slice of 3,600.
+      const matches = q.text
+        ? searchSymbolLibrary(q.text, 'all')
+        : AAC_SYMBOL_LIBRARY.filter(sym => !sym.svgPath);
+
+      strip.innerHTML = '';
+      strip.dataset.matchCount = String(matches.length);
+      strip.dataset.query = q.text;
+      strip.dataset.querySource = q.from;
+
+      const currentInCatalog = pendingSymbol
+        ? AAC_SYMBOL_LIBRARY.find(sym => symbolValueOf(sym) === pendingSymbol)
+        : null;
+
+      if (!matches.length && !currentInCatalog) {
+        const empty = document.createElement('div');
+        empty.className = 'editor-symbol-empty';
+        empty.id = 'editor-symbol-empty';
+        empty.textContent = `No symbol matches "${q.text}". Try a simpler word, or Browse All Symbols.`;
+        strip.appendChild(empty);
+        if (hint) hint.textContent = '';
+        return;
+      }
+
+      let shown = matches.slice(0, EDITOR_STRIP_LIMIT);
+
+      // Always show the symbol already on the tile, first, so the strip states
+      // what is set rather than only what was searched for.
+      if (pendingSymbol && !shown.some(sym => symbolValueOf(sym) === pendingSymbol)) {
+        const current = AAC_SYMBOL_LIBRARY.find(sym => symbolValueOf(sym) === pendingSymbol);
+        if (current) shown = [current].concat(shown.slice(0, EDITOR_STRIP_LIMIT - 1));
+      }
+
+      const frag = document.createDocumentFragment();
+      shown.forEach(sym => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'sym-card';
+        card.dataset.symbolId = sym.id;
+        card.dataset.symbolValue = symbolValueOf(sym);
+        card.setAttribute('aria-label', sym.label);
+        const icon = sym.svgPath
+          ? `<img src="${sym.svgPath}" loading="lazy" class="sym-svg-icon" alt="${sym.label}" style="width: 44px; height: 44px; object-fit: contain; pointer-events: none;" />`
+          : sym.emoji;
+        card.innerHTML = `
+          <div class="sym-icon">${icon}</div>
+          <div class="sym-name" title="${sym.label}">${sym.label}</div>
+        `;
+        card.onclick = () => selectInlineEditorSymbol(sym);
+        frag.appendChild(card);
+      });
+      strip.appendChild(frag);
+      strip.scrollLeft = 0;
+
+      if (hint) {
+        if (q.from === 'default') {
+          hint.textContent = `${AAC_SYMBOL_LIBRARY.length.toLocaleString()} symbols available — type a label above, or search here.`;
+        } else {
+          const src = q.from === 'label' ? 'from the label' : 'from your search';
+          if (!matches.length) {
+            hint.textContent = `No matches for "${q.text}" ${src} — showing the symbol already on this button.`;
+          } else {
+            const more = matches.length > EDITOR_STRIP_LIMIT ? ` (showing first ${EDITOR_STRIP_LIMIT})` : '';
+            hint.textContent = `${matches.length.toLocaleString()} match${matches.length === 1 ? '' : 'es'} for "${q.text}" ${src}${more}.`;
+          }
+        }
+      }
+
+      highlightEditorSymbolSelection();
+    }
+
+    function highlightEditorSymbolSelection() {
+      const strip = document.getElementById('editor-symbol-strip');
+      if (!strip) return;
+      strip.querySelectorAll('.sym-card').forEach(card => {
+        card.classList.toggle('selected', !!pendingSymbol && card.dataset.symbolValue === pendingSymbol);
+      });
+    }
+
+    function selectInlineEditorSymbol(symbolObj) {
+      pendingSymbol = symbolValueOf(symbolObj);
+      pendingPhotoBlob = null;
+
+      const ttsInp = document.getElementById('modal-tts-input');
+      const labelInp = document.getElementById('modal-label-input');
+      if (labelInp && !labelInp.value.trim()) {
+        labelInp.value = symbolObj.label;
+        onLabelSizeInput();
+      }
+      if (ttsInp && !ttsInp.value.trim()) ttsInp.value = symbolObj.label;
+
+      // Deliberately no closeEditor()/close-anything here: picking a symbol
+      // must not interrupt the edit.
+      updateModalPhotoPreview();
+    }
+
+    function filterEditorSymbolStrip() {
+      refreshEditorSymbolStrip();
+    }
+
+    function clearEditorSymbolSearch() {
+      const inp = document.getElementById('editor-symbol-search');
+      if (!inp) return;
+      inp.value = '';
+      refreshEditorSymbolStrip();
+      inp.focus();
+    }
+
+    // The label field drives both the size preview and the symbol suggestions.
+    function onEditorLabelInput() {
+      onLabelSizeInput();
+      const own = document.getElementById('editor-symbol-search');
+      // A search the user typed themselves wins over the label.
+      if (!own || !own.value.trim()) refreshEditorSymbolStrip();
+    }
+
+    // One matcher for both the full-screen library and the editor's inline
+    // strip, so a search that works in one works the same in the other.
+    function searchSymbolLibrary(query, category) {
+      const q = (query || '').trim().toLowerCase();
       let filtered = AAC_SYMBOL_LIBRARY;
-      if (currentSymbolCategory !== 'all') {
-        filtered = filtered.filter(s => s.category === currentSymbolCategory);
+      if (category && category !== 'all') {
+        filtered = filtered.filter(s => s.category === category);
       }
+      if (!q) return filtered;
+      return filtered.filter(s => {
+        if (s.label.toLowerCase().includes(q)) return true;
+        if (s.id && s.id.toLowerCase().includes(q)) return true;
+        if (s.category && s.category.toLowerCase().includes(q)) return true;
+        if (s.rawCat && s.rawCat.toLowerCase().includes(q)) return true;
+        return (s.keywords || []).some(k => k.toLowerCase().includes(q));
+      });
+    }
 
-      if (q) {
-        filtered = filtered.filter(s => {
-          if (s.label.toLowerCase().includes(q)) return true;
-          if (s.id && s.id.toLowerCase().includes(q)) return true;
-          if (s.category && s.category.toLowerCase().includes(q)) return true;
-          if (s.rawCat && s.rawCat.toLowerCase().includes(q)) return true;
-          return (s.keywords || []).some(k => k.toLowerCase().includes(q));
-        });
-      }
+    // The catalogue entry's value as it is stored on a tile.
+    function symbolValueOf(symbolObj) {
+      return symbolObj.svgPath ? symbolObj.svgPath : (symbolObj.emoji || symbolObj.id);
+    }
 
-      renderSymbolLibrary(filtered, true);
+    function filterSymbolLibrary() {
+      const q = document.getElementById('sym-search-input').value.trim();
+      document.getElementById('btn-sym-clear-search').style.display = q ? 'flex' : 'none';
+      renderSymbolLibrary(searchSymbolLibrary(q, currentSymbolCategory), true);
     }
 
     function clearSymbolSearch() {
@@ -5531,716 +6020,11 @@
       updateModalPhotoPreview();
     }
 
-    /* --- Quick Edit: Live Suggestions, Synonym Map, & Hold-to-Save --- */
-    const AAC_SYNONYM_MAP = {
-      'dog': ['puppy', 'doggy', 'canine', 'hound', 'pet'],
-      'puppy': ['dog', 'doggy', 'pet'],
-      'cat': ['kitty', 'kitten', 'feline', 'pet'],
-      'kitten': ['cat', 'kitty', 'pet'],
-      'tree': ['plants_and_trees', 'wood', 'forest', 'branch', 'park', 'nature', 'leaves', 'pine'],
-      'flower': ['plant', 'rose', 'nature', 'garden', 'bloom', 'tulip', 'daisy'],
-      'eat': ['food', 'hungry', 'dinner', 'lunch', 'breakfast', 'snack', 'bite', 'meal', 'feed'],
-      'food': ['eat', 'snack', 'dinner', 'lunch', 'meal'],
-      'drink': ['water', 'juice', 'milk', 'thirsty', 'sip', 'beverage', 'soda'],
-      'water': ['drink', 'thirsty', 'bottle', 'glass', 'ocean', 'pool', 'h2o'],
-      'happy': ['smile', 'glad', 'joy', 'excited', 'cheerful', 'good'],
-      'sad': ['cry', 'unhappy', 'frown', 'tears', 'hurt', 'bad'],
-      'mad': ['angry', 'furious', 'upset', 'yell', 'annoyed'],
-      'angry': ['mad', 'furious', 'upset', 'grumpy'],
-      'tired': ['sleep', 'bed', 'nap', 'exhausted', 'yawn', 'rest'],
-      'sleep': ['bed', 'tired', 'nap', 'night', 'rest', 'dream'],
-      'toilet': ['bathroom', 'potty', 'restroom', 'washroom', 'pee', 'poop'],
-      'bathroom': ['toilet', 'potty', 'shower', 'bath', 'wash'],
-      'potty': ['toilet', 'bathroom', 'pee', 'poop'],
-      'help': ['assist', 'support', 'aid', 'please', 'need', 'sos'],
-      'play': ['game', 'toy', 'fun', 'recess', 'sport'],
-      'car': ['vehicle', 'drive', 'automobile', 'ride', 'van', 'auto'],
-      'bus': ['school bus', 'transit', 'ride', 'vehicle'],
-      'home': ['house', 'room', 'family', 'building', 'inside'],
-      'house': ['home', 'building', 'room'],
-      'school': ['class', 'teacher', 'student', 'learn', 'lesson', 'building'],
-      'book': ['read', 'story', 'library', 'page'],
-      'love': ['heart', 'hug', 'care', 'family', 'affection'],
-      'more': ['again', 'extra', 'plus', 'add', 'another'],
-      'stop': ['halt', 'freeze', 'wait', 'red light', 'end', 'dont'],
-      'go': ['walk', 'run', 'leave', 'move', 'start', 'green light'],
-      'yes': ['okay', 'sure', 'agree', 'correct', 'good', 'check'],
-      'no': ['not', 'refuse', 'stop', 'wrong', 'bad', 'cross'],
-      'want': ['need', 'desire', 'wish', 'like', 'request'],
-      'like': ['love', 'enjoy', 'favorite', 'good', 'nice']
-    };
-
-    function searchAllLibraries(term) {
-      if (!term || !term.trim()) return [];
-      const q = term.trim().toLowerCase();
-      const synonyms = AAC_SYNONYM_MAP[q] || [];
-      const searchTerms = [q, ...synonyms];
-
-      const results = [];
-      const seen = new Set();
-
-      function calcScore(itemLabel, itemId, keywords, tags, query) {
-        const l = (itemLabel || '').toLowerCase();
-        const id = (itemId || '').toLowerCase();
-        if (l === query || id === query) return 100;
-        if (l.startsWith(query) || id.startsWith(query)) return 80;
-        if (l.includes(query) || id.includes(query)) return 60;
-        if (keywords && keywords.some(k => k.toLowerCase() === query)) return 70;
-        if (keywords && keywords.some(k => k.toLowerCase().includes(query))) return 40;
-        if (tags && tags.some(t => t.toLowerCase() === query)) return 70;
-        if (tags && tags.some(t => t.toLowerCase().includes(query))) return 40;
-        return 0;
-      }
-
-      // 1. Search ARASAAC official symbols
-      if (typeof AAC_OFFICIAL_SYMBOLS !== 'undefined' && Array.isArray(AAC_OFFICIAL_SYMBOLS)) {
-        for (const s of AAC_OFFICIAL_SYMBOLS) {
-          let best = 0;
-          for (const st of searchTerms) {
-            const sc = calcScore(s.label, s.id, [s.id.replace(/_/g, ' ')], s.tags || [], st);
-            if (sc > best) best = sc;
-          }
-          if (best > 0 && !seen.has(s.id)) {
-            seen.add(s.id);
-            results.push({
-              source: 'arasaac',
-              sourceLabel: 'ARASAAC',
-              id: s.id,
-              label: s.label,
-              svgPath: 'symbols/en/' + s.id + '.svg',
-              score: best
-            });
-          }
-        }
-      }
-
-      // 2. Search Starter Emojis
-      if (typeof AAC_STARTER_EMOJIS !== 'undefined' && Array.isArray(AAC_STARTER_EMOJIS)) {
-        for (const e of AAC_STARTER_EMOJIS) {
-          let best = 0;
-          for (const st of searchTerms) {
-            const sc = calcScore(e.label, e.id, e.keywords || [], [], st);
-            if (sc > best) best = sc;
-          }
-          if (best > 0 && !seen.has(e.id)) {
-            seen.add(e.id);
-            results.push({
-              source: 'emoji',
-              sourceLabel: 'Emoji',
-              id: e.id,
-              label: e.label,
-              emoji: e.emoji,
-              score: best + 5
-            });
-          }
-        }
-      }
-
-      results.sort((a, b) => b.score - a.score);
-      return results.slice(0, 16);
-    }
-
-    let quickImageDebounceTimer = null;
-
-    function renderQuickImageStrip(word) {
-      const strip = document.getElementById('quick-image-strip');
-      const emptyBox = document.getElementById('quick-image-empty');
-      const queryEl = document.getElementById('quick-image-query');
-      const countBadge = document.getElementById('quick-image-count-badge');
-      if (!strip) return;
-
-      const term = (word || '').trim();
-      const matches = searchAllLibraries(term.length > 0 ? term : 'tree');
-
-      strip.innerHTML = '';
-      if (matches.length === 0 && term.length > 0) {
-        strip.style.display = 'none';
-        if (emptyBox) {
-          if (queryEl) queryEl.textContent = term;
-          emptyBox.style.display = 'block';
-        }
-        if (countBadge) countBadge.textContent = '0 suggestions';
-        return;
-      }
-
-      if (emptyBox) emptyBox.style.display = 'none';
-      strip.style.display = 'flex';
-      if (countBadge) countBadge.textContent = `${matches.length} suggestions`;
-
-      matches.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'quick-image-card';
-        card.dataset.itemId = item.id;
-        card.title = `${item.label} (${item.sourceLabel})`;
-
-        const isCurrent = pendingSymbol && (
-          pendingSymbol === item.svgPath ||
-          pendingSymbol === item.emoji ||
-          pendingSymbol === item.id
-        );
-        if (isCurrent) card.classList.add('active');
-
-        const box = document.createElement('div');
-        box.className = 'quick-img-box';
-        if (item.svgPath) {
-          box.innerHTML = `<img src="${item.svgPath}" style="width:100%; height:100%; object-fit:contain;" alt="${item.label}">`;
-        } else {
-          box.textContent = item.emoji || '⭐';
-        }
-
-        const source = document.createElement('div');
-        source.className = 'quick-img-source';
-        source.textContent = item.sourceLabel;
-
-        card.appendChild(box);
-        card.appendChild(source);
-
-        card.onclick = () => selectQuickImageSuggestion(item);
-        strip.appendChild(card);
-      });
-    }
-
-    function selectQuickImageSuggestion(item) {
-      if (item.svgPath) {
-        pendingSymbol = item.svgPath;
-      } else {
-        pendingSymbol = item.emoji || item.id;
-      }
-      pendingPhotoBlob = null;
-      updateModalPhotoPreview();
-
-      document.querySelectorAll('#quick-image-strip .quick-image-card').forEach(c => {
-        c.classList.toggle('active', c.dataset.itemId === item.id);
-      });
-
-      const labelInp = document.getElementById('modal-label-input');
-      const ttsInp = document.getElementById('modal-tts-input');
-      if (!labelInp.value.trim()) {
-        labelInp.value = item.label;
-        onQuickEditLabelInput();
-      }
-      if (!ttsInp.value.trim()) {
-        ttsInp.value = item.label;
-      }
-    }
-
-    function renderSpeechSuggestions(word) {
-      const container = document.getElementById('speech-suggestions-bar');
-      if (!container) return;
-      container.innerHTML = '';
-      const w = (word || '').trim();
-      if (!w) return;
-
-      const suggestions = [
-        `I want ${w}.`,
-        `I want to play in the ${w}.`,
-        `I see ${w}.`,
-        `I like ${w}.`,
-        `More ${w} please.`
-      ];
-
-      suggestions.forEach(phrase => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'speech-suggestion-chip';
-        chip.textContent = phrase;
-        chip.onclick = () => {
-          document.getElementById('modal-tts-input').value = phrase;
-          showToast(`Speech cue set: "${phrase}"`);
-        };
-        container.appendChild(chip);
-      });
-    }
-
-    function onQuickEditLabelInput() {
-      onLabelSizeInput();
-      const val = document.getElementById('modal-label-input').value;
-      const clearBtn = document.getElementById('btn-label-clear');
-      if (clearBtn) clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
-
-      renderSpeechSuggestions(val);
-      updateSuggestedColorSchemeUI(val || 'Orange');
-
-      const sioInp = document.getElementById('sounditout-word-input');
-      if (sioInp && (!sioInp.value.trim() || sioInp.dataset.autofilled === 'true')) {
-        sioInp.value = val;
-        sioInp.dataset.autofilled = 'true';
-        if (currentActionType === 'sounditout') {
-          renderSoundItOutSyllables();
-        }
-      }
-
-      if (quickImageDebounceTimer) clearTimeout(quickImageDebounceTimer);
-      quickImageDebounceTimer = setTimeout(() => {
-        renderQuickImageStrip(val);
-      }, 220);
-    }
-
-    function clearEditorLabelInput() {
-      const inp = document.getElementById('modal-label-input');
-      inp.value = '';
-      onQuickEditLabelInput();
-      inp.focus();
-    }
-
-    function setQuickWord(word) {
-      const inp = document.getElementById('modal-label-input');
-      inp.value = word;
-      onQuickEditLabelInput();
-    }
-
-    function previewAuditoryTTS() {
-      const text = document.getElementById('modal-tts-input').value.trim() ||
-                   document.getElementById('modal-label-input').value.trim() ||
-                   'Quick Edit';
-      speakText(text);
-    }
-
-    /* --- Quick Color Scheme · Classic (R3) --- */
-    const AAC_COLOR_SCHEMES = [
-      { name: 'Orange', bg: '#ffedd5', border: '#ea580c', text: '#7c2d12', swatch: '#f97316' },
-      { name: 'Yellow', bg: '#fef9c3', border: '#ca8a04', text: '#713f12', swatch: '#eab308' },
-      { name: 'Green', bg: '#dcfce7', border: '#16a34a', text: '#14532d', swatch: '#22c55e' },
-      { name: 'Blue', bg: '#dbeafe', border: '#2563eb', text: '#1e3a8a', swatch: '#3b82f6' },
-      { name: 'Purple', bg: '#f3e8ff', border: '#9333ea', text: '#581c87', swatch: '#a855f7' },
-      { name: 'Pink', bg: '#fce7f3', border: '#db2777', text: '#831843', swatch: '#ec4899' },
-      { name: 'Teal', bg: '#ccfbf1', border: '#0d9488', text: '#134e4a', swatch: '#14b8a6' },
-      { name: 'Red', bg: '#fee2e2', border: '#dc2626', text: '#7f1d1d', swatch: '#ef4444' },
-      { name: 'Slate', bg: '#f1f5f9', border: '#475569', text: '#0f172a', swatch: '#64748b' },
-      { name: 'Classic White', bg: '#ffffff', border: '#000000', text: '#111111', swatch: '#ffffff' }
-    ];
-
-    let currentSuggestedScheme = AAC_COLOR_SCHEMES[0];
-
-    function getSuggestedScheme(word) {
-      if (!word || !word.trim()) return AAC_COLOR_SCHEMES[0];
-      const str = word.trim().toLowerCase();
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
-      }
-      return AAC_COLOR_SCHEMES[hash % AAC_COLOR_SCHEMES.length];
-    }
-
-    function updateSuggestedColorSchemeUI(word) {
-      currentSuggestedScheme = getSuggestedScheme(word);
-      const nameEl = document.getElementById('quick-scheme-name');
-      const swatchEl = document.getElementById('quick-scheme-swatch');
-      if (nameEl) nameEl.textContent = currentSuggestedScheme.name;
-      if (swatchEl) {
-        swatchEl.style.background = currentSuggestedScheme.swatch;
-        swatchEl.style.borderColor = currentSuggestedScheme.border;
-      }
-    }
-
-    function applySuggestedColorScheme(scheme) {
-      const s = scheme || currentSuggestedScheme;
-      if (!s) return;
-      document.getElementById('modal-tile-bgcolor').value = s.bg;
-      document.getElementById('modal-tile-bordercolor').value = s.border;
-      document.getElementById('modal-tile-textcolor').value = s.text;
-      
-      const previewBox = document.getElementById('photo-preview-container');
-      const previewText = document.getElementById('label-size-preview-text');
-      if (previewBox) {
-        previewBox.style.backgroundColor = s.bg;
-        previewBox.style.borderColor = s.border;
-      }
-      if (previewText) {
-        previewText.style.color = s.text;
-      }
-      showToast(`Applied ${s.name} scheme`);
-    }
-
-    function toggleColorSchemesPicker(e) {
-      if (e) e.stopPropagation();
-      const picker = document.getElementById('color-schemes-picker');
-      if (!picker) return;
-      if (picker.style.display === 'flex') {
-        picker.style.display = 'none';
-        return;
-      }
-
-      picker.innerHTML = '';
-      AAC_COLOR_SCHEMES.forEach(s => {
-        const row = document.createElement('div');
-        row.className = 'scheme-option';
-        row.innerHTML = `<div style="width:16px; height:16px; border-radius:3px; background:${s.swatch}; border:1px solid #cbd5e1; flex-shrink:0;"></div><span>${s.name}</span>`;
-        row.onclick = () => {
-          applySuggestedColorScheme(s);
-          picker.style.display = 'none';
-        };
-        picker.appendChild(row);
-      });
-      picker.style.display = 'flex';
-    }
-
-    function toggleFontsAndColors() {
-      const details = document.getElementById('editor-details-styling');
-      if (details) {
-        details.open = !details.open;
-        if (details.open) details.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-
-    /* --- Sound It Out Action & Phonics Syllables (R2) --- */
-    let currentActionType = 'speak';
-    let currentSoundItOutProgress = 'none';
-    let isSoundItOutAnimating = false;
-
-    function syllabifyWord(word) {
-      if (!word || !word.trim()) return [];
-      const w = word.trim().toLowerCase();
-
-      const overrides = {
-        'butterfly': ['but', 'ter', 'fly'],
-        'flower': ['flow', 'er'],
-        'water': ['wa', 'ter'],
-        'banana': ['ba', 'na', 'na'],
-        'elephant': ['el', 'e', 'phant'],
-        'dinosaur': ['di', 'no', 'saur'],
-        'happy': ['hap', 'py'],
-        'hungry': ['hun', 'gry'],
-        'thirsty': ['thirs', 'ty'],
-        'bathroom': ['bath', 'room'],
-        'bedroom': ['bed', 'room'],
-        'playground': ['play', 'ground'],
-        'cereal': ['ce', 're', 'al'],
-        'cookie': ['cook', 'ie'],
-        'crackers': ['crack', 'ers'],
-        'hamburger': ['ham', 'bur', 'ger'],
-        'sandwich': ['sand', 'wich'],
-        'chocolate': ['choc', 'o', 'late'],
-        'watermelon': ['wa', 'ter', 'mel', 'on'],
-        'yesterday': ['yes', 'ter', 'day'],
-        'tomorrow': ['to', 'mor', 'row'],
-        'together': ['to', 'geth', 'er'],
-        'computer': ['com', 'pu', 'ter'],
-        'telephone': ['tel', 'e', 'phone'],
-        'umbrella': ['um', 'brel', 'la'],
-        'hospital': ['hos', 'pi', 'tal']
-      };
-
-      if (overrides[w]) return overrides[w];
-
-      const syllableRegex = /[^aeiouy]*[aeiouy]+(?:[^aeiouy]*$|[^aeiouy](?=[^aeiouy]))?/gi;
-      const matches = w.match(syllableRegex);
-      if (!matches || matches.length <= 1) {
-        return [w];
-      }
-      return matches;
-    }
-
-    function onActionTypeChange() {
-      const type = document.getElementById('modal-action-type').value;
-      currentActionType = type;
-      const speakBox = document.getElementById('action-speak-container');
-      const soundBox = document.getElementById('action-sounditout-container');
-      if (type === 'sounditout') {
-        if (speakBox) speakBox.style.display = 'none';
-        if (soundBox) soundBox.style.display = 'flex';
-        const label = document.getElementById('modal-label-input').value.trim();
-        const wordInp = document.getElementById('sounditout-word-input');
-        if (wordInp && (!wordInp.value.trim() || wordInp.dataset.autofilled === 'true')) {
-          if (label) {
-            wordInp.value = label;
-            wordInp.dataset.autofilled = 'true';
-          }
-        }
-        renderSoundItOutSyllables();
-      } else {
-        if (speakBox) speakBox.style.display = 'block';
-        if (soundBox) soundBox.style.display = 'none';
-      }
-    }
-
-    function onSoundItOutWordInput() {
-      const inp = document.getElementById('sounditout-word-input');
-      if (inp) inp.dataset.autofilled = 'false';
-      renderSoundItOutSyllables();
-    }
-
-    function renderSoundItOutSyllables() {
-      const container = document.getElementById('sounditout-syllables-bar');
-      if (!container) return;
-      container.innerHTML = '';
-      const word = document.getElementById('sounditout-word-input').value.trim() ||
-                   document.getElementById('modal-label-input').value.trim() || 'butterfly';
-      const syllables = syllabifyWord(word);
-
-      syllables.forEach((syl, idx) => {
-        const chip = document.createElement('div');
-        chip.className = 'syllable-chip';
-        chip.id = `sio-chip-${idx}`;
-        chip.textContent = syl;
-        chip.onclick = () => speakText(syl);
-        container.appendChild(chip);
-      });
-    }
-
-    async function previewSoundItOutAnimation() {
-      if (isSoundItOutAnimating) return;
-      isSoundItOutAnimating = true;
-      const btnText = document.getElementById('preview-anim-text');
-      if (btnText) btnText.textContent = 'Playing...';
-
-      const word = document.getElementById('sounditout-word-input').value.trim() ||
-                   document.getElementById('modal-label-input').value.trim() || 'butterfly';
-      const syllables = syllabifyWord(word);
-
-      for (let i = 0; i < syllables.length; i++) {
-        const chip = document.getElementById(`sio-chip-${i}`);
-        if (chip) chip.classList.add('active');
-        speakText(syllables[i]);
-        await new Promise(r => setTimeout(r, 650));
-        if (chip) chip.classList.remove('active');
-      }
-
-      // Highlight all and speak whole word
-      document.querySelectorAll('#sounditout-syllables-bar .syllable-chip').forEach(c => c.classList.add('active'));
-      speakText(word);
-      await new Promise(r => setTimeout(r, 800));
-      document.querySelectorAll('#sounditout-syllables-bar .syllable-chip').forEach(c => c.classList.remove('active'));
-
-      if (btnText) btnText.textContent = '▶ Preview Animation';
-      isSoundItOutAnimating = false;
-    }
-
-    function recordWithAnimation() {
-      showToast('Recording ready (previewing animation)');
-      previewSoundItOutAnimation();
-    }
-
-    function setSoundItOutProgress(val) {
-      currentSoundItOutProgress = val;
-      const btns = document.querySelectorAll('#sounditout-progress-tracker .segment-btn');
-      btns.forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-progress') === val);
-      });
-    }
-
-    // Player Mode Overlay for Sound It Out
-    async function playSoundItOutPlayer(word, slotId) {
-      const overlay = document.getElementById('sounditout-player-overlay');
-      const wordEl = document.getElementById('sio-player-word');
-      const sylsEl = document.getElementById('sio-player-syllables');
-      if (!overlay || !wordEl || !sylsEl) {
-        speakText(word);
-        return;
-      }
-
-      const cleanWord = (word || '').trim() || 'Sound It Out';
-      const syllables = syllabifyWord(cleanWord);
-
-      wordEl.textContent = cleanWord;
-      sylsEl.innerHTML = '';
-
-      syllables.forEach((syl, i) => {
-        const pill = document.createElement('div');
-        pill.className = 'sio-syllable-pill';
-        pill.id = `sio-player-pill-${i}`;
-        pill.textContent = syl;
-        sylsEl.appendChild(pill);
-      });
-
-      overlay.style.display = 'flex';
-
-      for (let i = 0; i < syllables.length; i++) {
-        const pill = document.getElementById(`sio-player-pill-${i}`);
-        if (pill) pill.classList.add('active');
-        speakText(syllables[i]);
-        await new Promise(r => setTimeout(r, 650));
-        if (pill) pill.classList.remove('active');
-      }
-
-      // Highlight whole word & all pills
-      document.querySelectorAll('.sio-syllable-pill').forEach(p => p.classList.add('active'));
-      speakText(cleanWord);
-      await new Promise(r => setTimeout(r, 900));
-
-      overlay.style.display = 'none';
-    }
-
-    function dismissSoundItOutPlayer() {
-      const overlay = document.getElementById('sounditout-player-overlay');
-      if (overlay) overlay.style.display = 'none';
-    }
-
-    /* --- Save Menu & Save Options (R1) --- */
-    function toggleSaveMenu(e) {
-      if (e) e.stopPropagation();
-      const menu = document.getElementById('save-options-menu');
-      if (!menu) return;
-      const isOpen = menu.style.display === 'flex';
-      menu.style.display = isOpen ? 'none' : 'flex';
-    }
-
-    function closeSaveMenu() {
-      const menu = document.getElementById('save-options-menu');
-      if (menu) menu.style.display = 'none';
-    }
-
-    async function handleSaveOption(option) {
-      closeSaveMenu();
-      if (option === 'save') {
-        await saveEditorTile();
-      } else if (option === 'save_prev') {
-        await saveAndPrevTile();
-      } else if (option === 'save_next') {
-        await saveAndNextTile();
-      } else if (option === 'save_classic') {
-        await saveAndOpenClassic();
-      }
-    }
-
-    let saveHoldTimer = null;
-    let isSaveHeld = false;
-
-    function bindSaveButtonHold(btn) {
-      if (!btn || btn.dataset.holdBound) return;
-      btn.dataset.holdBound = 'true';
-
-      btn.addEventListener('pointerdown', (e) => {
-        isSaveHeld = false;
-        saveHoldTimer = setTimeout(() => {
-          isSaveHeld = true;
-          saveAndNextTile();
-        }, 600);
-      });
-
-      const cancelHold = () => {
-        if (saveHoldTimer) {
-          clearTimeout(saveHoldTimer);
-          saveHoldTimer = null;
-        }
-      };
-
-      btn.addEventListener('pointerup', (e) => {
-        if (saveHoldTimer) {
-          clearTimeout(saveHoldTimer);
-          saveHoldTimer = null;
-          if (!isSaveHeld) {
-            saveEditorTile();
-          }
-        }
-      });
-
-      btn.addEventListener('pointercancel', cancelHold);
-      btn.addEventListener('pointerleave', cancelHold);
-    }
-
-    async function saveCurrentTileRecord() {
-      if (!currentEditingSlot) return null;
-      if (pendingPhotoWrite) await pendingPhotoWrite;
-
-      const labelText = document.getElementById('modal-label-input').value.trim();
-      const ttsText = document.getElementById('modal-tts-input').value.trim() || labelText;
-      const labelSize = normalizeLabelSize(document.getElementById('modal-label-size').value);
-      const bgColor = document.getElementById('modal-tile-bgcolor').value;
-      const borderColor = document.getElementById('modal-tile-bordercolor').value;
-      const labelColor = document.getElementById('modal-tile-textcolor').value;
-      const sioWord = document.getElementById('sounditout-word-input').value.trim() || labelText;
-
-      const updatedTile = {
-        id: currentEditingSlot,
-        photo: pendingPhotoBlob,
-        symbol: pendingSymbol,
-        audio: pendingAudioBlob,
-        label: labelText,
-        tts: ttsText,
-        actionType: currentActionType,
-        soundItOutWord: sioWord,
-        soundItOutProgress: currentSoundItOutProgress,
-        labelSize: labelSize,
-        labelPosition: pendingLabelPosition,
-        bgColor: bgColor,
-        borderColor: borderColor,
-        labelColor: labelColor,
-        updatedAt: Date.now()
-      };
-
-      await saveTileToDB(updatedTile);
-      renderCurrentPage();
-      return updatedTile;
-    }
-
-    async function saveAndNextTile() {
-      if (!currentEditingSlot) return;
-      try {
-        await saveCurrentTileRecord();
-        showCompleteHUD();
-
-        const p = pages[currentPageIndex];
-        const totalSlots = p ? p.gridSize || 4 : 4;
-        let nextSlot = null;
-
-        for (let s = currentEditingSlot + 1; s <= totalSlots; s++) {
-          if (!p.tiles || !p.tiles[s] || (!p.tiles[s].label && !p.tiles[s].photo && !p.tiles[s].symbol)) {
-            nextSlot = s;
-            break;
-          }
-        }
-        if (nextSlot === null) {
-          for (let s = 1; s < currentEditingSlot; s++) {
-            if (!p.tiles || !p.tiles[s] || (!p.tiles[s].label && !p.tiles[s].photo && !p.tiles[s].symbol)) {
-              nextSlot = s;
-              break;
-            }
-          }
-        }
-        if (nextSlot === null) {
-          nextSlot = (currentEditingSlot % totalSlots) + 1;
-        }
-
-        showToast(`Saved! Opening Button #${nextSlot}`);
-        openEditor(nextSlot);
-      } catch (err) {
-        showToast('Failed to save tile', 'error');
-      }
-    }
-
-    async function saveAndPrevTile() {
-      if (!currentEditingSlot) return;
-      try {
-        await saveCurrentTileRecord();
-        showCompleteHUD();
-
-        const p = pages[currentPageIndex];
-        const totalSlots = p ? p.gridSize || 4 : 4;
-        const prevSlot = currentEditingSlot > 1 ? currentEditingSlot - 1 : totalSlots;
-
-        showToast(`Saved! Opening Button #${prevSlot}`);
-        openEditor(prevSlot);
-      } catch (err) {
-        showToast('Failed to save tile', 'error');
-      }
-    }
-
-    async function saveAndOpenClassic() {
-      if (!currentEditingSlot) return;
-      try {
-        await saveCurrentTileRecord();
-        showCompleteHUD();
-        showToast('Saved! Switched to Classic Tools');
-        const details = document.getElementById('editor-details-styling');
-        if (details) {
-          details.open = true;
-          details.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      } catch (err) {
-        showToast('Failed to save tile', 'error');
-      }
-    }
-
     function closeEditor() {
       closeCameraFullscreen();
       stopAudioStream();
       stopRecordingTimer();
       stopAudioPreview();
-      closeSaveMenu();
-
-      const picker = document.getElementById('color-schemes-picker');
-      if (picker) picker.style.display = 'none';
 
       pendingPhotoBlob = null;
       pendingAudioBlob = null;
@@ -6252,9 +6036,34 @@
 
     async function saveEditorTile() {
       if (!currentEditingSlot) return;
+      if (pendingPhotoWrite) await pendingPhotoWrite;
+
+      const labelText = document.getElementById('modal-label-input').value.trim();
+      const ttsText = document.getElementById('modal-tts-input').value.trim() || labelText;
+      const labelSize = normalizeLabelSize(document.getElementById('modal-label-size').value);
+      const bgColor = document.getElementById('modal-tile-bgcolor').value;
+      const borderColor = document.getElementById('modal-tile-bordercolor').value;
+      const labelColor = document.getElementById('modal-tile-textcolor').value;
+
+      const updatedTile = {
+        id: currentEditingSlot,
+        photo: pendingPhotoBlob,
+        symbol: pendingSymbol,
+        audio: pendingAudioBlob,
+        label: labelText,
+        tts: ttsText,
+        labelSize: labelSize,
+        labelPosition: pendingLabelPosition,
+        bgColor: bgColor,
+        borderColor: borderColor,
+        labelColor: labelColor,
+        updatedAt: Date.now()
+      };
+
       try {
-        await saveCurrentTileRecord();
+        await saveTileToDB(updatedTile);
         closeEditor();
+        renderCurrentPage();
         showCompleteHUD();
       } catch (err) {
         showToast('Failed to save tile', 'error');
@@ -6269,6 +6078,7 @@
         closeEditor();
         renderCurrentPage();
         showToast(`Button #${slot} cleared`);
+        showCompleteHUD();
       } catch (err) {
         showToast('Failed to clear button', 'error');
       }
@@ -6325,7 +6135,7 @@
       const removeBtn = document.getElementById('btn-remove-photo');
 
       if (pendingPhotoBlob) {
-        imgEl.src = (typeof pendingPhotoBlob === 'string') ? pendingPhotoBlob : URL.createObjectURL(pendingPhotoBlob);
+        imgEl.src = (typeof pendingPhotoBlob === 'string') ? pendingPhotoBlob : (tilePhotoUrl({ photo: pendingPhotoBlob }, 'preview') || '');
         imgEl.style.display = 'block';
         symEl.style.display = 'none';
         placeholder.style.display = 'none';
@@ -6343,6 +6153,8 @@
         placeholder.style.display = 'flex';
         removeBtn.style.display = 'none';
       }
+
+      highlightEditorSymbolSelection();
     }
 
     function startCamera() {
@@ -6524,7 +6336,7 @@
       const audio = new Audio(audioUrl);
       previewAudioPlayer = audio;
       audio.onended = () => { previewAudioPlayer = null; };
-      audio.play();
+      audio.play().catch(() => { previewAudioPlayer = null; });
     }
 
     function stopAudioPreview() {
@@ -6567,47 +6379,24 @@
       renderCurrentPage();
     }
 
-    // iPad Hardware Keyboard Shortcuts & Navigation
+    // Switch input: Space or Enter picks whatever the scan cursor is on.
+    window.addEventListener('keydown', (e) => {
+      if (e.key !== ' ' && e.key !== 'Enter') return;
+      if (document.querySelector('.modal-backdrop.open, .popover-backdrop.open')) return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (selectScannedTarget()) e.preventDefault();
+    });
+
+    // Keyboard navigation: Left/Right arrows change pages
     window.addEventListener('keydown', (e) => {
       const anyModalOpen = document.querySelector('.modal-backdrop.open, .popover-backdrop.open');
-      if (anyModalOpen) {
-        if (e.key === 'Escape') {
-          closeAllPopovers();
-          closeEditor();
-          closeHotspotEditor();
-          closeScenePicker();
-          closePageWizard();
-          closeOnlineGallery();
-          closeMyTemplatesModal();
-          closeImportModal();
-          closeSymbolLibrary();
-          closeAuditoryCueModal();
-          closeStubModal();
-        }
-        return;
-      }
+      if (anyModalOpen) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if (e.key === 'ArrowLeft') {
         prevPage();
       } else if (e.key === 'ArrowRight') {
         nextPage();
-      } else if (e.key === ' ' || e.code === 'Space') {
-        e.preventDefault();
-        const p = pages[currentPageIndex];
-        if (p && p.express && expressCollectedChips.length > 0) {
-          playExpressSentence();
-        } else {
-          playAllPageTiles();
-        }
-      } else if (e.key === 'Escape') {
-        switchToHomeView();
-      } else if (e.key >= '1' && e.key <= '9') {
-        const slot = parseInt(e.key);
-        const p = pages[currentPageIndex];
-        if (p && p.tiles && p.tiles[slot]) {
-          handleTileTap(slot, p.tiles[slot]);
-        }
       }
     });
 
@@ -6635,18 +6424,8 @@
       }, { passive: true });
     }
 
-    // iOS Safari Audio & Speech Synthesis Unlock on first touch
-    let iosAudioUnlocked = false;
+    // iOS Safari Audio Unlocker
     function unlockIOSAudio() {
-      if (iosAudioUnlocked) return;
-      iosAudioUnlocked = true;
-      if (window.speechSynthesis) {
-        try {
-          const u = new SpeechSynthesisUtterance('');
-          u.volume = 0;
-          window.speechSynthesis.speak(u);
-        } catch (e) {}
-      }
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {

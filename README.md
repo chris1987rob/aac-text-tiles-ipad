@@ -8,8 +8,8 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
 
 ## 🌟 iPad Capabilities & Features
 
-1. **Standard Button Grids (1–36 buttons)**:
-   - Flexible layouts: 1, 2, 4, 9, 16, 25, or 36 buttons per page.
+1. **Standard Button Grids (1–48 buttons)**:
+   - Flexible layouts: 1, 2, 4, 9, 12, 16, 25, 36, or 48 buttons per page.
    - Dynamic label auto-fitting and font scaling (never clips or runs off buttons).
    - High contrast neon green border audio feedback (`#00e676`).
 
@@ -89,10 +89,12 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
 ---
 
 ## 🧪 Automated Testing
-
-Run the headless iPad verification suite:
+ 
+Run the headless iPad verification suites:
 ```bash
-node test_ipad.js
+node test_ipad.js         # iPad layout, PWA tags, and features
+node test_persistence.js  # Multi-page IndexedDB persistence & real controls
+node test_buttons.js      # 240/240 button click coverage
 ```
 
 ---
