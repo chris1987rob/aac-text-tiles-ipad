@@ -9,7 +9,7 @@ public struct PageWizardModalView: View {
     @State private var selectedGridSize: Int = 4
     @State private var selectedPreset: String = "Core"
 
-    private let gridSizes = [1, 2, 4, 9, 16, 25, 36]
+    private let gridSizes = [1, 2, 4, 9, 16, 25, 36, 48]
 
     public var body: some View {
         NavigationView {
