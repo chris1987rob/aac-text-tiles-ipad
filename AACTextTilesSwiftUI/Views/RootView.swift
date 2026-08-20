@@ -7,6 +7,7 @@ public struct RootView: View {
     // Modals state
     @State private var selectedSlotForEdit: Int? = nil
     @State private var selectedHotspotForEdit: HotspotModel? = nil
+    @State private var isShowingPageOptions: Bool = false
     @State private var isShowingPageWizard: Bool = false
     @State private var isShowingOnlineGallery: Bool = false
     @State private var isShowingPagesNavigator: Bool = false
@@ -42,7 +43,7 @@ public struct RootView: View {
                         selectedHotspotForEdit = newSpot
                     },
                     onOpenPages: { isShowingPagesNavigator = true },
-                    onOpenOptions: { isShowingPagesNavigator = true },
+                    onOpenOptions: { isShowingPageOptions = true },
                     onOpenNewPage: { isShowingPageWizard = true }
                 )
             }
@@ -52,6 +53,9 @@ public struct RootView: View {
         }
         .sheet(item: $selectedHotspotForEdit) { spot in
             HotspotEditorModalView(store: store, hotspot: spot)
+        }
+        .sheet(isPresented: $isShowingPageOptions) {
+            PageOptionsModalView(store: store)
         }
         .sheet(isPresented: $isShowingPageWizard) {
             PageWizardModalView(store: store)

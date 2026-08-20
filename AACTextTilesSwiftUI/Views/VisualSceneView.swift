@@ -6,6 +6,9 @@ public struct VisualSceneView: View {
     public let onAddHotspot: () -> Void
 
     @State private var activeHotspotId: Int? = nil
+    @State private var isShowingSourceDialog: Bool = false
+    @State private var isShowingImagePicker: Bool = false
+    @State private var pickerSourceType: UIImagePickerController.SourceType = .photoLibrary
 
     public var body: some View {
         let p = store.currentPage
@@ -68,24 +71,79 @@ public struct VisualSceneView: View {
             // Top Toolbar in Editor Mode
             if store.isEditMode {
                 VStack {
-                    HStack {
+                    HStack(spacing: 12) {
                         Spacer()
+
+                        // 1. Upload Picture / Change Photo Button
+                        Button(action: {
+                            isShowingSourceDialog = true
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .font(.system(size: 16, weight: .bold))
+                                Text("Upload Picture")
+                                    .font(.system(size: 14, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 9)
+                            .background(Color(hex: "#0284C7"))
+                            .cornerRadius(10)
+                            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
+                        }
+
+                        // 2. Add Hotspot Button
                         Button(action: onAddHotspot) {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 16, weight: .bold))
                                 Text("Add Hotspot")
+                                    .font(.system(size: 14, weight: .bold))
                             }
-                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(Color(hex: "#006853"))
-                            .cornerRadius(8)
-                            .shadow(radius: 4)
+                            .padding(.vertical, 9)
+                            .background(Color(hex: "#008369"))
+                            .cornerRadius(10)
+                            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
                         }
                     }
                     .padding(14)
                     Spacer()
+                }
+            }
+        }
+        .actionSheet(isPresented: $isShowingSourceDialog) {
+            ActionSheet(
+                title: Text("Scene Background Picture"),
+                message: Text("Upload a photo to use for this visual scene page"),
+                buttons: [
+                    .default(Text("📷 Take Photo with Camera")) {
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            pickerSourceType = .camera
+                            isShowingImagePicker = true
+                        } else {
+                            pickerSourceType = .photoLibrary
+                            isShowingImagePicker = true
+                        }
+                    },
+                    .default(Text("🖼️ Choose from Photo Library")) {
+                        pickerSourceType = .photoLibrary
+                        isShowingImagePicker = true
+                    },
+                    .destructive(Text("Reset to Preset Scene")) {
+                        store.currentPage.sceneImageData = nil
+                        store.save()
+                    },
+                    .cancel()
+                ]
+            )
+        }
+        .sheet(isPresented: $isShowingImagePicker) {
+            ImagePicker(sourceType: pickerSourceType) { img in
+                if let data = img.jpegData(compressionQuality: 0.85) {
+                    store.currentPage.sceneImageData = data
+                    store.save()
                 }
             }
         }
