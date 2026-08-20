@@ -5,6 +5,8 @@ public struct HomeView: View {
     public let onLaunchPlayer: () -> Void
     public let onLaunchEditor: () -> Void
     public let onOpenHelp: () -> Void
+    public let onOpenSettings: () -> Void
+    public let onOpenDownloads: () -> Void
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -51,9 +53,9 @@ public struct HomeView: View {
                     // Page Editor
                     homeActionButton(title: "Page Editor", icon: "pencil.circle.fill", color: "#008369", action: onLaunchEditor)
                     // Settings
-                    homeActionButton(title: "Settings", icon: "gearshape.fill", color: "#008369", action: {})
+                    homeActionButton(title: "Settings", icon: "gearshape.fill", color: "#008369", action: onOpenSettings)
                     // Downloads
-                    homeActionButton(title: "Downloads", icon: "arrow.down.circle.fill", color: "#008369", action: {})
+                    homeActionButton(title: "Downloads", icon: "arrow.down.circle.fill", color: "#008369", action: onOpenDownloads)
                     // Help
                     homeActionButton(title: "Help", icon: "questionmark.circle.fill", color: "#008369", action: onOpenHelp)
                 }

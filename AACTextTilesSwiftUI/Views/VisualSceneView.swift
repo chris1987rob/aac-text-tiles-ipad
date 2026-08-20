@@ -170,7 +170,11 @@ public struct VisualSceneView: View {
                 triggerHotspotSpeech(spot)
             }
         }
-        .gesture(moveGesture(spot: spot, canvas: canvas))
+        // Only in edit mode. The drag was previously attached in both modes and
+        // merely guarded inside onChanged, so in Player mode it still competed
+        // with the tap: a child whose finger slid 4pt while pressing produced a
+        // drag that did nothing, and the hotspot silently failed to speak.
+        .gesture(store.isEditMode ? moveGesture(spot: spot, canvas: canvas) : nil)
     }
 
     @ViewBuilder

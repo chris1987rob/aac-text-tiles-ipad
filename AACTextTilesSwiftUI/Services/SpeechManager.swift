@@ -4,6 +4,14 @@ import AVFoundation
 public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     public static let shared = SpeechManager()
 
+    /// Rate used when a caller does not pass one. Settable so the Settings
+    /// screen's speed slider affects every button on the board, not just the
+    /// one preview it plays.
+    public var defaultRate: Float = {
+        let saved = UserDefaults.standard.double(forKey: "aac.speechRate")
+        return saved > 0 ? Float(saved) : 0.5
+    }()
+
     private let synthesizer = AVSpeechSynthesizer()
     private var audioPlayer: AVAudioPlayer?
 
@@ -36,7 +44,8 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
         }
     }
 
-    public func speak(_ text: String, rate: Float = 0.5) {
+    public func speak(_ text: String, rate: Float? = nil) {
+        let rate = rate ?? defaultRate
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         ensureSessionActive()
         if synthesizer.isSpeaking {

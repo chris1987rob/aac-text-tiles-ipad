@@ -31,6 +31,7 @@
 		B100002B2C60000100000001 /* HotspotEditorModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100002C2C60000100000001 /* HotspotEditorModalView.swift */; };
 		B100002D2C60000100000001 /* PagesNavigatorModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100002E2C60000100000001 /* PagesNavigatorModalView.swift */; };
 		B100002F2C60000100000001 /* HelpGuideModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000302C60000100000001 /* HelpGuideModalView.swift */; };
+		BB0000000000000000000100 /* SettingsModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000100 /* SettingsModalView.swift */; };
 		B10000472C60000100000001 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000482C60000100000001 /* ImagePicker.swift */; };
 		B10000492C60000100000001 /* PageOptionsModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100004A2C60000100000001 /* PageOptionsModalView.swift */; };
 		B10000312C60000100000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000322C60000100000001 /* Assets.xcassets */; };
@@ -62,6 +63,7 @@
 		B100002C2C60000100000001 /* HotspotEditorModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotspotEditorModalView.swift; sourceTree = "<group>"; };
 		B100002E2C60000100000001 /* PagesNavigatorModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagesNavigatorModalView.swift; sourceTree = "<group>"; };
 		B10000302C60000100000001 /* HelpGuideModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpGuideModalView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000100 /* SettingsModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModalView.swift; sourceTree = "<group>"; };
 		B10000482C60000100000001 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		B100004A2C60000100000001 /* PageOptionsModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageOptionsModalView.swift; sourceTree = "<group>"; };
 		B10000322C60000100000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 				B100002C2C60000100000001 /* HotspotEditorModalView.swift */,
 				B100002E2C60000100000001 /* PagesNavigatorModalView.swift */,
 				B10000302C60000100000001 /* HelpGuideModalView.swift */,
+				AA0000000000000000000100 /* SettingsModalView.swift */,
 				B100004A2C60000100000001 /* PageOptionsModalView.swift */,
 			);
 			path = Modals;
@@ -263,6 +266,7 @@
 				B100002B2C60000100000001 /* HotspotEditorModalView.swift in Sources */,
 				B100002D2C60000100000001 /* PagesNavigatorModalView.swift in Sources */,
 				B100002F2C60000100000001 /* HelpGuideModalView.swift in Sources */,
+				BB0000000000000000000100 /* SettingsModalView.swift in Sources */,
 				B10000472C60000100000001 /* ImagePicker.swift in Sources */,
 				B10000492C60000100000001 /* PageOptionsModalView.swift in Sources */,
 			);

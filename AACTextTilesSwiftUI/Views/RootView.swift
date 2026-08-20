@@ -12,6 +12,7 @@ public struct RootView: View {
     @State private var isShowingOnlineGallery: Bool = false
     @State private var isShowingPagesNavigator: Bool = false
     @State private var isShowingHelpGuide: Bool = false
+    @State private var isShowingSettings: Bool = false
 
     public init() {}
 
@@ -28,7 +29,10 @@ public struct RootView: View {
                         store.isEditMode = true
                         withAnimation { isShowingHome = false }
                     },
-                    onOpenHelp: { isShowingHelpGuide = true }
+                    onOpenHelp: { isShowingHelpGuide = true },
+                    onOpenSettings: { isShowingSettings = true },
+                    // The gallery screen existed but nothing could open it.
+                    onOpenDownloads: { isShowingOnlineGallery = true }
                 )
             } else {
                 BoardView(
@@ -68,6 +72,42 @@ public struct RootView: View {
         }
         .sheet(isPresented: $isShowingHelpGuide) {
             HelpGuideModalView()
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsModalView(store: store)
+        }
+        .onAppear(perform: openScreenFromLaunchArgument)
+    }
+
+    /// Opens a screen straight from a launch argument so each one can actually
+    /// be looked at. There is no way to drive touches on the simulator, and a
+    /// screen nobody has seen is a screen nobody has checked — which is how two
+    /// dead buttons and an unreachable gallery survived this long.
+    ///
+    ///     xcrun simctl launch <device> <bundle-id> -openScreen settings
+    ///
+    /// Does nothing without the argument.
+    private func openScreenFromLaunchArgument() {
+        guard let screen = UserDefaults.standard.string(forKey: "openScreen") else { return }
+        switch screen {
+        case "home":     isShowingHome = true
+        case "settings": isShowingSettings = true
+        case "gallery":  isShowingOnlineGallery = true
+        case "help":     isShowingHelpGuide = true
+        case "options":  isShowingPageOptions = true
+        case "pages":    isShowingPagesNavigator = true
+        case "wizard":   isShowingPageWizard = true
+        case "tile":     selectedSlotForEdit = 1
+        case "hotspot":
+            store.currentPageIndex = store.pages.firstIndex { !$0.hotspots.isEmpty } ?? 0
+            selectedHotspotForEdit = store.currentPage.hotspots.first
+        case "scene":
+            store.currentPageIndex = store.pages.firstIndex { $0.type == .scene } ?? 0
+        case "keyboard":
+            store.currentPageIndex = store.pages.firstIndex { $0.type == .keyboard } ?? 0
+        case "edit":
+            store.isEditMode = true
+        default: break
         }
     }
 
