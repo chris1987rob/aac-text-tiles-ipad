@@ -18,16 +18,30 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
 
     private func setupAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.mixWithOthers, .duckOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+            try session.setActive(true, options: [])
         } catch {
             print("Failed to set AVAudioSession category: \(error)")
         }
     }
 
+    /// The session can be deactivated by interruptions (calls, Siri, other apps).
+    /// Re-activating before each utterance keeps AAC speech from silently failing.
+    private func ensureSessionActive() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(true, options: [])
+        } catch {
+            print("Failed to reactivate AVAudioSession: \(error)")
+        }
+    }
+
     public func speak(_ text: String, rate: Float = 0.5) {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        synthesizer.stopSpeaking(at: .immediate)
+        ensureSessionActive()
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
 
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = rate
@@ -43,6 +57,7 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
     }
 
     public func playAudioData(_ data: Data) {
+        ensureSessionActive()
         do {
             audioPlayer = try AVAudioPlayer(data: data)
             audioPlayer?.play()

@@ -29,8 +29,16 @@ public class AACStore: ObservableObject {
     }
 
     public func loadPages() {
-        // Built-in starter communication book
-        self.pages = [
+        if let restored = AACStore.loadFromDisk(), !restored.isEmpty {
+            self.pages = restored
+            return
+        }
+        self.pages = AACStore.defaultPages()
+    }
+
+    /// Built-in starter communication book, used on first launch or after a reset.
+    public static func defaultPages() -> [PageModel] {
+        return [
             // Page 1: Colors 4-Grid
             PageModel(
                 title: "Colors",
@@ -132,7 +140,60 @@ public class AACStore: ObservableObject {
         }
     }
 
+    // MARK: - Persistence
+
+    private static var storeURL: URL {
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return dir.appendingPathComponent("aac_pages.json")
+    }
+
+    private var saveWorkItem: DispatchWorkItem?
+
+    /// Debounced save. Called on every mutation (including live hotspot drags),
+    /// so the actual disk write is coalesced to avoid write amplification.
     public func save() {
-        // Persist to UserDefaults or local JSON
+        saveWorkItem?.cancel()
+        let snapshot = pages
+        let work = DispatchWorkItem {
+            AACStore.writeToDisk(snapshot)
+        }
+        saveWorkItem = work
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.4, execute: work)
+    }
+
+    /// Immediate, non-debounced write. Use when the app is backgrounding.
+    public func saveNow() {
+        saveWorkItem?.cancel()
+        saveWorkItem = nil
+        AACStore.writeToDisk(pages)
+    }
+
+    private static func writeToDisk(_ pages: [PageModel]) {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(pages)
+            try data.write(to: storeURL, options: .atomic)
+        } catch {
+            print("AACStore save failed: \(error)")
+        }
+    }
+
+    public static func loadFromDisk() -> [PageModel]? {
+        guard FileManager.default.fileExists(atPath: storeURL.path) else { return nil }
+        do {
+            let data = try Data(contentsOf: storeURL)
+            return try JSONDecoder().decode([PageModel].self, from: data)
+        } catch {
+            print("AACStore load failed: \(error)")
+            return nil
+        }
+    }
+
+    /// Wipes saved edits and restores the built-in starter book.
+    public func resetToDefaults() {
+        try? FileManager.default.removeItem(at: AACStore.storeURL)
+        pages = AACStore.defaultPages()
+        currentPageIndex = 0
+        saveNow()
     }
 }
