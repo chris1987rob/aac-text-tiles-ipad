@@ -88,6 +88,11 @@ public struct RootView: View {
     ///
     /// Does nothing without the argument.
     private func openScreenFromLaunchArgument() {
+        // Editor mode is its own switch so any screen can be opened in it,
+        // e.g. -openScreen scene -editMode YES for the hotspot option bar.
+        if UserDefaults.standard.bool(forKey: "editMode") {
+            store.isEditMode = true
+        }
         guard let screen = UserDefaults.standard.string(forKey: "openScreen") else { return }
         switch screen {
         case "home":     isShowingHome = true

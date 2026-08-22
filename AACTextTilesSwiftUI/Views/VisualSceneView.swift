@@ -42,40 +42,8 @@ public struct VisualSceneView: View {
             // Top Toolbar in Editor Mode
             if store.isEditMode {
                 VStack {
-                    HStack(spacing: 12) {
-                        Spacer()
-
-                        Button(action: { isShowingSourceDialog = true }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "photo.on.rectangle.angled")
-                                    .font(.system(size: 16, weight: .bold))
-                                Text("Upload Picture")
-                                    .font(.system(size: 14, weight: .bold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 9)
-                            .background(Color(hex: "#0284C7"))
-                            .cornerRadius(10)
-                            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
-                        }
-
-                        Button(action: onAddHotspot) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 16, weight: .bold))
-                                Text("Add Hotspot")
-                                    .font(.system(size: 14, weight: .bold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 9)
-                            .background(Color(hex: "#008369"))
-                            .cornerRadius(10)
-                            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
-                        }
-                    }
-                    .padding(14)
+                    editorOptionBar(hotspotCount: p.hotspots.count)
+                        .padding(14)
                     Spacer()
                 }
             }
@@ -116,6 +84,58 @@ public struct VisualSceneView: View {
         }
     }
 
+    // MARK: - Editor option bar
+
+    @ViewBuilder
+    private func editorOptionBar(hotspotCount: Int) -> some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 13, weight: .bold))
+                Text(hotspotCount == 0
+                     ? "No hotspots yet"
+                     : "\(hotspotCount) hotspot\(hotspotCount == 1 ? "" : "s")")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .foregroundColor(Color(hex: "#475569"))
+            .padding(.leading, 4)
+
+            Spacer(minLength: 8)
+
+            barButton(icon: "photo.on.rectangle.angled", title: "Picture", tint: "#0284C7") {
+                isShowingSourceDialog = true
+            }
+
+            barButton(icon: "plus.circle.fill", title: "Add Hotspot", tint: "#008369") {
+                onAddHotspot()
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.white.opacity(0.94))
+                .shadow(color: Color.black.opacity(0.18), radius: 6, y: 2)
+        )
+    }
+
+    @ViewBuilder
+    private func barButton(icon: String, title: String, tint: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .bold))
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 13)
+            .padding(.vertical, 8)
+            .background(Color(hex: tint))
+            .cornerRadius(9)
+        }
+    }
+
     // MARK: - Hotspot rendering
 
     @ViewBuilder
@@ -145,6 +165,17 @@ public struct VisualSceneView: View {
                 .padding(.vertical, 3)
                 .background(Color.black.opacity(0.75))
                 .cornerRadius(6)
+
+                if isMoving {
+                    Text("\(Int(spot.w))% x \(Int(spot.h))%")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color(hex: "#1D4ED8"))
+                        .cornerRadius(5)
+                        .offset(y: 26)
+                }
             } else {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isActive ? Color(hex: "#00E676").opacity(0.4) : Color.clear)
@@ -189,7 +220,6 @@ public struct VisualSceneView: View {
                         .foregroundColor(Color(hex: "#1D4ED8"))
                 )
                 .frame(width: 34, height: 34)
-                .offset(x: 12, y: 12)
                 .contentShape(Rectangle())
                 .gesture(resizeGesture(spot: spot, canvas: canvas))
         }

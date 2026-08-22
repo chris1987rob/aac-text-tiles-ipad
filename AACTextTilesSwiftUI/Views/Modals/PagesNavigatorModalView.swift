@@ -3,6 +3,7 @@ import SwiftUI
 public struct PagesNavigatorModalView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject public var store: AACStore
+    @State private var deleteRefused = false
 
     public var body: some View {
         NavigationView {
@@ -34,6 +35,14 @@ public struct PagesNavigatorModalView: View {
                     }
                 }
                 .onDelete { indices in
+                    // Never let the book be emptied. A swipe could previously
+                    // delete every page, leaving a communication book with
+                    // nothing in it and no obvious way back - and a board is
+                    // often hours of somebody's work.
+                    guard store.pages.count - indices.count >= 1 else {
+                        deleteRefused = true
+                        return
+                    }
                     store.pages.remove(atOffsets: indices)
                     if store.currentPageIndex >= store.pages.count {
                         store.currentPageIndex = max(0, store.pages.count - 1)
@@ -46,6 +55,11 @@ public struct PagesNavigatorModalView: View {
                 leading: EditButton(),
                 trailing: Button("Done") { presentationMode.wrappedValue.dismiss() }
             )
+            .alert(isPresented: $deleteRefused) {
+                Alert(title: Text("Keep at least one page"),
+                      message: Text("A communication book needs somewhere to put buttons. Add another page before removing this one."),
+                      dismissButton: .default(Text("OK")))
+            }
         }
     }
 }

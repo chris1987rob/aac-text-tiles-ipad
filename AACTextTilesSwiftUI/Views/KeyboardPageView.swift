@@ -74,7 +74,11 @@ public struct KeyboardPageView: View {
                 }
 
                 Button(action: {
-                    SpeechManager.shared.speak(typedText)
+                    // Speaking an empty string produced a silent press that
+                    // read as the button being broken.
+                    let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !text.isEmpty else { return }
+                    SpeechManager.shared.speak(text)
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "play.fill")
