@@ -97,6 +97,53 @@ if let sceneIdx = reloaded2.pages.firstIndex(where: { !$0.hotspots.isEmpty }) {
     fails.append("no page with hotspots in the starter book")
 }
 
+// --------------------------- editing a tile must not destroy its photo/audio
+// Regression: QuickEditModalView built a fresh TileModel and dropped
+// photoData, audioData, labelHex and labelPositionTop, so changing a label
+// silently destroyed a tile's photo and its recorded voice.
+do {
+    let s2 = AACStore()
+    s2.currentPageIndex = 0
+    var page = s2.currentPage
+    page.tiles[1] = TileModel(id: 1, label: "Before", tts: "before",
+                              photoData: Data([1,2,3,4]),
+                              labelHex: "#FF0000",
+                              audioData: Data([9,9,9]),
+                              labelPositionTop: true)
+    s2.currentPage = page
+    s2.saveNow()
+
+    // Simulate exactly what the edit screen now does on Save.
+    let reopened = AACStore()
+    reopened.currentPageIndex = 0
+    var pg = reopened.currentPage
+    let existing = pg.tiles[1]
+    pg.tiles[1] = TileModel(
+        id: 1,
+        label: "After",                      // the only thing the user changed
+        tts: "after",
+        symbolName: nil,
+        photoData: existing?.photoData,
+        bgHex: "#FFFFFF",
+        borderHex: "#CBD5E1",
+        labelHex: existing?.labelHex ?? "#1E293B",
+        labelSize: 1.0,
+        audioData: existing?.audioData,
+        isSoundItOut: false,
+        labelPositionTop: existing?.labelPositionTop ?? false
+    )
+    reopened.currentPage = pg
+    reopened.saveNow()
+
+    let after = AACStore()
+    let t = after.pages[0].tiles[1]
+    eq("label change applied", t?.label ?? "", "After")
+    eq("photo survives a label edit", t?.photoData, Data([1,2,3,4]))
+    eq("recorded voice survives a label edit", t?.audioData, Data([9,9,9]))
+    eq("label colour survives", t?.labelHex ?? "", "#FF0000")
+    eq("label position survives", t?.labelPositionTop ?? false, true)
+}
+
 // ------------------------------------------------------------- reset restores
 let resetStore = AACStore()
 resetStore.resetToDefaults()

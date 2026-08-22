@@ -1,83 +1,108 @@
 import SwiftUI
 
+/// The template gallery. Every card here installs a page with real buttons on
+/// it - the previous four cards described their contents and then installed an
+/// empty grid.
 public struct OnlineGalleryModalView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject public var store: AACStore
 
+    @State private var search: String = ""
+    @State private var installed: String? = nil
+
     public var body: some View {
         NavigationView {
             List {
-                galleryCard(
-                    title: "Medical & Healthcare Needs (9 Buttons)",
-                    description: "Pain scale, symptoms, doctor, medicine, call nurse",
-                    buttonCount: 9,
-                    onInstall: {
-                        installBoard(title: "Medical Needs", size: 9)
+                ForEach(PageTemplateCatalog.categories, id: \.self) { category in
+                    let matches = templates(in: category)
+                    if !matches.isEmpty {
+                        Section(header: Text(category)) {
+                            ForEach(matches) { template in
+                                templateCard(template)
+                            }
+                        }
                     }
-                )
-                galleryCard(
-                    title: "Feelings & Sensory Check-In (9 Buttons)",
-                    description: "Emotions, tired, overwhelmed, sensory break, happy, calm",
-                    buttonCount: 9,
-                    onInstall: {
-                        installBoard(title: "Feelings Check-In", size: 9)
-                    }
-                )
-                galleryCard(
-                    title: "Restaurant & Food Ordering (9 Buttons)",
-                    description: "Pizza, burger, water, juice, napkin, bill please",
-                    buttonCount: 9,
-                    onInstall: {
-                        installBoard(title: "Restaurant Dining", size: 9)
-                    }
-                )
-                galleryCard(
-                    title: "School & Classroom Routine (9 Buttons)",
-                    description: "Raise hand, bathroom, pencil, backpack, recess, teacher",
-                    buttonCount: 9,
-                    onInstall: {
-                        installBoard(title: "Classroom Routine", size: 9)
-                    }
-                )
+                }
+
+                if allMatches.isEmpty {
+                    Text("No templates match \"\(search)\"")
+                        .foregroundColor(Color(hex: "#64748B"))
+                }
             }
-            .navigationBarTitle("Online AAC Template Gallery", displayMode: .inline)
+            .searchable(text: $search, prompt: "Search templates")
+            .navigationBarTitle("Template Gallery", displayMode: .inline)
             .navigationBarItems(trailing: Button("Done") { presentationMode.wrappedValue.dismiss() })
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
+    }
+
+    private var allMatches: [PageTemplate] {
+        let q = search.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !q.isEmpty else { return PageTemplateCatalog.all }
+        return PageTemplateCatalog.all.filter { t in
+            t.title.lowercased().contains(q)
+                || t.summary.lowercased().contains(q)
+                || t.tiles.contains { $0.label.lowercased().contains(q) }
         }
     }
 
-    private func galleryCard(title: String, description: String, buttonCount: Int, onInstall: @escaping () -> Void) -> some View {
+    private func templates(in category: String) -> [PageTemplate] {
+        allMatches.filter { $0.category == category }
+    }
+
+    @ViewBuilder
+    private func templateCard(_ template: PageTemplate) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
+            Text(template.title)
                 .font(.headline)
                 .foregroundColor(Color(hex: "#1E293B"))
-            Text(description)
+            Text(template.summary)
                 .font(.subheadline)
                 .foregroundColor(Color(hex: "#64748B"))
+                .fixedSize(horizontal: false, vertical: true)
+
+            // A glance at the actual words, so a card cannot promise content
+            // it does not carry.
+            Text(template.tiles.prefix(6).map { $0.label }.joined(separator: " · ")
+                 + (template.buttonCount > 6 ? " …" : ""))
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "#94A3B8"))
+                .lineLimit(1)
+
             HStack {
-                Text("\(buttonCount) Buttons")
+                Text("\(template.buttonCount) buttons")
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color(hex: "#E2E8F0"))
+                    .cornerRadius(6)
+                Text("\(template.gridSize)-grid")
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(Color(hex: "#E2E8F0"))
                     .cornerRadius(6)
                 Spacer()
-                Button("📥 Add to Book", action: onInstall)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: "#008369"))
-                    .cornerRadius(8)
+                Button(action: { install(template) }) {
+                    Text(installed == template.id ? "✓ Added" : "Add to Book")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Color(hex: installed == template.id ? "#94A3B8" : "#008369"))
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(.vertical, 6)
     }
 
-    private func installBoard(title: String, size: Int) {
-        let page = PageModel(title: title, type: .grid, gridSize: size)
-        store.pages.append(page)
+    /// Stays open after adding so several boards can be installed in one go.
+    private func install(_ template: PageTemplate) {
+        store.pages.append(template.makePage())
         store.currentPageIndex = store.pages.count - 1
         store.save()
-        presentationMode.wrappedValue.dismiss()
+        withAnimation { installed = template.id }
     }
 }

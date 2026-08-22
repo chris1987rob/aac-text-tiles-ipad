@@ -7,7 +7,7 @@ public struct PageWizardModalView: View {
     @State private var title: String = "New Board"
     @State private var selectedType: PageType = .grid
     @State private var selectedGridSize: Int = 4
-    @State private var selectedPreset: String = "Core"
+    @State private var selectedPreset: String = "Blank"
 
     private let gridSizes = [1, 2, 4, 9, 16, 25, 36, 48]
 
@@ -34,12 +34,17 @@ public struct PageWizardModalView: View {
                         .pickerStyle(SegmentedPickerStyle())
                     }
 
-                    Section(header: Text("3. Starter Content Presets")) {
-                        Picker("Preset", selection: $selectedPreset) {
-                            Text("⭐ Core Words").tag("Core")
-                            Text("🍎 Meals & Drinks").tag("Food")
-                            Text("😊 Feelings").tag("Feelings")
+                    Section(header: Text("3. Starter Content")) {
+                        Picker("Start from", selection: $selectedPreset) {
                             Text("Blank Grid").tag("Blank")
+                            ForEach(PageTemplateCatalog.all) { template in
+                                Text("\(template.title) (\(template.buttonCount))").tag(template.id)
+                            }
+                        }
+                        if let t = chosenTemplate {
+                            Text(t.summary)
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(hex: "#64748B"))
                         }
                     }
                 }
@@ -57,13 +62,23 @@ public struct PageWizardModalView: View {
         }
     }
 
+    private var chosenTemplate: PageTemplate? {
+        PageTemplateCatalog.all.first { $0.id == selectedPreset }
+    }
+
+    /// Every preset now writes real buttons. Previously only "Food" did, so
+    /// picking "Core Words" or "Feelings" produced an empty grid with a
+    /// promising name.
     private func createPage() {
-        var newPage = PageModel(title: title, type: selectedType, gridSize: selectedGridSize)
-        if selectedPreset == "Food" {
-            newPage.tiles[1] = TileModel(id: 1, label: "Eat", tts: "Eat food", symbolName: "eat", bgHex: "#C8E6C9")
-            newPage.tiles[2] = TileModel(id: 2, label: "Drink", tts: "Drink water", symbolName: "water", bgHex: "#BBDEFB")
-            newPage.tiles[3] = TileModel(id: 3, label: "More", tts: "More please", symbolName: "more", bgHex: "#FFF9C4")
-            newPage.tiles[4] = TileModel(id: 4, label: "Finished", tts: "I am all done", symbolName: "stop", bgHex: "#FFCDD2")
+        var newPage: PageModel
+        if selectedType == .grid, let template = chosenTemplate {
+            newPage = template.makePage()
+            newPage.title = title.isEmpty ? template.title : title
+            // The chosen grid wins over the template's own, but never so small
+            // that it would hide buttons the template put on the page.
+            newPage.gridSize = max(selectedGridSize, template.buttonCount)
+        } else {
+            newPage = PageModel(title: title, type: selectedType, gridSize: selectedGridSize)
         }
         store.pages.append(newPage)
         store.currentPageIndex = store.pages.count - 1

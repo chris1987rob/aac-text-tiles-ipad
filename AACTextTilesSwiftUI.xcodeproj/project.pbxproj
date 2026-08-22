@@ -15,6 +15,7 @@
 		B100000B2C60000100000001 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000C2C60000100000001 /* SpeechManager.swift */; };
 		B100000D2C60000100000001 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000E2C60000100000001 /* AudioRecorder.swift */; };
 		B100000F2C60000100000001 /* SymbolCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000102C60000100000001 /* SymbolCatalog.swift */; };
+		B10000902C60000100000001 /* PageTemplateCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000912C60000100000001 /* PageTemplateCatalog.swift */; };
 		B10000112C60000100000001 /* AACStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000122C60000100000001 /* AACStore.swift */; };
 		B10000132C60000100000001 /* TileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000142C60000100000001 /* TileView.swift */; };
 		B10000152C60000100000001 /* TileGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000162C60000100000001 /* TileGridView.swift */; };
@@ -47,6 +48,7 @@
 		B100000C2C60000100000001 /* SpeechManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechManager.swift; sourceTree = "<group>"; };
 		B100000E2C60000100000001 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		B10000102C60000100000001 /* SymbolCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolCatalog.swift; sourceTree = "<group>"; };
+		B10000912C60000100000001 /* PageTemplateCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTemplateCatalog.swift; sourceTree = "<group>"; };
 		B10000122C60000100000001 /* AACStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AACStore.swift; sourceTree = "<group>"; };
 		B10000142C60000100000001 /* TileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileView.swift; sourceTree = "<group>"; };
 		B10000162C60000100000001 /* TileGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGridView.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 				B100000C2C60000100000001 /* SpeechManager.swift */,
 				B100000E2C60000100000001 /* AudioRecorder.swift */,
 				B10000102C60000100000001 /* SymbolCatalog.swift */,
+				B10000912C60000100000001 /* PageTemplateCatalog.swift */,
 				B10000122C60000100000001 /* AACStore.swift */,
 			);
 			path = Services;
@@ -250,6 +253,7 @@
 				B100000B2C60000100000001 /* SpeechManager.swift in Sources */,
 				B100000D2C60000100000001 /* AudioRecorder.swift in Sources */,
 				B100000F2C60000100000001 /* SymbolCatalog.swift in Sources */,
+				B10000902C60000100000001 /* PageTemplateCatalog.swift in Sources */,
 				B10000112C60000100000001 /* AACStore.swift in Sources */,
 				B10000132C60000100000001 /* TileView.swift in Sources */,
 				B10000152C60000100000001 /* TileGridView.swift in Sources */,
