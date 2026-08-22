@@ -36,6 +36,17 @@ public struct VisualSceneView: View {
                         .frame(width: max(width, 1), height: max(height, 1))
                         .position(x: xPos, y: yPos)
                 }
+
+                // Separate layer, deliberately. See resizeHandle.
+                if store.isEditMode {
+                    ForEach(p.hotspots) { spot in
+                        resizeHandle(spot: spot, canvas: geo.size)
+                            .position(
+                                x: ((spot.x + spot.w) / 100.0) * geo.size.width,
+                                y: ((spot.y + spot.h) / 100.0) * geo.size.height
+                            )
+                    }
+                }
             }
 
             // Top Toolbar in Editor Mode
@@ -195,7 +206,6 @@ public struct VisualSceneView: View {
         }
         // CRITICAL: makes fully transparent hotspots hit-testable in Player mode
         .contentShape(Rectangle())
-        .overlay(resizeHandle(spot: spot, canvas: canvas), alignment: .bottomTrailing)
         .onTapGesture {
             if store.isEditMode {
                 onSelectHotspot(spot)
@@ -210,6 +220,10 @@ public struct VisualSceneView: View {
         .gesture(store.isEditMode ? moveGesture(spot: spot, canvas: canvas) : nil)
     }
 
+    /// Drawn as a sibling of the hotspots rather than an overlay inside one.
+    /// As an overlay it sat inside the view carrying `moveGesture`, and SwiftUI
+    /// let that parent drag claim touches that began on the handle - so the
+    /// hotspot moved and never resized.
     @ViewBuilder
     private func resizeHandle(spot: HotspotModel, canvas: CGSize) -> some View {
         if store.isEditMode {
@@ -222,7 +236,9 @@ public struct VisualSceneView: View {
                         .foregroundColor(Color(hex: "#1D4ED8"))
                 )
                 .frame(width: 34, height: 34)
-                .contentShape(Rectangle())
+                // Grab area larger than the drawn circle - fingers are not 34pt
+                // accurate, and this handle sits on the busiest part of a photo.
+                .contentShape(Rectangle().inset(by: -13))
                 .gesture(resizeGesture(spot: spot, canvas: canvas))
         }
     }
