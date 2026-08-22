@@ -84,29 +84,23 @@ public class AACStore: ObservableObject {
                     9: TileModel(id: 9, label: "Happy", tts: "I feel happy", symbolName: "happy", bgHex: "#FFF9C4", borderHex: "#FBC02D", labelHex: "#1E293B")
                 ]
             ),
-            // Page 4: Visual Scene Living Room
-            PageModel(
-                title: "Living Room Scene",
-                type: .scene,
-                gridSize: 4,
-                bgHex: "#FFFFFF",
-                hotspots: [
-                    HotspotModel(id: 1, x: 18, y: 50, w: 46, h: 36, label: "Sofa / Couch", tts: "I want to sit on the couch and relax."),
-                    HotspotModel(id: 2, x: 66, y: 20, w: 28, h: 35, label: "Television", tts: "Can we turn on the TV to watch a show?"),
-                    HotspotModel(id: 3, x: 28, y: 64, w: 18, h: 18, label: "Sleeping Cat", tts: "Look at the cute orange cat sleeping!"),
-                    HotspotModel(id: 4, x: 5, y: 35, w: 14, h: 50, label: "Lamp Light", tts: "Please turn on the lamp light."),
-                    HotspotModel(id: 5, x: 21, y: 12, w: 31, h: 35, label: "Window", tts: "Look out the window, it is nice outside.")
-                ],
-                scenePresetKey: "living-room"
-            ),
-            // Page 5: Talking Keyboard Page
+            // Page 4: Talking Keyboard Page
             PageModel(
                 title: "Talking Keyboard",
                 type: .keyboard,
                 gridSize: 1,
                 bgHex: "#F8FAFC"
             )
-        ]
+        ] + starterTemplatePages()
+    }
+
+    /// The catalog boards that are not already covered by a page above, so the
+    /// starter book never lists two pages with the same name.
+    private static func starterTemplatePages() -> [PageModel] {
+        let existing: Set<String> = ["colors", "yes / no", "core words", "talking keyboard"]
+        return PageTemplateCatalog.all
+            .filter { !existing.contains($0.title.lowercased()) }
+            .map { $0.makePage() }
     }
 
     public func nextPage() {
