@@ -15,8 +15,7 @@ public struct QuickEditModalView: View {
     @State private var isSoundItOut: Bool = false
     @State private var photoData: Data? = nil
     @State private var isShowingPhotoOptions = false
-    @State private var isShowingImagePicker = false
-    @State private var pickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+    @State private var pickerRequest: ImagePickerRequest? = nil
     @State private var audioData: Data? = nil
     @StateObject private var recorder = AudioRecorder()
 
@@ -142,25 +141,20 @@ public struct QuickEditModalView: View {
                 .foregroundColor(Color(hex: "#008369"))
             )
         }
-        .actionSheet(isPresented: $isShowingPhotoOptions) {
-            var buttons: [ActionSheet.Button] = [
-                .default(Text("📷 Take Photo with Camera")) {
-                    pickerSourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
-                    isShowingImagePicker = true
-                },
-                .default(Text("🖼️ Choose from Photo Library")) {
-                    pickerSourceType = .photoLibrary
-                    isShowingImagePicker = true
-                }
-            ]
+        .confirmationDialog(
+            "Button Picture",
+            isPresented: $isShowingPhotoOptions,
+            titleVisibility: .visible
+        ) {
+            Button("📷 Take Photo with Camera") { requestPicker(.camera) }
+            Button("🖼️ Choose from Photo Library") { requestPicker(.photoLibrary) }
             if photoData != nil {
-                buttons.append(.destructive(Text("Remove Picture")) { photoData = nil })
+                Button("Remove Picture", role: .destructive) { photoData = nil }
             }
-            buttons.append(.cancel())
-            return ActionSheet(title: Text("Button Picture"), buttons: buttons)
+            Button("Cancel", role: .cancel) {}
         }
-        .sheet(isPresented: $isShowingImagePicker) {
-            ImagePicker(sourceType: pickerSourceType) { img in
+        .sheet(item: $pickerRequest) { request in
+            ImagePicker(sourceType: request.source) { img in
                 // Tiles render small; 1024 keeps board.json from ballooning
                 // while still looking sharp on the iPad's display.
                 let sized = img.downscaled(maxDimension: 1024)
@@ -230,6 +224,14 @@ public struct QuickEditModalView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(selectedSymbol == name ? Color(hex: "#008369") : Color.clear, lineWidth: 2)
                 )
+        }
+    }
+
+    /// See ImagePickerRequest: presenting while the dialog is still dismissing
+    /// is silently dropped by SwiftUI.
+    private func requestPicker(_ preferred: UIImagePickerController.SourceType) {
+        DispatchQueue.main.async {
+            pickerRequest = ImagePickerRequest.resolving(preferred)
         }
     }
 

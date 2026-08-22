@@ -7,8 +7,7 @@ public struct VisualSceneView: View {
 
     @State private var activeHotspotId: Int? = nil
     @State private var isShowingSourceDialog: Bool = false
-    @State private var isShowingImagePicker: Bool = false
-    @State private var pickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+    @State private var pickerRequest: ImagePickerRequest? = nil
 
     // Gesture bookkeeping: original percent geometry captured at gesture start
     @State private var dragOrigin: [Int: CGPoint] = [:]
@@ -48,31 +47,25 @@ public struct VisualSceneView: View {
                 }
             }
         }
-        .actionSheet(isPresented: $isShowingSourceDialog) {
-            ActionSheet(
-                title: Text("Scene Background Picture"),
-                message: Text("Upload a photo to use for this visual scene page"),
-                buttons: [
-                    .default(Text("📷 Take Photo with Camera")) {
-                        pickerSourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
-                        isShowingImagePicker = true
-                    },
-                    .default(Text("🖼️ Choose from Photo Library")) {
-                        pickerSourceType = .photoLibrary
-                        isShowingImagePicker = true
-                    },
-                    .destructive(Text("Reset to Preset Scene")) {
-                        var page = store.currentPage
-                        page.sceneImageData = nil
-                        store.currentPage = page
-                        store.save()
-                    },
-                    .cancel()
-                ]
-            )
+        .confirmationDialog(
+            "Scene Background Picture",
+            isPresented: $isShowingSourceDialog,
+            titleVisibility: .visible
+        ) {
+            Button("📷 Take Photo with Camera") { requestPicker(.camera) }
+            Button("🖼️ Choose from Photo Library") { requestPicker(.photoLibrary) }
+            Button("Reset to Preset Scene", role: .destructive) {
+                var page = store.currentPage
+                page.sceneImageData = nil
+                store.currentPage = page
+                store.save()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Upload a photo to use for this visual scene page")
         }
-        .sheet(isPresented: $isShowingImagePicker) {
-            ImagePicker(sourceType: pickerSourceType) { img in
+        .sheet(item: $pickerRequest) { request in
+            ImagePicker(sourceType: request.source) { img in
                 let sized = img.downscaled(maxDimension: 2048)
                 if let data = sized.jpegData(compressionQuality: 0.85) {
                     var page = store.currentPage
@@ -81,6 +74,15 @@ public struct VisualSceneView: View {
                     store.save()
                 }
             }
+        }
+    }
+
+    /// Deferred to the next runloop turn so the confirmation dialog is fully
+    /// dismissed before the picker is asked for. Presenting during the
+    /// dismissal is what made these buttons do nothing.
+    private func requestPicker(_ preferred: UIImagePickerController.SourceType) {
+        DispatchQueue.main.async {
+            pickerRequest = ImagePickerRequest.resolving(preferred)
         }
     }
 
@@ -320,9 +322,13 @@ public struct VisualSceneView: View {
     @ViewBuilder
     private func sceneBackgroundView(_ p: PageModel) -> some View {
         if let data = p.sceneImageData, let img = UIImage(data: data) {
-            Image(uiImage: img)
-                .resizable()
-                .scaledToFill()
+            GeometryReader { geo in
+                Image(uiImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+            }
         } else {
             ZStack {
                 LinearGradient(

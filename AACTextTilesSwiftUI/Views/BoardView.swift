@@ -32,6 +32,9 @@ public struct BoardView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Hard stop: whatever a page renders, it cannot grow past the space
+            // it was given and push the toolbar off the bottom of the screen.
+            .clipped()
 
             // Signature GoTalk Teal Bottom Toolbar
             BottomToolbarView(

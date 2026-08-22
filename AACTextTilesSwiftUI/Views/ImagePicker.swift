@@ -44,3 +44,28 @@ public struct ImagePicker: UIViewControllerRepresentable {
         }
     }
 }
+
+/// Identifies one picker request so the picker can be driven by a single
+/// `.sheet(item:)`.
+///
+/// Both picture buttons used to sit on a view carrying an `.actionSheet` and a
+/// `.sheet(isPresented:)` at the same time. Choosing a source set the sheet's
+/// flag while the action sheet was still dismissing, and SwiftUI drops a
+/// presentation requested while another is in flight - so the button appeared
+/// dead. One `item:`-driven sheet, set after the dialog has gone, cannot race.
+public struct ImagePickerRequest: Identifiable {
+    public let id = UUID()
+    public let source: UIImagePickerController.SourceType
+
+    public init(source: UIImagePickerController.SourceType) {
+        self.source = source
+    }
+
+    /// Falls back to the library when the requested source is unavailable,
+    /// e.g. camera on a device that has none.
+    public static func resolving(_ preferred: UIImagePickerController.SourceType) -> ImagePickerRequest {
+        ImagePickerRequest(
+            source: UIImagePickerController.isSourceTypeAvailable(preferred) ? preferred : .photoLibrary
+        )
+    }
+}
