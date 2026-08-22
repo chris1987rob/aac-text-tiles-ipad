@@ -96,9 +96,11 @@ public class AACStore: ObservableObject {
 
     /// The catalog boards that are not already covered by a page above, so the
     /// starter book never lists two pages with the same name.
+    /// Only the five most-used boards ship in the book. The rest live on the
+    /// home screen so the book stays short enough to page through.
     private static func starterTemplatePages() -> [PageModel] {
         let existing: Set<String> = ["colors", "yes / no", "core words", "talking keyboard"]
-        return PageTemplateCatalog.all
+        return PageTemplateCatalog.popular
             .filter { !existing.contains($0.title.lowercased()) }
             .map { $0.makePage() }
     }

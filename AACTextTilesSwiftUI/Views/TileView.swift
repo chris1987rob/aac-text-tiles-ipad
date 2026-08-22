@@ -144,13 +144,27 @@ public struct TileView: View {
             case "bus": Text("🚌").font(.system(size: symSize))
             case "music": Text("🎵").font(.system(size: symSize))
             default:
-                Image(systemName: "star.fill")
-                    .font(.system(size: symSize * 0.75))
-                    .foregroundColor(Color(hex: "#008369"))
+                // Anything else is drawn as-is when it is an emoji, so a button
+                // can carry any picture without extending this switch. Only a
+                // genuinely unknown name falls through to the star.
+                if TileView.isEmoji(t.symbolName) {
+                    Text(t.symbolName ?? "").font(.system(size: symSize))
+                } else {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: symSize * 0.75))
+                        .foregroundColor(Color(hex: "#008369"))
+                }
             }
         } else {
             Spacer(minLength: 0)
         }
+    }
+}
+
+extension TileView {
+    static func isEmoji(_ raw: String?) -> Bool {
+        guard let raw = raw, !raw.isEmpty else { return false }
+        return raw.unicodeScalars.contains { $0.properties.isEmoji && $0.value > 0x238C }
     }
 }
 
