@@ -44,7 +44,7 @@ const fs = require('fs');
       if (typeof el.click === 'function') el.click();
       else el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     };
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     window.__toasts = [];
     document.addEventListener('DOMContentLoaded', () => {
       window.__inventory = [];
@@ -64,7 +64,9 @@ const fs = require('fs');
   await new Promise(r => setTimeout(r, 500));
 
   await page.evaluate(() => {
-    window.speechSynthesis.speak = (u) => window.__spoken.push(u.text);
+    // Words with a Bella clip never reach speechSynthesis, so observe the app's
+    // own speech log (fed by both the clip and the TTS path) instead.
+    window.speechSynthesis.speak = () => {};
     const realToast = window.showToast;
     window.showToast = (msg, type) => { window.__toasts.push(msg); return realToast(msg, type); };
     localStorage.removeItem('talk_tiles_custom_templates');
@@ -185,7 +187,7 @@ const fs = require('fs');
     closePagesNavigator();
 
     // Play the whole page
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.getElementById('btn-bar-play').click();
     out.played = window.__spoken.slice();
 
@@ -512,7 +514,7 @@ const fs = require('fs');
 
     // it speaks in player mode
     setEditMode(false); renderCurrentPage();
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.getElementById('tile-slot-1').dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
     out.spoke = window.__spoken.slice();
 
@@ -605,8 +607,8 @@ const fs = require('fs');
   });
 
   check(
-    '8. Symbol library: all 12 category chips filter, search + clear-search, a card fills the editor, camera/upload shortcuts, X and backdrop close',
-    c8.chipCount === 12 && c8.chips.every(c => c.active && c.cards > 0) &&
+    '8. Symbol library: all 17 category chips filter, search + clear-search, a card fills the editor, camera/upload shortcuts, X and backdrop close',
+    c8.chipCount === 17 && c8.chips.every(c => c.active && c.cards > 0) &&
       c8.searchCards > 0 && c8.clearVisible === 'flex' &&
       c8.afterClear.value === '' && c8.afterClear.cards > c8.searchCards &&
       !!c8.picked.symbol && c8.picked.libraryClosed &&
@@ -642,7 +644,7 @@ const fs = require('fs');
     document.querySelector('#modal-voice-picker .modal-footer .btn').click();
 
     document.getElementById('cue-text-input').value = 'Pick a colour';
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.querySelector('#modal-auditory-cue [onclick="previewAuditoryCue()"]').click();
     out.previewed = window.__spoken.slice();
 
@@ -912,7 +914,7 @@ const fs = require('fs');
     document.getElementById('hs-tab-tts').click();
     document.getElementById('hotspot-label-input').value = 'Water bottle';
     document.getElementById('hotspot-tts-input').value = 'I want my water bottle';
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.querySelector('#modal-hotspot-editor [onclick="previewHotspotSpeech()"]').click();
     out.previewed = window.__spoken.slice();
 
@@ -923,7 +925,7 @@ const fs = require('fs');
 
     // it plays in player mode
     setEditMode(false); renderCurrentPage();
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.getElementById('hotspot-' + saved.id).click();
     out.playedInUserMode = window.__spoken.slice();
 
@@ -986,7 +988,7 @@ const fs = require('fs');
     document.querySelector('[onclick="kbBackspace()"]').click();
     out.afterBackspace = document.getElementById('kb-text-display').textContent;
 
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     const speakBtns = [...document.querySelectorAll('[onclick="kbSpeakText()"]')];
     out.speakBtnCount = speakBtns.length;
     speakBtns.forEach(b => b.click());
@@ -1032,13 +1034,13 @@ const fs = require('fs');
     currentPageIndex = 0; setEditMode(false); renderCurrentPage();
     expressCollectedChips = []; renderExpressChips();
 
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     [1, 2, 3, 4, 5].forEach(s => document.getElementById('tile-slot-' + s)
       .dispatchEvent(new PointerEvent('pointerup', { bubbles: true })));
     const perTap = window.__spoken.slice();
     const chips = [...document.querySelectorAll('.express-chip')].map(c => c.textContent.trim());
 
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.getElementById('express-bar').click();
     const sentence = window.__spoken.slice();
 
@@ -1049,7 +1051,7 @@ const fs = require('fs');
     for (let i = 0; i < 6; i++) x.click();
     const afterAll = document.querySelectorAll('.express-chip').length;
 
-    window.__spoken = [];
+    window.__spoken = window.__spokenHistory = [];
     document.getElementById('express-bar').click();
     const emptyBar = window.__spoken.slice();
     return { perTap, chips, sentence, afterOneX, afterAll, emptyBar };

@@ -2,7 +2,7 @@
 
 **AAC Text Tiles iPad** is a full-featured, pixel-faithful GoTalk Now style AAC (Augmentative and Alternative Communication) app built specifically for **Apple iPad / iPadOS**.
 
-It operates **100% offline** on the iPad using Service Worker CacheStorage and IndexedDB, featuring the complete 3,436 official Mulberry AAC symbol library, interactive Visual Scene Displays with sound hotspots, talking keyboards, sentence building, and the GoTalk 7.0 Quick Edit suite.
+It operates **100% offline** on the iPad using Service Worker CacheStorage and IndexedDB, featuring an original in-house library of 550+ AAC symbol pictures (no third-party symbol licence), interactive Visual Scene Displays with sound hotspots, talking keyboards, sentence building, and the GoTalk 7.0 Quick Edit suite.
 
 ---
 
@@ -24,8 +24,9 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
    - Word prediction chips (*"I want"*, *"Yes"*, *"No"*, *"Please"*, *"Help"*, *"Thank you"*, *"More"*, *"Stop"*).
    - High-fidelity text-to-speech engine.
 
-4. **3,600+ Symbol & Photo Library**:
-   - Official Mulberry AAC vector symbols (CC BY-SA 4.0, licensed for commercial & personal AAC).
+4. **Symbol & Photo Library (550+ original pictures)**:
+   - Every picture was generated in-house (Qwen-Image on our own GPU) in one consistent flat-vector style; nothing is licensed from a third party.
+   - 16 categories with filter chips and section headers, ranked search, and a 🔊 button on every card to hear the word.
    - Instant search and category taxonomy chips (Core, Food, Feelings, Actions, Places, Health).
    - Live iPad camera capture and photo roll uploads.
 
@@ -52,7 +53,7 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
    ```
 2. **Open Either Native Xcode Project**:
    * **Pure Native Apple SwiftUI**: `open AACTextTilesSwiftUI.xcodeproj` (Modern Apple SwiftUI + AVFoundation)
-   * **Native Swift Container**: `open AACTextTilesiPad.xcodeproj` (Swift + WebKit bundle with 3,436 SVGs)
+   * **Native Swift Container**: `open AACTextTilesiPad.xcodeproj` (Swift + WebKit bundle with the symbol pictures)
 3. **Configure Free Signing**:
    * Select the project in the left pane -> **Signing & Capabilities**.
    * Under **Team**, select your Apple ID Personal Team.
@@ -100,5 +101,5 @@ node test_buttons.js      # 240/240 button click coverage
 ---
 
 ## 📄 License & Attribution
-* Mulberry Symbols &copy; Straight Street (CC BY-SA 4.0).
+* Symbol pictures are original works generated for this app (no third-party symbol licence).
 * Software &copy; 2026 Talk Tiles AAC Team.

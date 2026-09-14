@@ -1012,38 +1012,56 @@
       scrollbar-width: thin;
     }
 
-    .sym-card {
+        .sym-card {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 10px 4px 8px;
-      border-radius: 12px;
+      border-radius: 14px;
       background: #ffffff;
       border: 2px solid #e2e8f0;
       cursor: pointer;
       gap: 6px;
-      transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
       user-select: none;
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+      min-height: 94px;
     }
 
-    .sym-card:hover, .sym-card:active {
-      transform: scale(1.05);
+    .sym-card:hover {
+      transform: translateY(-2px) scale(1.03);
       border-color: #008369;
-      box-shadow: 0 4px 14px rgba(0, 131, 105, 0.18);
+      box-shadow: 0 6px 16px rgba(0, 131, 105, 0.16);
+      background: #f8fafc;
+    }
+
+    .sym-card:active {
+      transform: scale(0.97);
+      border-color: #008369;
     }
 
     .sym-card .sym-icon {
-      font-size: 2.2rem;
+      font-size: 2.35rem;
       line-height: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 44px;
+      height: 56px;
+      width: 56px;
+      pointer-events: none;
+    }
+
+    .sym-card .sym-img-icon {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      pointer-events: none;
     }
 
     .sym-card .sym-name {
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: #1e293b;
       text-align: center;
@@ -1052,6 +1070,65 @@
       text-overflow: ellipsis;
       width: 100%;
       padding: 0 2px;
+      pointer-events: none;
+    }
+
+    /* Speaker Audio Preview Button */
+    .sym-listen-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #008369;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      z-index: 5;
+      padding: 0;
+      line-height: 1;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .sym-listen-btn:hover {
+      background: #008369;
+      color: #ffffff;
+      border-color: #008369;
+      transform: scale(1.15);
+      box-shadow: 0 2px 8px rgba(0, 131, 105, 0.35);
+    }
+
+    .sym-listen-btn:active, .sym-listen-btn.playing {
+      background: #008369 !important;
+      color: #ffffff !important;
+      animation: symSpeakerPulse 0.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes symSpeakerPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 131, 105, 0.4); }
+      100% { transform: scale(1.18); box-shadow: 0 0 0 5px rgba(0, 131, 105, 0); }
+    }
+
+    .sym-category-section {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border-left: 4px solid #008369;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #1e293b;
     }
 
     /* The editor now carries a symbol strip; give it more room so more than
@@ -2233,7 +2310,7 @@
             <div id="editor-symbol-picker" class="editor-symbol-picker">
               <div class="editor-symbol-searchrow">
                 <svg class="editor-sym-search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="editor-symbol-search" class="text-input" placeholder="Search 3,600+ symbols — eat, water, happy, dog..." oninput="filterEditorSymbolStrip()">
+                <input type="text" id="editor-symbol-search" class="text-input" placeholder="Search modern symbols — eat, pizza, happy, help, dog..." oninput="filterEditorSymbolStrip()">
                 <button id="btn-editor-sym-clear" type="button" onclick="clearEditorSymbolSearch()" title="Clear symbol search">&times;</button>
               </div>
               <div id="editor-symbol-strip" class="editor-symbol-strip"></div>
@@ -2243,7 +2320,7 @@
             <div id="photo-controls-default" style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="btn btn-primary" type="button" onclick="openSymbolLibrary()" style="background: #008369; color: #ffffff; font-weight: 700; border-color: #006853;">
                 <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <span>Browse All Symbols</span>
+                <span>Choose a Different Image</span>
               </button>
               <button class="btn" type="button" onclick="startCamera()">Take Photo</button>
               <button class="btn" type="button" onclick="triggerFileInput()">Upload Image</button>
@@ -2305,9 +2382,12 @@
     <div id="modal-symbol-library" class="modal-backdrop" onclick="closeSymbolLibrary()">
       <div class="modal-card wide" onclick="event.stopPropagation()">
         <div class="modal-header" style="background: #008369; color: #ffffff;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; fill: #ffffff;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <span class="modal-title" style="color: #ffffff;">Symbol & Photo Library</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px;">🌟</div>
+            <div>
+              <div class="modal-title" style="color: #ffffff; line-height: 1.2; font-size: 1.15rem; font-weight: 800;">Symbols</div>
+              <div style="font-size: 0.76rem; color: rgba(255,255,255,0.85); font-weight: 500;">Tap to select &bull; Tap 🔊 on any symbol to hear it</div>
+            </div>
           </div>
           <button class="modal-close-btn" onclick="closeSymbolLibrary()" style="color: #ffffff;">
             <svg class="icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
@@ -2319,7 +2399,7 @@
           <div style="display: flex; gap: 10px; align-items: center;">
             <div style="flex: 1; position: relative; display: flex; align-items: center;">
               <svg viewBox="0 0 24 24" style="position: absolute; left: 12px; width: 18px; height: 18px; fill: #64748b;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-              <input type="text" id="sym-search-input" class="text-input" placeholder="Search 3,400+ symbols (e.g. eat, water, happy, help, dog, bus)..." oninput="filterSymbolLibrary()" style="padding-left: 38px; padding-right: 36px;">
+              <input type="text" id="sym-search-input" class="text-input" placeholder="Search symbols — eat, pizza, happy, help, dog, bathroom, school..." oninput="filterSymbolLibrary()" style="padding-left: 38px; padding-right: 36px;">
               <button type="button" id="btn-sym-clear-search" onclick="clearSymbolSearch()" style="position: absolute; right: 8px; width: 24px; height: 24px; border: none; background: #e2e8f0; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; color: #475569;">✕</button>
             </div>
             <button class="btn" type="button" onclick="closeSymbolLibrary(); startCamera();" title="Take a photo with camera" style="flex-shrink: 0; background: #f8fafc;">📷 Camera</button>
@@ -2340,6 +2420,11 @@
             <button type="button" class="sym-cat-chip" data-cat="daily" onclick="selectSymbolCategory('daily')">👕 Daily (<span id="sym-count-daily">0</span>)</button>
             <button type="button" class="sym-cat-chip" data-cat="animals" onclick="selectSymbolCategory('animals')">🐶 Animals (<span id="sym-count-animals">0</span>)</button>
             <button type="button" class="sym-cat-chip" data-cat="health" onclick="selectSymbolCategory('health')">🩺 Health (<span id="sym-count-health">0</span>)</button>
+            <button type="button" class="sym-cat-chip" data-cat="vehicles" onclick="selectSymbolCategory('vehicles')">🚗 Vehicles (<span id="sym-count-vehicles">0</span>)</button>
+            <button type="button" class="sym-cat-chip" data-cat="nature" onclick="selectSymbolCategory('nature')">🌤️ Nature (<span id="sym-count-nature">0</span>)</button>
+            <button type="button" class="sym-cat-chip" data-cat="concepts" onclick="selectSymbolCategory('concepts')">🔢 Numbers (<span id="sym-count-concepts">0</span>)</button>
+            <button type="button" class="sym-cat-chip" data-cat="colors" onclick="selectSymbolCategory('colors')">🎨 Colors (<span id="sym-count-colors">0</span>)</button>
+            <button type="button" class="sym-cat-chip" data-cat="social" onclick="selectSymbolCategory('social')">💬 Social (<span id="sym-count-social">0</span>)</button>
           </div>
 
           <!-- Symbols Grid View -->
@@ -2899,6 +2984,295 @@
         window.__lastVoice = v ? v.name : '(default)';
         window.speechSynthesis.speak(utter);
       }
+    }
+
+/* --- Voice engine (Bella clips) -------------------------------------------
+       Every catalogue symbol ships a pre-rendered clip in one voice (see
+       symbol_gen/gen_audio.py). A tap used to do `new Audio(url).play()`: the
+       WebView then opened the file, decoded it and spun up a player before any
+       sound came out, so the word landed noticeably after the finger. Clips
+       for the page on screen are now fetched and decoded ahead of time into
+       AudioBuffers and started on an AudioBufferSourceNode, which begins in
+       the audio thread's next quantum (a few ms). The <audio> element remains
+       the cold-start fallback (first tap on a page that has not warmed yet,
+       or no Web Audio at all), and it plays at once while the buffer warms
+       for the next tap. Recordings (Blobs) go through the same cache. */
+    const VOICE_CACHE_MAX = 160;   // ~3 full 48-tile pages; ~0.2 MB per decoded clip
+    let voiceCtx = null;
+    const voiceBufferPromises = new Map();   // url -> Promise<AudioBuffer>, insertion order = LRU
+    const voiceBuffers = new Map();          // url -> AudioBuffer once decoded
+    const voiceBlobPromises = new WeakMap(); // Blob -> Promise<AudioBuffer>
+    const voiceBlobBuffers = new WeakMap();  // Blob -> AudioBuffer once decoded
+    const voiceUndecodable = new WeakSet();  // Blobs decodeAudioData rejected (element path only)
+    let voiceSourceNode = null;              // the AudioBufferSourceNode playing now
+    let voiceElement = null;                 // the <audio> playing now (cold path)
+    window.__voiceTelemetry = { taps: 0, tapAt: 0, startAt: 0, latencyMs: null, path: '', src: '' };
+
+    function voiceContext() {
+      if (voiceCtx) return voiceCtx;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      try { voiceCtx = new Ctx({ latencyHint: 'interactive' }); }
+      catch (e) { try { voiceCtx = new Ctx(); } catch (e2) { return null; } }
+      return voiceCtx;
+    }
+
+    // Autoplay policy leaves a fresh AudioContext suspended until a gesture;
+    // resume it on the very first pointer so the first tile tap is not the
+    // one that pays for it.
+    function unlockVoice() {
+      const ctx = voiceContext();
+      if (ctx && ctx.state !== 'running') { try { ctx.resume().catch(() => {}); } catch (e) {} }
+    }
+    document.addEventListener('pointerdown', unlockVoice, { capture: true, passive: true });
+    document.addEventListener('touchstart', unlockVoice, { capture: true, passive: true });
+    document.addEventListener('keydown', unlockVoice, { capture: true, passive: true });
+
+    // fetch() refuses file: URLs, which is what the packaged app runs from;
+    // XMLHttpRequest reads them (the WebView allows file->file reads).
+    function fetchVoiceBytes(url) {
+      return new Promise((resolve, reject) => {
+        const x = new XMLHttpRequest();
+        x.open('GET', url, true);
+        x.responseType = 'arraybuffer';
+        x.onload = () => {
+          const ok = (x.status === 200) || (x.status === 0 && x.response && x.response.byteLength > 0);
+          ok ? resolve(x.response) : reject(new Error('clip fetch ' + x.status + ' ' + url));
+        };
+        x.onerror = () => reject(new Error('clip fetch failed ' + url));
+        x.send();
+      });
+    }
+
+    function decodeVoiceBytes(ctx, bytes) {
+      return new Promise((resolve, reject) => {
+        try {
+          const r = ctx.decodeAudioData(bytes, resolve, reject);
+          if (r && typeof r.catch === 'function') r.catch(reject);
+        } catch (e) { reject(e); }
+      });
+    }
+
+    // Start decoding a clip (URL string or recorded Blob). Returns the
+    // AudioBuffer promise, or null when Web Audio is unavailable.
+    function warmVoice(src) {
+      const ctx = voiceContext();
+      if (!ctx || !src) return null;
+      if (typeof src === 'string') {
+        let p = voiceBufferPromises.get(src);
+        if (p) {                                   // LRU touch
+          voiceBufferPromises.delete(src);
+          voiceBufferPromises.set(src, p);
+          return p;
+        }
+        p = fetchVoiceBytes(src).then(b => decodeVoiceBytes(ctx, b));
+        p.then(buf => { voiceBuffers.set(src, buf); },
+               () => { voiceBufferPromises.delete(src); });
+        voiceBufferPromises.set(src, p);
+        while (voiceBufferPromises.size > VOICE_CACHE_MAX) {
+          const oldest = voiceBufferPromises.keys().next().value;
+          voiceBufferPromises.delete(oldest);
+          voiceBuffers.delete(oldest);
+        }
+        return p;
+      }
+      if (isBlobLike(src) && typeof src.arrayBuffer === 'function' && !voiceUndecodable.has(src)) {
+        let p = voiceBlobPromises.get(src);
+        if (p) return p;
+        p = src.arrayBuffer().then(b => decodeVoiceBytes(ctx, b));
+        p.then(buf => { voiceBlobBuffers.set(src, buf); },
+               () => { voiceBlobPromises.delete(src); voiceUndecodable.add(src); });
+        voiceBlobPromises.set(src, p);
+        return p;
+      }
+      return null;
+    }
+
+    function voiceBufferReady(src) {
+      if (typeof src === 'string') return voiceBuffers.get(src) || null;
+      if (isBlobLike(src)) return voiceBlobBuffers.get(src) || null;
+      return null;
+    }
+
+    function stopVoice() {
+      if (voiceSourceNode) {
+        const n = voiceSourceNode;
+        voiceSourceNode = null;
+        n.onended = null;
+        try { n.stop(); } catch (e) {}
+        try { n.disconnect(); } catch (e) {}
+      }
+      if (voiceElement) {
+        const el = voiceElement;
+        voiceElement = null;
+        el.onended = null; el.onerror = null;
+        try { el.pause(); } catch (e) {}
+        if (el.__objectUrl) { URL.revokeObjectURL(el.__objectUrl); el.__objectUrl = null; }
+      }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    }
+
+    // Play a clip now. `opts.onended` runs when it finishes (or is stopped by
+    // a later clip); `opts.onerror` runs when it could not play at all, so the
+    // caller can fall back to TTS. Returns the path taken: 'buffer' | 'element'.
+    function playVoice(src, opts) {
+      opts = opts || {};
+      const tapAt = opts.tapAt || performance.now();
+      stopVoice();
+      const ctx = voiceContext();
+      const buf = ctx ? voiceBufferReady(src) : null;
+      const tel = window.__voiceTelemetry;
+      tel.taps++; tel.tapAt = tapAt; tel.src = (typeof src === 'string') ? src : '(blob)';
+
+      if (buf) {
+        if (ctx.state !== 'running') unlockVoice();
+        const node = ctx.createBufferSource();
+        node.buffer = buf;
+        node.connect(ctx.destination);
+        node.onended = () => {
+          if (voiceSourceNode === node) voiceSourceNode = null;
+          try { node.disconnect(); } catch (e) {}
+          if (opts.onended) opts.onended();
+        };
+        voiceSourceNode = node;
+        node.start(0);
+        tel.startAt = performance.now();
+        tel.latencyMs = tel.startAt - tapAt;
+        tel.path = 'buffer';
+        tel.outputLatencyMs = 1000 * ((ctx.baseLatency || 0) + (ctx.outputLatency || 0));
+        return 'buffer';
+      }
+
+      // Cold: the element starts as soon as it can while the buffer decodes
+      // for next time.
+      warmVoice(src);
+      let url = src, objectUrl = null;
+      if (typeof src !== 'string') {
+        try { url = objectUrl = URL.createObjectURL(src); }
+        catch (e) { if (opts.onerror) opts.onerror(e); return 'none'; }
+      }
+      const el = new Audio(url);
+      el.__objectUrl = objectUrl;
+      voiceElement = el;
+      const done = () => {
+        if (voiceElement === el) voiceElement = null;
+        if (el.__objectUrl) { URL.revokeObjectURL(el.__objectUrl); el.__objectUrl = null; }
+        if (opts.onended) opts.onended();
+      };
+      el.onended = done;
+      el.onerror = () => { done(); if (opts.onerror) opts.onerror(new Error('audio element error')); };
+      el.addEventListener('playing', () => {
+        if (tel.src === url || (objectUrl && tel.src === '(blob)')) {
+          tel.startAt = performance.now();
+          tel.latencyMs = tel.startAt - tapAt;
+        }
+      }, { once: true });
+      tel.path = 'element';
+      el.play().catch(err => { done(); if (opts.onerror) opts.onerror(err); });
+      return 'element';
+    }
+
+    // Phrase -> catalogue clip. Keyed by what the clip actually says (the
+    // symbol's tts), so a tile whose phrase is "I want" gets the "I want" clip
+    // whichever picture it carries, and a tile that just says "Want" does not.
+    let voicePhraseIndex = null;
+    function normalisePhrase(s) {
+      return String(s || '').toLowerCase().replace(/[^\p{L}\p{N}']+/gu, ' ').replace(/\s+/g, ' ').trim();
+    }
+    function clipForPhrase(phrase) {
+      const key = normalisePhrase(phrase);
+      if (!key) return null;
+      if (!voicePhraseIndex || voicePhraseIndex.size === 0) {
+        voicePhraseIndex = new Map();
+        (AAC_SYMBOL_LIBRARY || []).forEach(s => {
+          if (!s.audio) return;
+          const k = normalisePhrase(s.tts || s.label);
+          if (k && !voicePhraseIndex.has(k)) voicePhraseIndex.set(k, s);
+        });
+        // Phrases the built-in boards speak that no symbol says verbatim
+        // ("help", "more", "My Schedule"), rendered by symbol_gen/gen_phrases.py.
+        if (typeof AAC_PHRASE_CLIPS !== 'undefined' && Array.isArray(AAC_PHRASE_CLIPS)) {
+          AAC_PHRASE_CLIPS.forEach(c => {
+            const k = normalisePhrase(c.text);
+            if (k && c.audio && !voicePhraseIndex.has(k)) {
+              voicePhraseIndex.set(k, { id: 'phrase:' + k, label: c.text, tts: c.text, audio: c.audio });
+            }
+          });
+        }
+      }
+      return voicePhraseIndex.get(key) || null;
+    }
+
+    // Speak a phrase in the app voice: the Bella clip when the catalogue has
+    // one for exactly these words, the device's TTS otherwise.
+    function speakPhrase(text, opts) {
+      const clean = String(text || '').trim();
+      if (!clean) return 'none';
+      const sym = clipForPhrase(clean);
+      if (!sym) { speakText(clean); return 'tts'; }
+      window.__lastSpoken = clean;
+      window.__spokenHistory.push(clean);
+      window.__lastVoice = '(clip)';
+      const o = Object.assign({}, opts || {}, { onerror: () => speakText(clean) });
+      return playVoice(sym.audio, o);
+    }
+
+    // Warm every clip the page on screen can speak, then its neighbours, so
+    // the first tap after a page turn is already a buffer start.
+    function pageVoiceSources(p) {
+      const out = [];
+      if (!p) return out;
+      Object.values(p.tiles || {}).forEach(t => {
+        if (!t) return;
+        if (t.audio) out.push(t.audio);
+        else { const sym = tileSymbolClip(t); if (sym) out.push(sym.audio); }
+      });
+      (p.hotspots || []).forEach(h => {
+        if (!h) return;
+        if (h.audio) out.push(h.audio);
+        else { const sym = clipForPhrase(h.tts || h.label); if (sym) out.push(sym.audio); }
+      });
+      return out;
+    }
+    function warmPageVoices() {
+      if (!voiceContext()) return;
+      const idx = [currentPageIndex, currentPageIndex + 1, currentPageIndex - 1];
+      idx.forEach(i => {
+        const p = pages[(i + pages.length) % pages.length];
+        pageVoiceSources(p).forEach(src => warmVoice(src));
+      });
+    }
+
+    // Pre-rendered voice clips: one consistent voice for every library symbol,
+    // shipped with the app (see symbol_gen/gen_audio.py). Returns false when
+    // there is no clip so the caller can fall back to the device's TTS.
+    function playSymbolClip(sym, text) {
+      if (!sym || !sym.audio) return false;
+      try {
+        const say = String(text || sym.tts || sym.label || '').trim();
+        window.__lastSpoken = say;
+        window.__spokenHistory.push(say);
+        window.__lastVoice = '(clip)';
+        // A clip missing from an old offline cache must not silence the tile.
+        playVoice(sym.audio, { onerror: () => speakText(say) });
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // The clip a tile speaks: its own library picture's clip when the phrase
+    // is still that picture's phrase, else any catalogue clip that says exactly
+    // the tile's phrase. A recording on the tile wins over both (caller).
+    function tileSymbolClip(data) {
+      if (!data) return null;
+      const phrase = normalisePhrase(data.tts || data.label);
+      if (!phrase) return null;
+      if (typeof data.symbol === 'string' && data.symbol.startsWith('symbols/modern/')) {
+        const sym = AAC_SYMBOL_LIBRARY.find(s => s.img === data.symbol);
+        if (sym && sym.audio && normalisePhrase(sym.tts || sym.label) === phrase) return sym;
+      }
+      return clipForPhrase(phrase);
     }
 
     /* --- Storage Helpers --- */
@@ -4013,23 +4387,24 @@
 
     function resolveSymbolToken(sym) {
       if (!sym || typeof sym !== 'string') return sym || null;
+      if (sym.startsWith('symbols/en/')) return legacyMulberryToModern(sym); // pre-v2.6 tile
       if (sym.endsWith('.svg') || sym.includes('/')) return sym;      // already a path
-      if (EMOJI_SYMBOL_CASES.includes(sym)) return sym;               // handled by getSymbolSvg
       if (!/^[\w-]+$/.test(sym)) return sym;                          // an actual emoji glyph
       if (!symbolIdIndex) {
         symbolIdIndex = new Map();
         for (const e of AAC_SYMBOL_LIBRARY) {
-          if (e.svgPath) {
-            symbolIdIndex.set(e.id.toLowerCase(), e.svgPath);
-            const lbl = String(e.label || '').toLowerCase();
-            if (lbl && !symbolIdIndex.has(lbl)) symbolIdIndex.set(lbl, e.svgPath);
-          } else if (e.emoji && !symbolIdIndex.has(e.id.toLowerCase())) {
-            symbolIdIndex.set(e.id.toLowerCase(), e.emoji);
-          }
+          const val = e.img || e.emoji;
+          if (!val) continue;
+          if (!symbolIdIndex.has(e.id.toLowerCase())) symbolIdIndex.set(e.id.toLowerCase(), val);
+          const lbl = String(e.label || '').toLowerCase();
+          if (lbl && !symbolIdIndex.has(lbl)) symbolIdIndex.set(lbl, val);
         }
       }
       const k = sym.toLowerCase();
-      return symbolIdIndex.get(k) || symbolIdIndex.get(k.replace(/_/g, ' ')) || null;
+      const hit = symbolIdIndex.get(k) || symbolIdIndex.get(k.replace(/_/g, ' '));
+      if (hit) return hit;
+      if (EMOJI_SYMBOL_CASES.includes(sym)) return sym;               // legacy glyphs drawn by getSymbolSvg
+      return null;
     }
 
     function normalizeTemplateTile(tile) {
@@ -4089,13 +4464,13 @@
         tiles: {
           1: { label: 'Hurt', tts: 'It hurts here', color: '#ef9a9a', symbol: 'hurt' },
           2: { label: 'Sick', tts: 'I feel sick', color: '#ffcdd2', symbol: 'sick' },
-          3: { label: 'Doctor', tts: 'I need the doctor', color: '#b3e5fc', symbol: 'symbols/en/doctor_1a.svg' },
+          3: { label: 'Doctor', tts: 'I need the doctor', color: '#b3e5fc', symbol: 'doctor' },
           4: { label: 'Medicine', tts: 'I need my medicine', color: '#fff9c4', symbol: 'medicine' },
-          5: { label: 'Headache', tts: 'My head hurts', color: '#ffcc80', symbol: 'symbols/en/headache.svg' },
-          6: { label: 'Tummy Ache', tts: 'My stomach hurts', color: '#ffcc80', symbol: 'symbols/en/stomach_ache.svg' },
-          7: { label: 'Too Loud', tts: 'It is too loud', color: '#e1bee7', symbol: 'symbols/en/ear_muffs.svg' },
+          5: { label: 'Headache', tts: 'My head hurts', color: '#ffcc80', symbol: 'headache' },
+          6: { label: 'Tummy Ache', tts: 'My stomach hurts', color: '#ffcc80', symbol: 'tummy_ache' },
+          7: { label: 'Too Loud', tts: 'It is too loud', color: '#e1bee7', symbol: 'too_loud' },
           8: { label: 'Rest', tts: 'I need to lie down and rest', color: '#c8e6c9', symbol: 'sleep' },
-          9: { label: 'Emergency', tts: 'Emergency! Please help me right now', color: '#e57373', symbol: 'symbols/en/ambulance.svg' }
+          9: { label: 'Emergency', tts: 'Emergency! Please help me right now', color: '#e57373', symbol: 'emergency' }
         }
       },
       {
@@ -4113,7 +4488,7 @@
           5: { label: 'Scared', tts: 'I feel scared', color: '#b39ddb', symbol: 'scared' },
           6: { label: 'Silly', tts: 'I feel silly', color: '#ffcc80', symbol: 'silly' },
           7: { label: 'Excited', tts: 'I am so excited!', color: '#ffe082', symbol: 'excited' },
-          8: { label: 'Calm', tts: 'I feel calm and ready', color: '#c8e6c9', symbol: 'symbols/en/relax_,_to.svg' },
+          8: { label: 'Calm', tts: 'I feel calm and ready', color: '#c8e6c9', symbol: 'calm' },
           9: { label: 'Need a Break', tts: 'I need a sensory break please', color: '#cfd8dc', symbol: 'sleep' }
         }
       },
@@ -4125,15 +4500,15 @@
         desc: 'Food requests, ordering favorite meals, napkins, water, and paying.',
         gridSize: 9,
         tiles: {
-          1: { label: 'Burger', tts: 'I want a hamburger please', color: '#ffe0b2', symbol: 'symbols/en/hamburger.svg' },
+          1: { label: 'Burger', tts: 'I want a hamburger please', color: '#ffe0b2', symbol: 'burger' },
           2: { label: 'Pizza', tts: 'I would like pizza', color: '#ffcc80', symbol: 'pizza' },
-          3: { label: 'Fries', tts: 'French fries please', color: '#fff9c4', symbol: 'symbols/en/chips.svg' },
+          3: { label: 'Fries', tts: 'French fries please', color: '#fff9c4', symbol: 'french_fries' },
           4: { label: 'Water', tts: 'Water with ice please', color: '#b3e5fc', symbol: 'water' },
           5: { label: 'Juice', tts: 'Apple juice please', color: '#ffcc80', symbol: 'juice' },
-          6: { label: 'Napkin', tts: 'I need a napkin', color: '#ffffff', symbol: 'symbols/en/serviette.svg' },
+          6: { label: 'Napkin', tts: 'I need a napkin', color: '#ffffff', symbol: 'napkin' },
           7: { label: 'More', tts: 'Can I have more please?', color: '#c8e6c9', symbol: 'more' },
           8: { label: 'Delicious', tts: 'This food is delicious', color: '#f8bbd0', symbol: 'smile' },
-          9: { label: 'Check Please', tts: 'Can we have the bill please?', color: '#cfd8dc', symbol: 'symbols/en/money.svg' }
+          9: { label: 'Check Please', tts: 'Can we have the bill please?', color: '#cfd8dc', symbol: 'money' }
         }
       },
       {
@@ -4151,7 +4526,7 @@
           5: { label: 'Recess', tts: 'Time for recess and playground', color: '#a5d6a7', symbol: 'play_act' },
           6: { label: 'Lunch', tts: 'Time for lunch', color: '#ffe082', symbol: 'eat' },
           7: { label: 'Quiet', tts: 'Quiet listening time', color: '#e1bee7', symbol: 'listen' },
-          8: { label: 'Teacher', tts: 'Teacher, can you help me?', color: '#ffcc80', symbol: 'symbols/en/teacher_1a.svg' },
+          8: { label: 'Teacher', tts: 'Teacher, can you help me?', color: '#ffcc80', symbol: 'teacher' },
           9: { label: 'Finished', tts: 'I am finished with my school work', color: '#cfd8dc', symbol: 'close' }
         }
       }
@@ -4255,58 +4630,58 @@
     const CORE_WORDS_LAYOUT = [
       // row 1 - navy control row
       ['back', 'navy', '⬅️'],
-      ['go', 'navy', '➡️'],
-      ['stop', 'navy', '✋'],
-      ['yes', 'navy', '👍'],
-      ['no', 'navy', '👎'],
-      ['help', 'navy', 'symbols/en/help_,_to.svg'],
-      ['more', 'navy', '➕'],
-      ['all done', 'navy', '🏁'],
+      ['go', 'navy', 'go'],
+      ['stop', 'navy', 'stop'],
+      ['yes', 'navy', 'yes'],
+      ['no', 'navy', 'no'],
+      ['help', 'navy', 'help'],
+      ['more', 'navy', 'more'],
+      ['all done', 'navy', 'all_done'],
       // row 2
-      ['I', 'lavender', 'symbols/en/I.svg'],
-      ['want', 'green', 'symbols/en/want_,_to.svg'],
-      ['eat', 'green', 'symbols/en/eat_,_to.svg'],
-      ['drink', 'green', 'symbols/en/drink_,_to.svg'],
-      ['play', 'green', 'symbols/en/play_,_to.svg'],
-      ['good', 'blue', 'symbols/en/good.svg'],
+      ['I', 'lavender', 'i_me'],
+      ['want', 'green', 'want'],
+      ['eat', 'green', 'eat'],
+      ['drink', 'green', 'drink_act'],
+      ['play', 'green', 'play_act'],
+      ['good', 'blue', 'good'],
       ['my', 'white', null],
-      ['please', 'teal', '🙏'],
+      ['please', 'teal', 'please'],
       // row 3
       ['you', 'lavender', null],
       ['need', 'green', null],
-      ['come', 'green', 'symbols/en/come_,_to.svg'],
-      ['get', 'green', 'symbols/en/get_,_to.svg'],
-      ['look', 'green', 'symbols/en/look_,_to.svg'],
-      ['bad', 'blue', 'symbols/en/bad.svg'],
-      ['in', 'white', 'symbols/en/in.svg'],
-      ['thank you', 'teal', '🤝'],
+      ['come', 'green', 'come'],
+      ['get', 'green', 'get'],
+      ['look', 'green', 'look'],
+      ['bad', 'blue', 'bad'],
+      ['in', 'white', 'in'],
+      ['thank you', 'teal', 'thank_you'],
       // row 4
       ['it', 'lavender', null],
       ['like', 'green', null],
-      ['make', 'green', 'symbols/en/make_,_to.svg'],
-      ['put', 'green', 'symbols/en/put_,_to.svg'],
-      ['open', 'green', 'symbols/en/open_,_to.svg'],
-      ['little', 'blue', 'symbols/en/little.svg'],
-      ['on', 'white', 'symbols/en/on.svg'],
-      ['hello', 'teal', 'symbols/en/hello.svg'],
+      ['make', 'green', 'make'],
+      ['put', 'green', 'put'],
+      ['open', 'green', 'open'],
+      ['little', 'blue', 'little'],
+      ['on', 'white', 'on'],
+      ['hello', 'teal', 'hello'],
       // row 5
       ['we', 'lavender', null],
       ['have', 'green', null],
-      ['read', 'green', 'symbols/en/read_,_to.svg'],
-      ['sing', 'green', 'symbols/en/sing_,_to.svg'],
-      ['turn', 'green', 'symbols/en/turn_,_to.svg'],
+      ['read', 'green', 'read'],
+      ['sing', 'green', 'sing'],
+      ['turn', 'green', 'turn'],
       ['big', 'blue', null],
-      ['up', 'white', 'symbols/en/up.svg'],
-      ['bye', 'teal', '👋'],
+      ['up', 'white', 'up'],
+      ['bye', 'teal', 'goodbye'],
       // row 6
       ['they', 'lavender', null],
       ['feel', 'green', null],
-      ['give', 'green', 'symbols/en/give_,_to.svg'],
+      ['give', 'green', 'give'],
       ['do', 'green', null],
-      ['finished', 'green', 'symbols/en/finish.svg'],
+      ['finished', 'green', 'finished'],
       ['different', 'blue', null],
       ['not', 'white', null],
-      ['again', 'teal', '🔁']
+      ['again', 'teal', 'again']
     ];
 
     function buildCoreWordsTiles() {
@@ -4644,6 +5019,7 @@
 
       fitAllLabels();
       requestAnimationFrame(() => requestAnimationFrame(fitAllLabels));
+      warmPageVoices();
     }
 
     function getGridDimensions(count) {
@@ -4692,7 +5068,23 @@
         if (isEditMode) {
           tile.classList.add('empty-editor');
           tile.innerHTML = `<span class="tile-empty-text">Tap to Add Button</span>`;
-          tile.onclick = () => openEditor(slotId);
+          // Chromium snaps a tap in the gap between tiles onto the nearest one
+          // and, for the click it synthesises, moves the coordinates inside
+          // it too -- so the click cannot be checked. The pointerdown that
+          // precedes it still carries the finger's real position: only a
+          // press that really landed in this slot's box lets the click open
+          // its editor. Synthetic clicks (no finger) pass.
+          let pressInside = false;
+          tile.addEventListener('pointerdown', (e) => {
+            const r = tile.getBoundingClientRect();
+            pressInside = !e.isTrusted ||
+              (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
+          });
+          tile.onclick = (e) => {
+            const ok = !(e && e.isTrusted) || pressInside;
+            pressInside = false;
+            if (ok) openEditor(slotId);
+          };
           return tile;
         }
       }
@@ -4734,11 +5126,65 @@
         if (data && data.label) tile.appendChild(labelDiv);
       }
 
-      tile.addEventListener('pointerup', () => handleTileTap(slotId, data));
+      // Play on the press itself: waiting for the release added the whole
+      // finger-down time to the word. Editing still opens on release so the
+      // editor does not swallow the tail of the same press. A release with no
+      // press before it (synthetic / assistive input) still plays.
+      //
+      // Chromium's touch-target adjustment snaps a finger that lands in the
+      // 12px gap between tiles onto the nearest tile (the next one across, or
+      // the one below) and delivers pointerdown to it -- with the finger's real
+      // coordinates. So a tile only takes a press that is actually inside its
+      // own box; a gap does nothing. Synthetic events (no real finger) pass.
+      const pressOnTile = (e) => {
+        if (!e || !e.isTrusted) return true;
+        const r = tile.getBoundingClientRect();
+        return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      };
+      let pressed = false;
+      tile.addEventListener('pointerdown', (e) => {
+        if (!pressOnTile(e)) { pressed = false; return; }
+        pressed = true;
+        if (!isEditMode) handleTileTap(slotId, data);
+      });
+      tile.addEventListener('pointerup', (e) => {
+        const wasPressed = pressed;
+        pressed = false;
+        if (isEditMode && !wasPressed && e.isTrusted) return;   // release of a press that began off the tile
+        if (!isEditMode && !pressOnTile(e)) return;
+        if (isEditMode || !wasPressed) handleTileTap(slotId, data);
+      });
+      tile.addEventListener('pointercancel', () => { pressed = false; });
       return tile;
     }
 
+    // Tiles saved before v2.6 point at the licensed Mulberry SVGs, which no
+    // longer ship. Map "symbols/en/<name>.svg" onto the in-house picture whose
+    // id or label matches the Mulberry name (dropping suffixes like "_1a" and
+    // "_,_to"); otherwise the emoji for that word; otherwise nothing, so the
+    // tile shows its label instead of a broken-image icon.
+    const legacySymbolCache = new Map();
+    function legacyMulberryToModern(path) {
+      if (legacySymbolCache.has(path)) return legacySymbolCache.get(path);
+      let name = path.slice('symbols/en/'.length).replace(/\.svg$/, '').toLowerCase();
+      name = name.replace(/_,_to$/, '').replace(/_\d+[a-z]?$/, '').replace(/_,_/g, ' ').replace(/_/g, ' ').trim();
+      const singular = name.endsWith('s') ? name.slice(0, -1) : null;
+      let found = null;
+      for (const e of AAC_SYMBOL_LIBRARY) {
+        const id = e.id.replace(/_/g, ' ').toLowerCase(), label = e.label.toLowerCase();
+        if (id === name || label === name || (singular && (id === singular || label === singular))) { found = e; break; }
+      }
+      if (!found) {
+        found = AAC_SYMBOL_LIBRARY.find(e => (e.keywords || []).some(k => k === name)) || null;
+      }
+      const val = found ? (found.img || found.emoji || null) : null;
+      legacySymbolCache.set(path, val);
+      return val;
+    }
+
     function getSymbolSvg(symbol) {
+      if (!symbol) return '';
+      if (typeof symbol === 'string' && symbol.startsWith('symbols/en/')) symbol = legacyMulberryToModern(symbol);
       if (!symbol) return '';
       if (typeof symbol === 'string' && (symbol.endsWith('.svg') || symbol.includes('/'))) {
         return `<img src="${symbol}" class="tile-symbol-img" style="max-height: 82%; max-width: 82%; object-fit: contain; pointer-events: none;" alt="symbol" />`;
@@ -4845,6 +5291,7 @@
 
       const container = document.getElementById('scene-hotspots-container');
       container.innerHTML = '';
+      warmPageVoices();
 
       (page.hotspots || []).forEach(spot => {
         const spotEl = document.createElement('div');
@@ -4904,9 +5351,10 @@
       }
 
       if (spot.audio || (spot.action === 'recorded' && spot.audio)) {
-        playTileAudio(`hotspot-${spot.id}`, spot.audio);
+        playTileAudio(`hotspot-${spot.id}`, spot.audio, performance.now());
       } else {
-        speakText(spot.tts || spot.label || 'Hotspot');
+        stopBoardAudio();
+        speakPhrase(spot.tts || spot.label || 'Hotspot');
       }
     }
 
@@ -5199,6 +5647,7 @@
         openEditor(slotId);
         return;
       }
+      const tapAt = performance.now();
 
       const p = pages[currentPageIndex];
       const tileEl = document.getElementById(`tile-slot-${slotId}`);
@@ -5212,48 +5661,48 @@
       }
 
       if (data && data.audio) {
-        playTileAudio(slotId, data.audio);
+        playTileAudio(slotId, data.audio, tapAt);
       } else if (data && (data.tts || data.label)) {
-        speakText(data.tts || data.label);
+        const clipSym = tileSymbolClip(data);
+        if (clipSym) {
+          window.__lastSpoken = String(data.tts || data.label).trim();
+          window.__spokenHistory.push(window.__lastSpoken);
+          window.__lastVoice = '(clip)';
+          playTileAudio(slotId, clipSym.audio, tapAt, () => speakText(data.tts || data.label));
+        } else {
+          stopBoardAudio();
+          speakText(data.tts || data.label);
+        }
       }
     }
 
-    function playTileAudio(slotId, audioBlob) {
+    // Plays a recording (Blob) or a clip (URL) for a tile / hotspot and keeps
+    // the 'playing' highlight on it until the sound ends.
+    function playTileAudio(slotId, audioSrc, tapAt, onerror) {
       stopBoardAudio();
       const tileEl = document.getElementById(`tile-slot-${slotId}`);
       if (tileEl) tileEl.classList.add('playing');
-
-      const audioUrl = (typeof audioBlob === 'string') ? audioBlob : URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      currentPlayingAudio = audio;
       currentPlayingSlot = slotId;
 
       const cleanup = () => {
         if (tileEl) tileEl.classList.remove('playing');
-        if (typeof audioBlob !== 'string') URL.revokeObjectURL(audioUrl);
-        if (currentPlayingAudio === audio) {
-          currentPlayingAudio = null;
-          currentPlayingSlot = null;
-        }
+        if (currentPlayingSlot === slotId) currentPlayingSlot = null;
       };
-
-      audio.onended = cleanup;
-      audio.onerror = cleanup;
-      audio.play().catch(cleanup);
+      currentPlayingAudio = playVoice(audioSrc, {
+        tapAt: tapAt,
+        onended: cleanup,
+        onerror: () => { cleanup(); if (onerror) onerror(); }
+      });
     }
 
     function stopBoardAudio() {
-      if (currentPlayingAudio) {
-        currentPlayingAudio.pause();
-        currentPlayingAudio.currentTime = 0;
-        currentPlayingAudio = null;
-      }
+      stopVoice();
+      currentPlayingAudio = null;
       if (currentPlayingSlot) {
         const prev = document.getElementById(`tile-slot-${currentPlayingSlot}`);
         if (prev) prev.classList.remove('playing');
         currentPlayingSlot = null;
       }
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
     }
 
     function playAllPageTiles() {
@@ -5305,7 +5754,8 @@
       if (item.photo && typeof item.photo === 'string') {
         return `<img class="express-chip-thumb" src="${item.photo}" alt="">`;
       }
-      const sym = item.symbol;
+      let sym = item.symbol;
+      if (typeof sym === 'string' && sym.startsWith('symbols/en/')) sym = legacyMulberryToModern(sym);
       if (!sym) return '';
       if (typeof sym === 'string' && (sym.endsWith('.svg') || sym.includes('/'))) {
         return `<img class="express-chip-thumb" src="${sym}" alt="">`;
@@ -5325,7 +5775,41 @@
     function playExpressSentence() {
       if (expressCollectedChips.length === 0) return;
       const sentence = expressCollectedChips.map(c => c.label).join(' ');
+      // Keep the one voice when every chip has a clip; a sentence that mixes
+      // Bella and the device voice would be worse than either alone.
+      const clips = expressCollectedChips.map(c => clipForPhrase(c.tts || c.label));
+      if (clips.length && clips.every(Boolean) && voiceContext()) {
+        window.__lastSpoken = sentence;
+        window.__spokenHistory.push(sentence);
+        window.__lastVoice = '(clip)';
+        playVoiceSequence(clips.map(s => s.audio), () => speakText(sentence));
+        return;
+      }
       speakText(sentence);
+    }
+
+    // Plays clips back to back on the audio clock with a short gap between
+    // words; falls back to `onerror` if any of them cannot be decoded.
+    let voiceSequenceId = 0;
+    function playVoiceSequence(srcs, onerror) {
+      const ctx = voiceContext();
+      const mine = ++voiceSequenceId;
+      stopVoice();
+      Promise.all(srcs.map(s => warmVoice(s))).then(bufs => {
+        if (mine !== voiceSequenceId) return;
+        if (ctx.state !== 'running') unlockVoice();
+        let t = ctx.currentTime + 0.01;
+        const nodes = bufs.map(buf => {
+          const n = ctx.createBufferSource();
+          n.buffer = buf; n.connect(ctx.destination);
+          n.start(t); t += buf.duration + 0.12;
+          return n;
+        });
+        const last = nodes[nodes.length - 1];
+        voiceSourceNode = { stop() { nodes.forEach(n => { try { n.stop(); } catch (e) {} }); },
+                            disconnect() { nodes.forEach(n => { try { n.disconnect(); } catch (e) {} }); } };
+        last.onended = () => { if (voiceSourceNode && voiceSourceNode.stop && mine === voiceSequenceId) voiceSourceNode = null; };
+      }).catch(() => { if (mine === voiceSequenceId && onerror) onerror(); });
     }
 
     /* --- Auditory Cue Modal Logic --- */
@@ -5677,34 +6161,104 @@
       { id: 'turtle', label: 'Turtle', emoji: '🐢', category: 'animals', keywords: ['turtle', 'slow', 'shell', 'green'] }
     ];
 
-    // Build unified AAC Symbol Catalog (3,600+ symbols)
+        // Build unified Modern AAC Symbol Catalog
     let AAC_SYMBOL_LIBRARY = [];
 
     function initSymbolLibrary() {
-      const list = [...AAC_STARTER_EMOJIS];
+      const list = [];
       if (typeof AAC_OFFICIAL_SYMBOLS !== 'undefined' && Array.isArray(AAC_OFFICIAL_SYMBOLS)) {
         AAC_OFFICIAL_SYMBOLS.forEach(s => {
-          let cat = s.category || 'core';
-          if (s.rawCat && s.rawCat.toLowerCase().includes('drink')) {
-            cat = 'drinks';
-          }
           list.push({
             id: s.id,
             label: s.label,
-            category: cat,
-            rawCat: s.rawCat,
-            svgPath: 'symbols/en/' + s.id + '.svg',
-            keywords: [s.id.replace(/_/g, ' '), ...(s.tags || [])]
+            category: s.category || 'core',
+            emoji: s.emoji || s.icon || '⭐',
+            img: s.img || null,
+            audio: s.audio || null,
+            tts: s.tts || s.label,
+            keywords: [s.label.toLowerCase(), s.id.replace(/_/g, ' '), ...(s.tags || [])]
           });
         });
       }
+      if (typeof AAC_STARTER_EMOJIS !== 'undefined' && Array.isArray(AAC_STARTER_EMOJIS)) {
+        AAC_STARTER_EMOJIS.forEach(s => {
+          if (!list.some(item => item.id === s.id)) {
+            list.push({
+              id: s.id,
+              label: s.label,
+              category: s.category || 'core',
+              emoji: s.emoji || '⭐',
+              tts: s.label,
+              keywords: [s.label.toLowerCase(), s.id.replace(/_/g, ' '), ...(s.keywords || [])]
+            });
+          }
+        });
+      }
+      // Stable sort by category so entries appended to the catalogue later
+      // still land under their own section header in the grouped view.
+      const order = Object.keys(CATEGORY_DISPLAY_NAMES);
+      list.forEach((s, i) => { s._i = i; });
+      list.sort((a, b) => {
+        const ca = order.indexOf(a.category), cb = order.indexOf(b.category);
+        return (ca === cb) ? a._i - b._i : (ca < 0 ? 999 : ca) - (cb < 0 ? 999 : cb);
+      });
+      list.forEach(s => { delete s._i; });
       AAC_SYMBOL_LIBRARY = list;
+      symbolIdIndex = null;
     }
-    initSymbolLibrary();
 
     let currentSymbolCategory = 'all';
     let currentRenderedSymbols = [];
-    let currentRenderLimit = 120;
+    let currentRenderLimit = 160;
+
+    function previewSymbolAudio(event, symId) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      if (typeof unlockIOSAudio === 'function') unlockIOSAudio();
+
+      const sym = AAC_SYMBOL_LIBRARY.find(s => s.id === symId);
+      if (!sym) return;
+
+      const text = sym.tts || sym.label || sym.id;
+      if (!playSymbolClip(sym, text)) speakText(text);
+
+      if (event && event.currentTarget) {
+        const btn = event.currentTarget;
+        btn.classList.add('playing');
+        setTimeout(() => btn.classList.remove('playing'), 1100);
+      }
+    }
+
+    const CATEGORY_DISPLAY_NAMES = {
+      'core': '⭐ Core Words',
+      'feelings': '😊 Feelings & Emotions',
+      'food': '🍎 Food & Meals',
+      'drinks': '🥤 Drinks & Beverages',
+      'actions': '🏃 Actions & Verbs',
+      'people': '👪 People & Family',
+      'places': '🏠 Places & School',
+      'play': '🧸 Play & Toys',
+      'daily': '👕 Daily & Clothing',
+      'animals': '🐶 Animals & Pets',
+      'health': '🩺 Health & Medical',
+      'vehicles': '🚗 Vehicles & Travel',
+      'nature': '🌤️ Weather & Nature',
+      'concepts': '🔢 Numbers & Concepts',
+      'colors': '🎨 Colors & Shapes',
+      'social': '💬 Social & Phrases'
+    };
+    initSymbolLibrary();
+
+    // One renderer for every symbol card: the generated picture when the
+    // catalogue has one, the emoji fallback otherwise (and if the picture
+    // fails to load, e.g. a stale offline cache).
+    function symbolCardIcon(sym) {
+      const emoji = sym.emoji || sym.id;
+      if (!sym.img) return `<div class="sym-icon">${emoji}</div>`;
+      return `<div class="sym-icon"><img src="${sym.img}" loading="lazy" decoding="async" class="sym-img-icon" alt="${sym.label}" onerror="this.parentNode.textContent='${emoji}'"></div>`;
+    }
 
     function openSymbolLibrary() {
       initSymbolLibrary();
@@ -5737,7 +6291,7 @@
 
       if (reset) {
         grid.innerHTML = '';
-        currentRenderLimit = 120;
+        currentRenderLimit = 160;
         currentRenderedSymbols = symbols || [];
       }
 
@@ -5750,25 +6304,36 @@
       grid.style.display = 'grid';
       empty.style.display = 'none';
 
+      const q = document.getElementById('sym-search-input').value.trim();
+      const isGroupedView = reset && currentSymbolCategory === 'all' && !q;
+
       const slice = currentRenderedSymbols.slice(reset ? 0 : grid.children.length, currentRenderLimit);
       const frag = document.createDocumentFragment();
 
+      let lastCat = null;
+
       slice.forEach(s => {
+        if (isGroupedView && s.category !== lastCat) {
+          lastCat = s.category;
+          const secHeader = document.createElement('div');
+          secHeader.className = 'sym-category-section';
+          const catName = CATEGORY_DISPLAY_NAMES[s.category] || s.category.toUpperCase();
+          const catCount = currentRenderedSymbols.filter(item => item.category === s.category).length;
+          secHeader.innerHTML = `<span>${catName}</span> <span style="font-size: 0.78rem; opacity: 0.75; font-weight: 600;">${catCount}</span>`;
+          frag.appendChild(secHeader);
+        }
+
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'sym-card';
+        card.dataset.symbolId = s.id;
         card.setAttribute('aria-label', s.label);
-        if (s.svgPath) {
-          card.innerHTML = `
-            <div class="sym-icon"><img src="${s.svgPath}" loading="lazy" class="sym-svg-icon" alt="${s.label}" style="width: 44px; height: 44px; object-fit: contain; pointer-events: none;" /></div>
-            <div class="sym-name" title="${s.label}">${s.label}</div>
-          `;
-        } else {
-          card.innerHTML = `
-            <div class="sym-icon">${s.emoji}</div>
-            <div class="sym-name" title="${s.label}">${s.label}</div>
-          `;
-        }
+        
+        card.innerHTML = `
+          <button type="button" class="sym-listen-btn" title="Hear ${s.label}" aria-label="Listen to ${s.label}" onclick="previewSymbolAudio(event, '${s.id}')">🔊</button>
+          ${symbolCardIcon(s)}
+          <div class="sym-name" title="${s.label}">${s.label}</div>
+        `;
         card.onclick = () => selectLibrarySymbol(s);
         frag.appendChild(card);
       });
@@ -5783,11 +6348,7 @@
     }
 
     function selectLibrarySymbol(symbolObj) {
-      if (symbolObj.svgPath) {
-        pendingSymbol = symbolObj.svgPath;
-      } else {
-        pendingSymbol = symbolObj.emoji || symbolObj.id;
-      }
+      pendingSymbol = symbolValueOf(symbolObj);
       pendingPhotoBlob = null;
 
       const labelInp = document.getElementById('modal-label-input');
@@ -5799,12 +6360,13 @@
         onLabelSizeInput();
       }
       if (!ttsInp.value.trim()) {
-        ttsInp.value = symbolObj.label;
+        ttsInp.value = symbolObj.tts || symbolObj.label;
       }
 
       updateModalPhotoPreview();
       closeSymbolLibrary();
       showToast(`Selected "${symbolObj.label}"`);
+      if (!playSymbolClip(symbolObj)) speakText(symbolObj.tts || symbolObj.label);
     }
 
     /* --- Inline symbol picker (tile editor) ---------------------------------
@@ -5832,11 +6394,9 @@
       if (clearBtn) clearBtn.style.display = (ownSearch && ownSearch.value.trim()) ? 'flex' : 'none';
 
       const q = editorSymbolQuery();
-      // With nothing to go on, lead with the starter set: the friendly, widely
-      // recognised core icons rather than an alphabetical slice of 3,600.
       const matches = q.text
         ? searchSymbolLibrary(q.text, 'all')
-        : AAC_SYMBOL_LIBRARY.filter(sym => !sym.svgPath);
+        : AAC_SYMBOL_LIBRARY;
 
       strip.innerHTML = '';
       strip.dataset.matchCount = String(matches.length);
@@ -5851,7 +6411,7 @@
         const empty = document.createElement('div');
         empty.className = 'editor-symbol-empty';
         empty.id = 'editor-symbol-empty';
-        empty.textContent = `No symbol matches "${q.text}". Try a simpler word, or Browse All Symbols.`;
+        empty.textContent = `No symbol matches "${q.text}". Try another word, or Browse All Symbols.`;
         strip.appendChild(empty);
         if (hint) hint.textContent = '';
         return;
@@ -5859,8 +6419,6 @@
 
       let shown = matches.slice(0, EDITOR_STRIP_LIMIT);
 
-      // Always show the symbol already on the tile, first, so the strip states
-      // what is set rather than only what was searched for.
       if (pendingSymbol && !shown.some(sym => symbolValueOf(sym) === pendingSymbol)) {
         const current = AAC_SYMBOL_LIBRARY.find(sym => symbolValueOf(sym) === pendingSymbol);
         if (current) shown = [current].concat(shown.slice(0, EDITOR_STRIP_LIMIT - 1));
@@ -5874,11 +6432,9 @@
         card.dataset.symbolId = sym.id;
         card.dataset.symbolValue = symbolValueOf(sym);
         card.setAttribute('aria-label', sym.label);
-        const icon = sym.svgPath
-          ? `<img src="${sym.svgPath}" loading="lazy" class="sym-svg-icon" alt="${sym.label}" style="width: 44px; height: 44px; object-fit: contain; pointer-events: none;" />`
-          : sym.emoji;
         card.innerHTML = `
-          <div class="sym-icon">${icon}</div>
+          <button type="button" class="sym-listen-btn" title="Hear ${sym.label}" aria-label="Listen to ${sym.label}" onclick="previewSymbolAudio(event, '${sym.id}')">🔊</button>
+          ${symbolCardIcon(sym)}
           <div class="sym-name" title="${sym.label}">${sym.label}</div>
         `;
         card.onclick = () => selectInlineEditorSymbol(sym);
@@ -5922,10 +6478,8 @@
         labelInp.value = symbolObj.label;
         onLabelSizeInput();
       }
-      if (ttsInp && !ttsInp.value.trim()) ttsInp.value = symbolObj.label;
+      if (ttsInp && !ttsInp.value.trim()) ttsInp.value = symbolObj.tts || symbolObj.label;
 
-      // Deliberately no closeEditor()/close-anything here: picking a symbol
-      // must not interrupt the edit.
       updateModalPhotoPreview();
     }
 
@@ -5941,16 +6495,12 @@
       inp.focus();
     }
 
-    // The label field drives both the size preview and the symbol suggestions.
     function onEditorLabelInput() {
       onLabelSizeInput();
       const own = document.getElementById('editor-symbol-search');
-      // A search the user typed themselves wins over the label.
       if (!own || !own.value.trim()) refreshEditorSymbolStrip();
     }
 
-    // One matcher for both the full-screen library and the editor's inline
-    // strip, so a search that works in one works the same in the other.
     function searchSymbolLibrary(query, category) {
       const q = (query || '').trim().toLowerCase();
       let filtered = AAC_SYMBOL_LIBRARY;
@@ -5958,18 +6508,30 @@
         filtered = filtered.filter(s => s.category === category);
       }
       if (!q) return filtered;
-      return filtered.filter(s => {
-        if (s.label.toLowerCase().includes(q)) return true;
-        if (s.id && s.id.toLowerCase().includes(q)) return true;
-        if (s.category && s.category.toLowerCase().includes(q)) return true;
-        if (s.rawCat && s.rawCat.toLowerCase().includes(q)) return true;
-        return (s.keywords || []).some(k => k.toLowerCase().includes(q));
+      // Rank, don't just filter: "dog" must put Dog before Hot Dog, "bus"
+      // the bus before the bus driver. Lower score = earlier.
+      const scored = [];
+      filtered.forEach((s, i) => {
+        const label = (s.label || '').toLowerCase();
+        const id = (s.id || '').toLowerCase().replace(/_/g, ' ');
+        const kws = (s.keywords || []).map(k => k.toLowerCase());
+        let score = -1;
+        if (label === q || id === q) score = 0;
+        else if (kws.includes(q)) score = 1;
+        else if (label.startsWith(q) || id.startsWith(q)) score = 2;
+        else if (new RegExp('\\b' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(label + ' ' + id)) score = 3;
+        else if (kws.some(k => k.startsWith(q))) score = 4;
+        else if (label.includes(q) || id.includes(q)) score = 5;
+        else if ((s.tts || '').toLowerCase().includes(q) || kws.some(k => k.includes(q))) score = 6;
+        else if ((s.category || '').toLowerCase().includes(q)) score = 7;
+        if (score >= 0) scored.push({ s, score, i });
       });
+      scored.sort((a, b) => a.score - b.score || a.i - b.i);
+      return scored.map(x => x.s);
     }
 
-    // The catalogue entry's value as it is stored on a tile.
     function symbolValueOf(symbolObj) {
-      return symbolObj.svgPath ? symbolObj.svgPath : (symbolObj.emoji || symbolObj.id);
+      return symbolObj.img || symbolObj.emoji || symbolObj.id;
     }
 
     function filterSymbolLibrary() {
@@ -5998,10 +6560,9 @@
         chip.classList.toggle('active', cat === currentSymbolCategory);
       });
 
-      // Update count badges
       const totalEl = document.getElementById('sym-total-count');
       if (totalEl) totalEl.textContent = AAC_SYMBOL_LIBRARY.length.toLocaleString();
-      ['core', 'feelings', 'food', 'drinks', 'actions', 'people', 'places', 'play', 'daily', 'animals', 'health'].forEach(cat => {
+      Object.keys(CATEGORY_DISPLAY_NAMES).forEach(cat => {
         const countEl = document.getElementById('sym-count-' + cat);
         if (countEl) {
           const count = AAC_SYMBOL_LIBRARY.filter(s => s.category === cat).length;

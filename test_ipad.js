@@ -37,10 +37,10 @@ const puppeteer = require('/home/mike/browser-automation/node_modules/puppeteer'
       pass: manifestLink && appleIcon && appleCapable && appleCapable.content === 'yes'
     });
 
-    // Check 2: Mulberry Symbol Catalog (3,400+ indexed)
-    const hasSymbols = typeof AAC_OFFICIAL_SYMBOLS !== 'undefined' && AAC_OFFICIAL_SYMBOLS.length > 3400;
+    // Check 2: Modern Royalty-Free AAC Symbol Catalog
+    const hasSymbols = typeof AAC_OFFICIAL_SYMBOLS !== 'undefined' && AAC_OFFICIAL_SYMBOLS.length >= 250;
     checks.push({
-      name: 'Mulberry AAC Symbol Library (3,400+ indexed vector SVGs)',
+      name: 'Modern Royalty-Free AAC Symbol Library (Categorized with Audio Speech)',
       pass: hasSymbols
     });
 

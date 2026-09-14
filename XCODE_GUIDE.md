@@ -29,7 +29,7 @@ You have two ready-to-run Xcode projects depending on your preferred Apple stack
   ```bash
   open AACTextTilesiPad.xcodeproj
   ```
-  *(Native Swift host with bundled 3,436 Mulberry SVG vector library in `www/`)*
+  *(Native Swift host with the bundled in-house symbol pictures in `www/`)*
 
 ---
 
@@ -61,7 +61,7 @@ You have two ready-to-run Xcode projects depending on your preferred Apple stack
 * **Dedicated iPad Architecture (`TARGETED_DEVICE_FAMILY = 2`)**: Optimized exclusively for iPadOS 15, 16, 17, and 18.
 * **Hardware Mute Switch Bypass**: Configured with `AVAudioSession.Category.playback` so communication speech always plays through iPad speakers even when muted.
 * **Zero Latency Offline Speech**: Dual-engine speech system using native `AVSpeechSynthesizer` Swift bridge and iOS Web Speech API.
-* **3,600+ Bundled Vector Symbols**: All 3,436 official Mulberry AAC symbols bundled directly in the app bundle (`www/symbols/en/`).
+* **550+ Bundled Symbol Pictures**: every in-house symbol picture is bundled directly in the app bundle (`www/symbols/modern/`).
 * **Visual Scene Displays & Hotspots**: Interactive photo touch zones with recorded audio and text-to-speech.
 * **Talking Keyboard & Phonics**: Full QWERTY keyboard with word prediction chips and Sound It Out syllable breakdown.
 * **Apple Pencil & Touch Optimizations**: Double-tap zoom and rubber-banding suppression for steady communication access.
@@ -84,8 +84,8 @@ aac-text-tiles-ipad/
 │   ├── Assets.xcassets/          # iPad AppIcon sets (76pt, 152pt, 167pt, 1024pt)
 │   └── www/                      # Bundled web assets (offline HTML, JS, SVG symbols)
 ├── index.html                    # Main AAC single-page application
-├── symbols_data.js               # 3,436 Mulberry symbol index & taxonomy
-├── symbols/en/                   # 3,436 Mulberry AAC vector SVGs
+├── symbols_data.js               # symbol catalogue (id, label, category, tts, tags, img)
+├── symbols/modern/               # 558 in-house symbol pictures (384px WebP, alpha)
 ├── sw.js                         # Offline Service Worker
 ├── manifest.json                 # Apple PWA manifest
 ├── serve.py                      # Local Wi-Fi delivery server for Safari PWA install
