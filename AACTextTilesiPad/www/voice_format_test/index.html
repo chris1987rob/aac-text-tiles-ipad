@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talk Tiles — voice clip format probe</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; margin: 24px; color: #0f172a; }
+    h1 { font-size: 1.3rem; }
+    table { border-collapse: collapse; margin-top: 12px; }
+    td, th { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-size: 0.95rem; }
+    .ok { background: #d1fae5; } .bad { background: #fee2e2; } .wait { background: #f1f5f9; }
+    button { font-size: 1.1rem; padding: 12px 20px; margin-top: 12px; }
+    pre { background: #f1f5f9; padding: 10px; font-size: 0.8rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Which voice-clip formats does this WebView play?</h1>
+  <p>Open this page inside the iPad app's WKWebView (copy the folder next to <code>www/index.html</code>
+     and load <code>voice_format_test/index.html</code>), or in Safari on the iPad. Tap <b>Run</b>. Each row
+     tries the two paths the board uses: <code>decodeAudioData</code> (the instant, pre-decoded tap path)
+     and a plain <code>&lt;audio&gt;</code> element (the cold fallback). A format is usable only if
+     <b>both</b> say OK. The Android/web build ships <code>.opus</code>; the iPad copies stay on
+     <code>.mp3</code> until a row here passes — then switch with
+     <code>write_symbols_data.py</code> (TARGETS ext) + <code>encode_clip.py --all --format &lt;ext&gt; --out …</code>.</p>
+  <button onclick="run()">Run</button>
+  <table id="t">
+    <tr><th>File</th><th>Container / codec</th><th>decodeAudioData</th><th>&lt;audio&gt; canPlayType</th><th>&lt;audio&gt; plays</th><th>Bytes</th></tr>
+  </table>
+  <pre id="log"></pre>
+  <script>
+    const FILES = [
+      ['sun.opus', 'Ogg / Opus 24 kbps', 'audio/ogg; codecs=opus'],
+      ['sun.caf',  'CAF / Opus 24 kbps (CoreAudio native)', 'audio/x-caf; codecs=opus'],
+      ['sun.webm', 'WebM / Opus 24 kbps', 'audio/webm; codecs=opus'],
+      ['sun.mp3',  'MP3 48 kbps (what ships on iPad today)', 'audio/mpeg'],
+    ];
+    const log = (m) => { document.getElementById('log').textContent += m + '\n'; };
+    function fetchBytes(url) {
+      return new Promise((resolve, reject) => {
+        const x = new XMLHttpRequest();
+        x.open('GET', url, true); x.responseType = 'arraybuffer';
+        x.onload = () => (x.status === 200 || (x.status === 0 && x.response && x.response.byteLength)) ? resolve(x.response) : reject(new Error('HTTP ' + x.status));
+        x.onerror = () => reject(new Error('fetch failed')); x.send();
+      });
+    }
+    function decode(ctx, bytes) {
+      return new Promise((resolve, reject) => {
+        try { const r = ctx.decodeAudioData(bytes, resolve, reject); if (r && r.catch) r.catch(reject); } catch (e) { reject(e); }
+      });
+    }
+    function elementPlays(url) {
+      return new Promise((resolve) => {
+        const a = new Audio(url);
+        const done = (v) => { clearTimeout(t); resolve(v); };
+        const t = setTimeout(() => done('timeout (no playing event in 4 s)'), 4000);
+        a.addEventListener('playing', () => done('OK'), { once: true });
+        a.addEventListener('error', () => done('error ' + (a.error && a.error.code)), { once: true });
+        a.play().catch(e => done('play() rejected: ' + e.message));
+      });
+    }
+    async function run() {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new Ctx();
+      try { await ctx.resume(); } catch (e) {}
+      log('UA: ' + navigator.userAgent);
+      log('AudioContext sampleRate: ' + ctx.sampleRate);
+      const table = document.getElementById('t');
+      while (table.rows.length > 1) table.deleteRow(1);
+      for (const [file, desc, mime] of FILES) {
+        const row = table.insertRow();
+        row.className = 'wait';
+        const cells = [file, desc, '…', new Audio().canPlayType(mime) || '(empty = no)', '…', '…'].map(v => { const c = row.insertCell(); c.textContent = v; return c; });
+        let dec = 'FAIL', bytes = 0;
+        try {
+          const b = await fetchBytes(file); bytes = b.byteLength;
+          const buf = await decode(ctx, b.slice(0));
+          dec = 'OK ' + buf.duration.toFixed(2) + ' s @ ' + buf.sampleRate;
+        } catch (e) { dec = 'FAIL: ' + (e && (e.message || e.name) || e); }
+        cells[2].textContent = dec;
+        cells[5].textContent = bytes;
+        const el = await elementPlays(file);
+        cells[4].textContent = el;
+        const ok = dec.startsWith('OK') && el === 'OK';
+        row.className = ok ? 'ok' : 'bad';
+        log(file + ': decodeAudioData=' + dec + ' | element=' + el);
+      }
+      log('Done. Send this log to Chris / the box.');
+    }
+  </script>
+</body>
+</html>

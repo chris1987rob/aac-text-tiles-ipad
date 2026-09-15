@@ -31,6 +31,8 @@ function check(name, cond, detail) {
     args: ['--no-sandbox', '--allow-file-access-from-files', '--use-fake-ui-for-media-stream']
   });
   const page = await browser.newPage();
+  // The suites run offline: no VoiceForge server, so typed words use the device path.
+  await page.evaluateOnNewDocument(() => { try { localStorage.setItem('talk_tiles_tts_server', ''); } catch (e) {} });
   await page.setViewport({ width: 1280, height: 800 });
 
   const errors = [];
@@ -278,42 +280,35 @@ function check(name, cond, detail) {
     JSON.stringify(scan));
 
   // --------------------------------------------------------------------------
-  // 11: the Voice buttons pick a voice that speech actually uses.
+  // 11: the Voice buttons pick the clip voice the board speaks with, and the
+  //     choice survives a reload.
   // --------------------------------------------------------------------------
   const voice = await page.evaluate(async () => {
     const out = {};
-    // Headless Chrome ships no speech voices, so stand in a pair of fakes to
-    // prove the wiring; the picker's real-device path is the same code.
-    const fakes = [
-      { name: 'Test Voice A', lang: 'en-US' },
-      { name: 'Test Voice B', lang: 'en-GB' }
-    ];
-    window.speechSynthesis.getVoices = () => fakes;
-
-    openVoicePicker('primary');
+    out.voices = clipVoices().map(v => v.id);
+    openVoicePicker();
     out.rows = document.querySelectorAll('#voice-picker-list .voice-row').length;
-    document.querySelectorAll('#voice-picker-list .voice-row')[0].click();
-    out.closedAfterPick = !document.getElementById('modal-voice-picker').classList.contains('open');
-    out.storedPrimary = getVoiceName('primary');
+    out.previews = document.querySelectorAll('#voice-picker-list .voice-row-preview').length;
+    closeVoicePicker();
+    // Pick the last installed voice (the default when it is the only one).
+    const pick = clipVoices()[clipVoices().length - 1].id;
+    out.picked = pick;
+    out.ok = await setActiveVoice(pick, { quiet: true });
+    out.active = activeVoice().id;
+    out.stored = localStorage.getItem('talk_tiles_clip_voice');
+    // A voice that is not installed falls back to the default, not to silence.
+    out.ghostOk = await setActiveVoice('no_such_voice', { quiet: true });
+    out.afterGhost = activeVoice().id;
     speakText('hello');
-    out.usedAfterPrimary = window.__lastVoice;
-
-    openVoicePicker('second');
-    document.querySelectorAll('#voice-picker-list .voice-row')[1].click();
-    out.storedSecond = getVoiceName('second');
-    useSecondVoice();                       // toggles back to primary
-    speakText('hello again');
-    out.afterToggleBack = window.__lastVoice;
-    useSecondVoice();                       // and onto the second voice
-    speakText('hello once more');
-    out.afterToggleSecond = window.__lastVoice;
+    out.spokeWith = window.__lastVoice;
+    out.mode = window.__ttsMode;
+    await setActiveVoice(pick, { quiet: true });
     return out;
   });
-  check('11. Voice / Use Second Voice pick real voices and speech uses them',
-    voice.rows === 2 && voice.closedAfterPick &&
-      voice.storedPrimary === 'Test Voice A' && voice.usedAfterPrimary === 'Test Voice A' &&
-      voice.storedSecond === 'Test Voice B' &&
-      voice.afterToggleBack === 'Test Voice A' && voice.afterToggleSecond === 'Test Voice B',
+  check('11. Voice picker lists the installed clip voices with previews; the pick is stored and a missing voice falls back to the default',
+    voice.rows === voice.voices.length && voice.previews === voice.rows && voice.ok &&
+      voice.active === voice.picked && voice.stored === voice.picked &&
+      voice.afterGhost === voice.voices[0] && voice.spokeWith === '(clip)' && voice.mode === 'clip',
     JSON.stringify(voice));
 
   // --------------------------------------------------------------------------

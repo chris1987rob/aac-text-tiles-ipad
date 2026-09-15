@@ -1295,6 +1295,39 @@
       border-color: #008369;
     }
 
+    .voice-mode-pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #065f46;
+      background: #d1fae5;
+      border: 1px solid #6ee7b7;
+      border-radius: 999px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      align-self: center;
+    }
+    .voice-mode-pill:empty { display: none; }
+    .voice-mode-pill.offline { color: #7c2d12; background: #ffedd5; border-color: #fdba74; }
+    .voice-mode-pill.inline { font-size: 0.7rem; padding: 1px 8px; }
+    .voice-list { display: flex; flex-direction: column; gap: 6px; }
+    .voice-row { display: flex; gap: 6px; align-items: stretch; }
+    .voice-row-pick {
+      flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+      padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; background: #fff;
+      text-align: left; cursor: pointer; font: inherit;
+    }
+    .voice-row.selected .voice-row-pick { border-color: #008369; background: #e6f4ea; }
+    .voice-row.off .voice-row-pick { opacity: 0.5; cursor: default; }
+    .voice-row-name { font-weight: 800; font-size: 1rem; color: #0f172a; }
+    .voice-row-desc { font-size: 0.78rem; color: #64748b; }
+    .voice-row-preview {
+      width: 48px; border: 2px solid #e2e8f0; border-radius: 8px; background: #fff; color: #008369;
+      font-size: 1.1rem; cursor: pointer;
+    }
+    .voice-row-preview:active { background: #e6f4ea; }
+    .voice-row-preview:disabled { opacity: 0.4; cursor: default; }
     .kb-display-box {
       display: flex;
       align-items: center;
@@ -1844,6 +1877,7 @@
           <!-- Typing Display & Controls -->
           <div class="kb-display-box">
             <div id="kb-text-display" class="kb-display-text"></div>
+            <span id="voice-mode-pill" class="voice-mode-pill" title="Which voice spoke the last phrase"></span>
             <button class="btn btn-danger" onclick="kbClearText()" style="padding: 10px 14px; font-weight: 700;">✕ Clear</button>
             <button class="btn" onclick="kbBackspace()" style="padding: 10px 14px; font-weight: 700; background: #e2e8f0;">⌫ Backspace</button>
             <button class="btn btn-primary" onclick="kbSpeakText()" style="padding: 10px 20px; font-weight: 800; font-size: 1.1rem; background: #00a86b;">▶ Speak</button>
@@ -2196,9 +2230,9 @@
           </div>
 
           <div style="display: flex; gap: 8px; justify-content: space-between;">
-            <button class="btn btn-primary" onclick="openVoicePicker('primary')">Voice</button>
+            <button class="btn btn-primary" onclick="openVoicePicker()">Voice</button>
             <button id="btn-preview-cue" class="btn" style="background: #006853; color: #fff;" onclick="previewAuditoryCue()">Preview</button>
-            <button class="btn" style="background: #006853; color: #fff;" onclick="useSecondVoice()">Use Second Voice</button>
+            <button class="btn" style="background: #006853; color: #fff;" onclick="useSecondVoice()">Next Voice</button>
           </div>
         </div>
         <div class="modal-footer">
@@ -2935,55 +2969,436 @@
     window.__spokenHistory = [];
     window.__lastSpoken = "";
 
-    // Two selectable voices, as on the reference app: a primary voice and a
-    // second one an adult can switch to. These used to be buttons that raised a
-    // toast and changed nothing.
-    const VOICE_PRIMARY_KEY = 'talk_tiles_voice_primary';
-    const VOICE_SECOND_KEY = 'talk_tiles_voice_second';
-    let activeVoiceSlot = 'primary';
+/* --- Say anything (multi-voice, type-to-say) ------------------------------
+       Which clip voice the tiles use, and one pipeline for everything the
+       board has to say -- tile phrases, typed text, cues -- in that voice:
 
+         1. the catalogue clip that says exactly these words
+         2. a render of these words cached in IndexedDB from an earlier tap
+         3. the words' single clips chained (and, when the VoiceForge server
+            is reachable, a proper render into the cache for next time)
+         4. a live render from the VoiceForge server on the LAN
+         5. Android's TextToSpeech through the TalkTiles bridge
+         6. the browser's speechSynthesis (Android WebView has none)
+
+       Stage 1 is synchronous so a tile still starts on the audio clock.
+       window.__ttsMode says which stage spoke last, for the pill and tests. */
+    const CLIP_VOICE_KEY = 'talk_tiles_clip_voice';
+    const TTS_SERVER_KEY = 'talk_tiles_tts_server';
+    const TTS_RATE_KEY = 'talk_tiles_tts_rate';
+    const TTS_SERVER_DEFAULT = 'http://100.109.39.46:8770';   // VoiceForge on the Debian box (tailscale)
+    const TTS_DB = 'talk_tiles_tts', TTS_STORE = 'clips', TTS_CACHE_MAX = 400;
+    const VOICE_PRIMARY_KEY = 'talk_tiles_voice_primary';      // legacy: a speechSynthesis voice name
+    const voiceUnavailable = new Set();      // clip voice ids whose folder is not in this copy
+    const voiceMisses = new Map();           // voice id -> clips that fell back to the default
+    let speakSeq = 0;                        // a later speakText() cancels the async stages of an earlier one
+    window.__ttsMode = '';
+    window.__ttsModeHistory = [];
+    window.__ttsCacheStats = { hits: 0, misses: 0, puts: 0 };
+
+    function clipFormat() {
+      return (typeof AAC_CLIP_FORMAT === 'string' && AAC_CLIP_FORMAT) ? AAC_CLIP_FORMAT : 'opus';
+    }
+    function clipVoices() {
+      if (typeof AAC_VOICES !== 'undefined' && Array.isArray(AAC_VOICES) && AAC_VOICES.length) return AAC_VOICES;
+      return [{ id: 'bella', name: 'Bella', gender: 'female', description: '', dir: 'symbols/audio',
+                preview: 'symbols/audio/hello.' + clipFormat(), clips: 0 }];
+    }
+    function defaultVoice() { return clipVoices()[0]; }
+    function storedVoiceId() {
+      try { return localStorage.getItem(CLIP_VOICE_KEY) || ''; } catch (e) { return ''; }
+    }
+    function activeVoice() {
+      const id = storedVoiceId();
+      return clipVoices().find(v => v.id === id && !voiceUnavailable.has(v.id)) || defaultVoice();
+    }
+    function ttsRate() {
+      try { const r = parseFloat(localStorage.getItem(TTS_RATE_KEY)); return (r >= 0.5 && r <= 1.5) ? r : 0.95; }
+      catch (e) { return 0.95; }
+    }
+    function ttsServerUrl() {
+      let u = TTS_SERVER_DEFAULT;
+      try { const s = localStorage.getItem(TTS_SERVER_KEY); if (s !== null) u = s; } catch (e) {}
+      return String(u || '').trim().replace(/\/+$/, '');
+    }
+
+    // Catalogue paths name the default voice's folder; the active voice's
+    // clip is the same file name in its own folder.
+    function voiceUrl(src) {
+      const v = activeVoice(), d = defaultVoice();
+      if (v === d || typeof src !== 'string' || !src.startsWith(d.dir + '/')) return src;
+      return v.dir + src.slice(d.dir.length);
+    }
+    function voiceFallbackUrl(url) {
+      const d = defaultVoice();
+      if (typeof url !== 'string' || url.startsWith(d.dir + '/')) return null;
+      const v = clipVoices().find(x => x !== d && url.startsWith(x.dir + '/'));
+      return v ? d.dir + url.slice(v.dir.length) : null;
+    }
+    function altFormatUrl(url) {
+      if (typeof url !== 'string') return null;
+      if (/\.opus$/i.test(url)) return url.replace(/\.opus$/i, '.mp3');
+      if (/\.mp3$/i.test(url)) return url.replace(/\.mp3$/i, '.opus');
+      return null;
+    }
+    // Every URL worth trying for a clip, in order: the clip itself, the same
+    // clip in the other container, then the default voice's clip both ways.
+    function voiceCandidates(url) {
+      const out = [url];
+      const alt = altFormatUrl(url), fb = voiceFallbackUrl(url);
+      if (alt) out.push(alt);
+      if (fb) { out.push(fb); const fba = altFormatUrl(fb); if (fba) out.push(fba); }
+      return out;
+    }
+    function noteVoiceMiss(url) {
+      const v = clipVoices().find(x => x !== defaultVoice() && url.startsWith(x.dir + '/'));
+      if (!v) return;
+      if (!voiceMisses.has(v.id)) voiceMisses.set(v.id, new Set());
+      voiceMisses.get(v.id).add(url);
+    }
+
+    // Is this voice's folder really in this copy? Fetches its preview clip.
+    function probeVoice(v) {
+      if (!v || v === defaultVoice()) return Promise.resolve(true);
+      return fetchVoiceBytes(v.preview).then(() => true, () => {
+        const alt = altFormatUrl(v.preview);
+        return alt ? fetchVoiceBytes(alt).then(() => true, () => false) : false;
+      }).then(ok => {
+        if (!ok) voiceUnavailable.add(v.id); else voiceUnavailable.delete(v.id);
+        return ok;
+      });
+    }
+
+    function setActiveVoice(id, opts) {
+      opts = opts || {};
+      const v = clipVoices().find(x => x.id === id) || defaultVoice();
+      try { localStorage.setItem(CLIP_VOICE_KEY, v.id); } catch (e) {}
+      return probeVoice(v).then(ok => {
+        if (!ok) {
+          const d = defaultVoice();
+          try { localStorage.setItem(CLIP_VOICE_KEY, d.id); } catch (e) {}
+          if (!opts.quiet) showToast(v.name + "'s clips are not installed — using " + d.name, 'error');
+        }
+        warmPageVoices();
+        setVoiceMode(window.__ttsMode || 'clip');
+        refreshVoiceUi();
+        if (!opts.quiet && ok) {
+          previewVoice(v.id);
+        }
+        return ok;
+      });
+    }
+    function nextVoice() {
+      const list = clipVoices().filter(v => !voiceUnavailable.has(v.id));
+      const i = list.findIndex(v => v.id === activeVoice().id);
+      return setActiveVoice(list[(i + 1) % list.length].id);
+    }
+    // Hear a voice without switching to it.
+    function previewVoice(id) {
+      const v = clipVoices().find(x => x.id === id);
+      if (!v) return;
+      window.__lastVoice = '(clip)';
+      playVoice(v.preview, { raw: true, onerror: () => {
+        const alt = altFormatUrl(v.preview);
+        if (alt) playVoice(alt, { raw: true, onerror: () => showToast(v.name + ' preview is not installed', 'error') });
+      } });
+    }
+
+    /* ---- which stage spoke: pill + settings line ---- */
+    const TTS_MODE_LABEL = {
+      clip: v => v.name + ' · clip', chain: v => v.name + ' · word clips', cache: v => v.name + ' · saved',
+      live: v => v.name + ' · live', device: () => 'Device voice · offline', browser: () => 'Browser voice · offline',
+      none: () => 'No voice available', rendering: v => v.name + ' · rendering…'
+    };
+    function setVoiceMode(mode) {
+      window.__ttsMode = mode;
+      window.__ttsModeHistory.push(mode);
+      const v = activeVoice();
+      const label = (TTS_MODE_LABEL[mode] || (() => mode))(v);
+      const offline = mode === 'device' || mode === 'browser' || mode === 'none';
+      ['voice-mode-pill', 'settings-voice-status'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = label;
+        el.classList.toggle('offline', offline);
+        el.title = offline ? 'The app voice needs a clip or the voice server; this was spoken by the device instead.'
+                           : 'Spoken in the app voice (' + v.name + ')';
+      });
+    }
+
+    /* ---- render cache (IndexedDB, its own database) ---- */
+    function ttsHash(str) {
+      // FNV-1a, 32-bit, over UTF-16 code units. Stable, tiny, good enough to
+      // spread a few hundred phrases; the stored text is checked on read.
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+      return ('0000000' + h.toString(16)).slice(-8);
+    }
+    function ttsCacheKey(voiceId, text) {
+      const n = normalisePhrase(text);
+      return voiceId + ':' + ttsHash(n) + ':' + n.length;
+    }
+    let ttsDbPromise = null;
+    function ttsDb() {
+      if (ttsDbPromise) return ttsDbPromise;
+      ttsDbPromise = new Promise((resolve) => {
+        try {
+          if (!window.indexedDB) { resolve(null); return; }
+          const req = indexedDB.open(TTS_DB, 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(TTS_STORE)) {
+              db.createObjectStore(TTS_STORE, { keyPath: 'key' }).createIndex('ts', 'ts');
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+          req.onblocked = () => resolve(null);
+        } catch (e) { resolve(null); }
+      });
+      return ttsDbPromise;
+    }
+    function ttsCacheGet(key, text, voiceId) {
+      return ttsDb().then(db => new Promise((resolve) => {
+        if (!db) { resolve(null); return; }
+        try {
+          const req = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE).get(key);
+          req.onsuccess = () => {
+            const row = req.result;
+            const ok = row && row.blob && row.voice === voiceId && normalisePhrase(row.text) === normalisePhrase(text);
+            window.__ttsCacheStats[ok ? 'hits' : 'misses']++;
+            resolve(ok ? row.blob : null);
+          };
+          req.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      }));
+    }
+    function ttsCachePut(key, text, voiceId, blob) {
+      return ttsDb().then(db => new Promise((resolve) => {
+        if (!db) { resolve(false); return; }
+        try {
+          const tx = db.transaction(TTS_STORE, 'readwrite');
+          tx.objectStore(TTS_STORE).put({ key, text, voice: voiceId, blob, ts: Date.now() });
+          tx.oncomplete = () => { window.__ttsCacheStats.puts++; resolve(true); ttsCachePrune(); };
+          tx.onerror = () => resolve(false);
+        } catch (e) { resolve(false); }
+      }));
+    }
+    // Oldest renders go first once the store passes TTS_CACHE_MAX.
+    function ttsCachePrune() {
+      return ttsDb().then(db => new Promise((resolve) => {
+        if (!db) { resolve(0); return; }
+        try {
+          const store = db.transaction(TTS_STORE, 'readwrite').objectStore(TTS_STORE);
+          const count = store.count();
+          count.onsuccess = () => {
+            let extra = count.result - TTS_CACHE_MAX;
+            if (extra <= 0) { resolve(0); return; }
+            let removed = 0;
+            const cur = store.index('ts').openCursor();
+            cur.onsuccess = () => {
+              const c = cur.result;
+              if (!c || extra <= 0) { resolve(removed); return; }
+              c.delete(); extra--; removed++; c.continue();
+            };
+            cur.onerror = () => resolve(removed);
+          };
+          count.onerror = () => resolve(0);
+        } catch (e) { resolve(0); }
+      }));
+    }
+    function ttsCacheCount() {
+      return ttsDb().then(db => new Promise((resolve) => {
+        if (!db) { resolve(0); return; }
+        try { const r = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE).count();
+              r.onsuccess = () => resolve(r.result); r.onerror = () => resolve(0); }
+        catch (e) { resolve(0); }
+      }));
+    }
+    function ttsCacheClear() {
+      return ttsDb().then(db => new Promise((resolve) => {
+        if (!db) { resolve(false); return; }
+        try { const tx = db.transaction(TTS_STORE, 'readwrite'); tx.objectStore(TTS_STORE).clear();
+              tx.oncomplete = () => resolve(true); tx.onerror = () => resolve(false); }
+        catch (e) { resolve(false); }
+      }));
+    }
+
+    /* ---- live render on the VoiceForge server ---- */
+    let ttsServerState = { ok: null, at: 0 };
+    function fetchWithTimeout(url, ms, init) {
+      const ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+      const timer = setTimeout(() => { if (ctl) ctl.abort(); }, ms);
+      return fetch(url, Object.assign({}, init || {}, ctl ? { signal: ctl.signal } : {}))
+        .finally(() => clearTimeout(timer));
+    }
+    // Reachability, remembered for 30 s so a run of typed words does not ping
+    // the server every time.
+    function ttsServerAlive(force) {
+      const url = ttsServerUrl();
+      if (!url) return Promise.resolve(false);
+      if (!force && ttsServerState.ok !== null && performance.now() - ttsServerState.at < 30000) {
+        return Promise.resolve(ttsServerState.ok);
+      }
+      return fetchWithTimeout(url + '/api/status', 1500).then(r => r.ok, () => false).then(ok => {
+        ttsServerState = { ok, at: performance.now() };
+        return ok;
+      });
+    }
+    function ttsRenderLive(text, voice) {
+      const body = {
+        text, voice: voice.voiceforge || voice.id, engine: 'chatterbox-turbo', speed: 0.95,
+        post_preset: 'recorded', target_lufs: -16.0, sample_rate: 24000, quality_gate: false, format: 'wav'
+      };
+      return fetchWithTimeout(ttsServerUrl() + '/api/speak', 30000, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      }).then(r => {
+        if (!r.ok) throw new Error('speak ' + r.status);
+        return r.blob();
+      }).then(b => (b.type && b.type.indexOf('audio') === 0) ? b : new Blob([b], { type: 'audio/wav' }));
+    }
+    // The server loads the engine on its first render (~10-20 s cold) and drops
+    // it after 15 idle minutes, so the first keystroke on the keyboard page
+    // asks for a throwaway render now rather than making the typed word wait.
+    let ttsWarmedAt = 0;
+    function ttsWarmServer() {
+      if (performance.now() - ttsWarmedAt < 600000) return;
+      ttsWarmedAt = performance.now();
+      ttsServerAlive().then(ok => {
+        if (!ok) { ttsWarmedAt = 0; return; }
+        ttsRenderLive('Ready.', activeVoice()).catch(() => {});
+      });
+    }
+    // Render into the cache without playing (the chained-clips stage does this
+    // so the next time these words are typed they come out as one phrase).
+    function ttsRenderToCache(text, voice) {
+      const key = ttsCacheKey(voice.id, text);
+      return ttsServerAlive().then(ok => {
+        if (!ok) return false;
+        return ttsCacheGet(key, text, voice.id).then(hit => hit ? true :
+          ttsRenderLive(text, voice).then(blob => ttsCachePut(key, text, voice.id, blob)).catch(() => false));
+      });
+    }
+
+    /* ---- the device's own voice (last resort) ---- */
     function availableVoices() {
       if (!window.speechSynthesis || !window.speechSynthesis.getVoices) return [];
       return window.speechSynthesis.getVoices() || [];
     }
-
-    function getVoiceName(slot) {
-      try { return localStorage.getItem(slot === 'second' ? VOICE_SECOND_KEY : VOICE_PRIMARY_KEY) || ''; }
-      catch (e) { return ''; }
+    function resolveBrowserVoice(gender) {
+      const voices = availableVoices();
+      if (!voices.length) return null;
+      let name = '';
+      try { name = localStorage.getItem(VOICE_PRIMARY_KEY) || ''; } catch (e) {}
+      const byName = name && voices.find(v => v.name === name);
+      if (byName) return byName;
+      const en = voices.filter(v => /^en/i.test(v.lang || ''));
+      const want = gender === 'male' ? /male|david|daniel|alex|fred|guy|james|tom/i : /female|samantha|karen|moira|tessa|victoria|zira|susan|fiona|allison|ava|joanna|kate|sara/i;
+      return en.find(v => want.test(v.name)) || en[0] || voices[0];
+    }
+    function speakDevice(text) {
+      const v = activeVoice();
+      if (window.TalkTiles && typeof window.TalkTiles.speak === 'function') {
+        try {
+          if (window.TalkTiles.speak(text, v.gender || 'female', ttsRate()) !== false) {
+            window.__lastVoice = '(device)';
+            setVoiceMode('device');
+            return 'device';
+          }
+        } catch (e) { console.warn('TalkTiles.speak failed', e); }
+      }
+      if (window.speechSynthesis) {
+        try {
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.rate = ttsRate();
+          const bv = resolveBrowserVoice(v.gender);
+          if (bv) { try { utter.voice = bv; if (bv.lang) utter.lang = bv.lang; } catch (e) {} }
+          window.__lastVoice = bv ? bv.name : '(default)';
+          window.speechSynthesis.speak(utter);
+          setVoiceMode('browser');
+          return 'browser';
+        } catch (e) { console.warn('speechSynthesis failed', e); }
+      }
+      window.__lastVoice = '(none)';
+      setVoiceMode('none');
+      showToast('No voice available to say "' + text + '"', 'error');
+      return 'none';
     }
 
-    function setVoiceName(slot, name) {
-      try { localStorage.setItem(slot === 'second' ? VOICE_SECOND_KEY : VOICE_PRIMARY_KEY, name || ''); }
-      catch (e) {}
-    }
-
-    function resolveVoice() {
-      const name = getVoiceName(activeVoiceSlot);
-      if (!name) return null;
-      return availableVoices().find(v => v.name === name) || null;
-    }
-
-    function speakText(text) {
-      if (!text) return;
-      const clean = String(text).trim();
+    /* ---- the pipeline ---- */
+    // Say `text` in the app voice. Returns the stage that took it (or 'tts'
+    // when the answer is still being decided asynchronously). opts.noClip
+    // skips the clip stages -- it is set when a clip already failed to play,
+    // so a broken clip cannot loop back into itself.
+    function speakText(text, opts) {
+      opts = opts || {};
+      const clean = String(text == null ? '' : text).trim();
+      if (!clean) return 'none';
       window.__lastSpoken = clean;
       window.__spokenHistory.push(clean);
+      const mine = ++speakSeq;
 
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(clean);
-        utter.rate = 0.95;
-        const v = resolveVoice();
-        // A stored voice name can resolve to something the engine will not
-        // accept (a stale voice after a system update). Fall back to the
-        // default rather than letting the board go silent.
-        if (v) {
-          try { utter.voice = v; if (v.lang) utter.lang = v.lang; }
-          catch (e) { console.warn('Voice not usable, using default', e); }
+      if (!opts.noClip) {
+        const sym = clipForPhrase(clean);
+        if (sym) {
+          window.__lastVoice = '(clip)';
+          setVoiceMode('clip');
+          playVoice(sym.audio, Object.assign({}, opts, { onerror: () => speakText(clean, { noClip: true }) }));
+          return 'clip';
         }
-        window.__lastVoice = v ? v.name : '(default)';
-        window.speechSynthesis.speak(utter);
       }
+      speakTextAsync(clean, opts, mine);
+      return 'tts';
+    }
+    const speakTextNoClip = (t) => speakText(t, { noClip: true });
+
+    function chainClipsFor(clean) {
+      const words = normalisePhrase(clean).split(' ').filter(Boolean);
+      if (words.length < 2 || !voiceContext()) return null;
+      const clips = words.map(w => clipForPhrase(w));
+      return clips.every(Boolean) ? clips.map(s => s.audio) : null;
+    }
+
+    function speakTextAsync(clean, opts, mine) {
+      const v = activeVoice();
+      const key = ttsCacheKey(v.id, clean);
+      const stale = () => mine !== speakSeq;
+      return ttsCacheGet(key, clean, v.id).then(hit => {
+        if (stale()) return 'stale';
+        if (hit) {
+          window.__lastVoice = '(clip)';
+          setVoiceMode('cache');
+          playVoice(hit, { onerror: () => speakDevice(clean) });
+          return 'cache';
+        }
+        if (!opts.noClip) {
+          const chain = chainClipsFor(clean);
+          if (chain) {
+            window.__lastVoice = '(clip)';
+            setVoiceMode('chain');
+            playVoiceSequence(chain, () => speakDevice(clean));
+            ttsRenderToCache(clean, v);      // a proper phrase for next time, if the server is up
+            return 'chain';
+          }
+        }
+        return ttsServerAlive().then(alive => {
+          if (stale()) return 'stale';
+          if (!alive) return speakDevice(clean);
+          setVoiceMode('rendering');
+          return ttsRenderLive(clean, v).then(blob => {
+            if (stale()) return 'stale';
+            window.__lastVoice = '(clip)';
+            setVoiceMode('live');
+            playVoice(blob, { onerror: () => speakDevice(clean) });
+            ttsCachePut(key, clean, v.id, blob);
+            return 'live';
+          }, () => {
+            ttsServerState = { ok: false, at: performance.now() };
+            return stale() ? 'stale' : speakDevice(clean);
+          });
+        });
+      });
     }
 
 /* --- Voice engine (Bella clips) -------------------------------------------
@@ -3055,17 +3470,35 @@
 
     // Start decoding a clip (URL string or recorded Blob). Returns the
     // AudioBuffer promise, or null when Web Audio is unavailable.
-    function warmVoice(src) {
+    // Fetch + decode the first of the candidate URLs that works; a miss on a
+    // non-default voice is counted so a half-installed voice is visible.
+    function fetchDecodeAny(ctx, urls) {
+      let i = 0;
+      const next = (err) => {
+        if (i >= urls.length) return Promise.reject(err || new Error('no clip'));
+        const u = urls[i++];
+        return fetchVoiceBytes(u).then(b => decodeVoiceBytes(ctx, b)).catch(e => {
+          if (i === 1) noteVoiceMiss(u);
+          return next(e);
+        });
+      };
+      return next(null);
+    }
+
+    // `raw`: the URL is already the file to play (a preview, or a path the
+    // caller mapped) -- do not point it at the active voice's folder again.
+    function warmVoice(src, raw) {
       const ctx = voiceContext();
       if (!ctx || !src) return null;
       if (typeof src === 'string') {
+        if (!raw) src = voiceUrl(src);
         let p = voiceBufferPromises.get(src);
         if (p) {                                   // LRU touch
           voiceBufferPromises.delete(src);
           voiceBufferPromises.set(src, p);
           return p;
         }
-        p = fetchVoiceBytes(src).then(b => decodeVoiceBytes(ctx, b));
+        p = fetchDecodeAny(ctx, voiceCandidates(src));
         p.then(buf => { voiceBuffers.set(src, buf); },
                () => { voiceBufferPromises.delete(src); });
         voiceBufferPromises.set(src, p);
@@ -3110,6 +3543,9 @@
         if (el.__objectUrl) { URL.revokeObjectURL(el.__objectUrl); el.__objectUrl = null; }
       }
       if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (window.TalkTiles && typeof window.TalkTiles.stopSpeech === 'function') {
+        try { window.TalkTiles.stopSpeech(); } catch (e) {}
+      }
     }
 
     // Play a clip now. `opts.onended` runs when it finishes (or is stopped by
@@ -3118,6 +3554,7 @@
     function playVoice(src, opts) {
       opts = opts || {};
       const tapAt = opts.tapAt || performance.now();
+      if (typeof src === 'string' && !opts.raw) src = voiceUrl(src);
       stopVoice();
       const ctx = voiceContext();
       const buf = ctx ? voiceBufferReady(src) : null;
@@ -3145,7 +3582,7 @@
 
       // Cold: the element starts as soon as it can while the buffer decodes
       // for next time.
-      warmVoice(src);
+      warmVoice(src, true);
       let url = src, objectUrl = null;
       if (typeof src !== 'string') {
         try { url = objectUrl = URL.createObjectURL(src); }
@@ -3160,7 +3597,19 @@
         if (opts.onended) opts.onended();
       };
       el.onended = done;
-      el.onerror = () => { done(); if (opts.onerror) opts.onerror(new Error('audio element error')); };
+      // A clip missing from this voice's folder (or in the other container)
+      // is played from the next candidate before the caller hears "error".
+      const candidates = (typeof src === 'string') ? voiceCandidates(src).slice(1) : [];
+      el.onerror = () => {
+        if (voiceElement === el && candidates.length) {
+          const alt = candidates.shift();
+          noteVoiceMiss(url);
+          el.src = alt;
+          el.play().catch(() => { done(); if (opts.onerror) opts.onerror(new Error('audio element error')); });
+          return;
+        }
+        done(); if (opts.onerror) opts.onerror(new Error('audio element error'));
+      };
       el.addEventListener('playing', () => {
         if (tel.src === url || (objectUrl && tel.src === '(blob)')) {
           tel.startAt = performance.now();
@@ -3213,7 +3662,7 @@
       window.__lastSpoken = clean;
       window.__spokenHistory.push(clean);
       window.__lastVoice = '(clip)';
-      const o = Object.assign({}, opts || {}, { onerror: () => speakText(clean) });
+      const o = Object.assign({}, opts || {}, { onerror: () => speakTextNoClip(clean) });
       return playVoice(sym.audio, o);
     }
 
@@ -3254,7 +3703,7 @@
         window.__spokenHistory.push(say);
         window.__lastVoice = '(clip)';
         // A clip missing from an old offline cache must not silence the tile.
-        playVoice(sym.audio, { onerror: () => speakText(say) });
+        playVoice(sym.audio, { onerror: () => speakTextNoClip(say) });
         return true;
       } catch (e) {
         return false;
@@ -3496,6 +3945,39 @@
     }
 
     /* --- Toast Notification --- */
+
+    function saveTtsServer(v) {
+      try { localStorage.setItem(TTS_SERVER_KEY, String(v || '').trim()); } catch (e) {}
+      ttsServerState = { ok: null, at: 0 };
+    }
+    function saveTtsRate(v) {
+      try { localStorage.setItem(TTS_RATE_KEY, String(v)); } catch (e) {}
+      const el = document.getElementById('settings-rate-label');
+      if (el) el.textContent = parseFloat(v).toFixed(2);
+    }
+    function showTtsServerStatus(msg) {
+      const el = document.getElementById('settings-tts-server-status');
+      if (el) el.textContent = msg;
+    }
+    function testTtsServer() {
+      const inp = document.getElementById('settings-tts-server');
+      if (inp) saveTtsServer(inp.value);
+      showTtsServerStatus('Checking…');
+      ttsServerAlive(true).then(ok => {
+        if (!ok) { showTtsServerStatus('Not reachable at ' + ttsServerUrl()); return; }
+        showTtsServerStatus('Reachable — rendering a test phrase…');
+        const v = activeVoice();
+        ttsRenderLive('This is ' + v.name + ', the voice server is working.', v).then(blob => {
+          showTtsServerStatus('Voice server working (' + v.name + ')');
+          setVoiceMode('live');
+          playVoice(blob, {});
+        }, err => showTtsServerStatus('Reachable, but the render failed: ' + (err && err.message || err)));
+      });
+    }
+    function refreshTtsCacheCount() {
+      ttsCacheCount().then(n => { const el = document.getElementById('settings-tts-cache-count'); if (el) el.textContent = n; });
+    }
+
     function showToast(message, type = 'info') {
       const container = document.getElementById('toast-container');
       if (!container) return;
@@ -3528,19 +4010,34 @@
       titleEl.textContent = title;
 
       if (title === 'Settings') {
+        const rate = ttsRate();
         bodyEl.innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <div style="font-weight: 700; margin-bottom: 6px;">Voice</div>
+              <div id="settings-voice-list" class="voice-list">${voiceRowsHtml(activeVoice().id)}</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Last spoken by: <span id="settings-voice-status" class="voice-mode-pill inline"></span></div>
+            </div>
+            <div>
+              <div style="font-weight: 700; margin-bottom: 4px;">Typed words</div>
+              <div style="font-size: 0.82rem; color: #475569; margin-bottom: 6px;">Words with no clip are rendered in the same voice by the voice server when it can be reached, and remembered. Without it the device's own voice speaks them.</div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" id="settings-tts-server" class="text-input" style="flex: 1; font-size: 0.85rem;" placeholder="http://host:8770" value="${escapeHtmlText(ttsServerUrl())}" onchange="saveTtsServer(this.value)">
+                <button class="btn" style="padding: 8px 12px;" onclick="testTtsServer()">Test</button>
+              </div>
+              <div id="settings-tts-server-status" style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Not checked yet</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Saved renders: <span id="settings-tts-cache-count">…</span> <button class="btn" style="padding: 2px 8px; font-size: 0.75rem;" onclick="ttsCacheClear().then(() => refreshTtsCacheCount())">Clear</button></div>
+            </div>
             <label style="display: flex; justify-content: space-between; align-items: center; font-weight: 600;">
-              <span>Speech Rate (0.95x):</span>
-              <input type="range" min="0.5" max="1.5" step="0.05" value="0.95">
+              <span>Device voice rate (<span id="settings-rate-label">${rate.toFixed(2)}</span>x):</span>
+              <input type="range" min="0.5" max="1.5" step="0.05" value="${rate}" oninput="saveTtsRate(this.value)">
             </label>
-            <label style="display: flex; justify-content: space-between; align-items: center; font-weight: 600;">
-              <span>High Contrast Borders:</span>
-              <input type="checkbox" checked>
-            </label>
-            <p style="font-size: 0.85rem; color: #64748b;">talk tiles AAC Communication Book v2.4.1 &copy; 2026</p>
+            <p style="font-size: 0.85rem; color: #64748b;">talk tiles AAC Communication Book v2.7 &copy; 2026</p>
           </div>
         `;
+        setVoiceMode(window.__ttsMode || 'clip');
+        refreshTtsCacheCount();
+        ttsServerAlive().then(ok => showTtsServerStatus(ok ? 'Voice server reachable' : 'Voice server not reachable — typed words use the device voice'));
       } else if (title === 'Downloads') {
         bodyEl.innerHTML = `
           <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -4111,6 +4608,7 @@
     function updateKeyboardDisplay() {
       const el = document.getElementById('kb-text-display');
       if (el) el.textContent = kbCurrentText;
+      if (kbCurrentText) ttsWarmServer();
     }
 
     function kbToggleNumbers() {
@@ -5668,7 +6166,7 @@
           window.__lastSpoken = String(data.tts || data.label).trim();
           window.__spokenHistory.push(window.__lastSpoken);
           window.__lastVoice = '(clip)';
-          playTileAudio(slotId, clipSym.audio, tapAt, () => speakText(data.tts || data.label));
+          playTileAudio(slotId, clipSym.audio, tapAt, () => speakTextNoClip(data.tts || data.label));
         } else {
           stopBoardAudio();
           speakText(data.tts || data.label);
@@ -5782,7 +6280,7 @@
         window.__lastSpoken = sentence;
         window.__spokenHistory.push(sentence);
         window.__lastVoice = '(clip)';
-        playVoiceSequence(clips.map(s => s.audio), () => speakText(sentence));
+        playVoiceSequence(clips.map(s => s.audio), () => speakTextNoClip(sentence));
         return;
       }
       speakText(sentence);
@@ -5835,52 +6333,45 @@
       document.getElementById('tab-cue-none').classList.toggle('active', mode === 'none');
     }
 
-    // "Voice" and "Use Second Voice" used to be `showToast(...)` and nothing
-    // else. They now pick a real SpeechSynthesis voice, which `speakText()`
-    // applies to every utterance the board makes.
-    function openVoicePicker(slot) {
-      activeVoiceSlot = slot;
-      const voices = availableVoices();
+    // "Voice" lists the clip voices installed in this copy (AAC_VOICES); the
+    // one picked is the voice every tile, cue and typed phrase uses.
+    function voiceRowsHtml(current) {
+      return clipVoices().map(v => {
+        const off = voiceUnavailable.has(v.id);
+        return `<div class="voice-row${v.id === current ? ' selected' : ''}${off ? ' off' : ''}" data-voice="${escapeHtmlText(v.id)}">
+            <button class="voice-row-pick" onclick="setActiveVoice('${escapeHtmlText(v.id)}')" ${off ? 'disabled' : ''}>
+              <span class="voice-row-name">${escapeHtmlText(v.name)}</span>
+              <span class="voice-row-desc">${escapeHtmlText(v.description || '')}${off ? ' — not installed' : ''}</span>
+            </button>
+            <button class="voice-row-preview" onclick="previewVoice('${escapeHtmlText(v.id)}')" title="Hear ${escapeHtmlText(v.name)}" ${off ? 'disabled' : ''}>▶</button>
+          </div>`;
+      }).join('');
+    }
+    function refreshVoiceUi() {
+      const cur = activeVoice().id;
+      ['voice-picker-list', 'settings-voice-list'].forEach(id => {
+        const host = document.getElementById(id);
+        if (host && host.children.length) host.innerHTML = voiceRowsHtml(cur);
+      });
+      const pill = document.getElementById('voice-mode-pill');
+      if (pill && !pill.textContent) setVoiceMode('clip');
+    }
+    function openVoicePicker() {
       const host = document.getElementById('voice-picker-list');
       const modal = document.getElementById('modal-voice-picker');
       const title = document.getElementById('voice-picker-title');
-      title.textContent = slot === 'second' ? 'Choose Second Voice' : 'Choose Voice';
-      host.innerHTML = '';
-
-      if (!voices.length) {
-        host.innerHTML = '<div style="padding:16px; color:#64748b;">No speech voices are installed on this device. The board will use the system default.</div>';
-      } else {
-        const current = getVoiceName(slot);
-        voices.forEach(v => {
-          const row = document.createElement('button');
-          row.className = 'btn voice-row' + (v.name === current ? ' btn-primary' : '');
-          row.style.cssText = 'display:flex; justify-content:space-between; width:100%; margin-bottom:6px; text-align:left;';
-          row.innerHTML = `<span>${escapeHtmlText(v.name)}</span><span style="opacity:.65;">${escapeHtmlText(v.lang || '')}</span>`;
-          row.onclick = () => chooseVoice(slot, v.name);
-          host.appendChild(row);
-        });
-      }
+      title.textContent = 'Choose Voice';
+      host.innerHTML = voiceRowsHtml(activeVoice().id);
       modal.classList.add('open');
-    }
-
-    function chooseVoice(slot, name) {
-      setVoiceName(slot, name);
-      activeVoiceSlot = slot;
-      closeVoicePicker();
-      showToast((slot === 'second' ? 'Second voice: ' : 'Voice: ') + name);
-      speakText('This is the ' + (slot === 'second' ? 'second' : 'main') + ' voice');
     }
 
     function closeVoicePicker() {
       document.getElementById('modal-voice-picker').classList.remove('open');
     }
 
-    // Switch the board onto the second voice (and back) without reopening the list.
+    // Step to the next installed voice without opening the list.
     function useSecondVoice() {
-      if (!getVoiceName('second')) { openVoicePicker('second'); return; }
-      activeVoiceSlot = activeVoiceSlot === 'second' ? 'primary' : 'second';
-      showToast(activeVoiceSlot === 'second' ? 'Using second voice' : 'Using main voice');
-      speakText('This is the ' + (activeVoiceSlot === 'second' ? 'second' : 'main') + ' voice');
+      nextVoice().then(() => showToast('Voice: ' + activeVoice().name));
     }
 
     // The share icon raised a "Share Page" toast and did nothing. It now hands
@@ -6938,6 +7429,18 @@
       }
 
       renderCurrentPage();
+
+      // The picked voice may not be in this copy (a book moved between
+      // devices); fall back to the default quietly. The voice server is only
+      // looked for when something needs it (a typed word, Settings), so an
+      // offline board never logs a failed request at start.
+      const chosen = clipVoices().find(v => v.id === storedVoiceId());
+      if (chosen && chosen !== defaultVoice()) {
+        setActiveVoice(chosen.id, { quiet: true }).then(ok => {
+          if (!ok) showToast(chosen.name + "'s clips are not installed — using " + defaultVoice().name, 'error');
+        });
+      }
+      setVoiceMode('clip');
     }
 
     // Switch input: Space or Enter picks whatever the scan cursor is on.

@@ -26,6 +26,8 @@ const fs = require('fs');
   });
 
   const page = await browser.newPage();
+  // The suites run offline: no VoiceForge server, so typed words use the device path.
+  await page.evaluateOnNewDocument(() => { try { localStorage.setItem('talk_tiles_tts_server', ''); } catch (e) {} });
   await page.setViewport({ width: 1024, height: 768 });
 
   const client = await page.target().createCDPSession();
@@ -619,7 +621,7 @@ const fs = require('fs');
   // --------------------------------------------------------------------------
   // Check 9: Set Auditory Cue modal
   // --------------------------------------------------------------------------
-  const c9 = await page.evaluate(() => {
+  const c9 = await page.evaluate(async () => {
     const out = { modes: [] };
     setEditMode(false); currentPageIndex = 0; renderCurrentPage();
     document.getElementById('btn-bar-auditory').click();
@@ -630,18 +632,22 @@ const fs = require('fs');
     });
     document.getElementById('tab-cue-tts').click();
 
-    // Voice / Use Second Voice are real controls as of v2.5: the first opens a
-    // voice picker, the second switches the board onto the second voice.
+    // Voice / Next Voice are real controls: the first lists the clip voices
+    // installed in this copy (each with a preview button), the second steps
+    // the board onto the next installed voice.
     window.__toasts = [];
     document.querySelector('#modal-auditory-cue [onclick*="openVoicePicker"]').click();
     out.voicePickerOpen = document.getElementById('modal-voice-picker').classList.contains('open');
     out.voiceRows = document.querySelectorAll('#voice-picker-list .voice-row').length;
-    out.voiceEmptyNote = !!document.querySelector('#voice-picker-list div');
+    out.voicePreviews = document.querySelectorAll('#voice-picker-list .voice-row-preview').length;
+    out.voiceSelectedRow = !!document.querySelector('#voice-picker-list .voice-row.selected');
     document.querySelector('#modal-voice-picker .modal-close-btn').click();
     out.voicePickerClosed = !document.getElementById('modal-voice-picker').classList.contains('open');
+    const voiceBefore = activeVoice().id;
     document.querySelector('#modal-auditory-cue [onclick*="useSecondVoice"]').click();
-    out.secondVoiceOpened = document.getElementById('modal-voice-picker').classList.contains('open');
-    document.querySelector('#modal-voice-picker .modal-footer .btn').click();
+    await new Promise(r => setTimeout(r, 300));
+    out.nextVoice = { before: voiceBefore, after: activeVoice().id, installed: clipVoices().length };
+    await setActiveVoice(voiceBefore, { quiet: true });
 
     document.getElementById('cue-text-input').value = 'Pick a colour';
     window.__spoken = window.__spokenHistory = [];
@@ -662,7 +668,9 @@ const fs = require('fs');
   check(
     '9. Auditory Cue modal: Recorded / TTS / None tabs, Voice picker opens/closes, Second Voice, Preview speaks, Save persists on the page, Close',
     c9.modes.every(m => m.mode === m.m && m.active) &&
-      c9.voicePickerOpen && c9.voiceEmptyNote && c9.voicePickerClosed && c9.secondVoiceOpened &&
+      c9.voicePickerOpen && c9.voiceRows >= 1 && c9.voicePreviews === c9.voiceRows && c9.voiceSelectedRow &&
+      c9.voicePickerClosed &&
+      (c9.nextVoice.installed < 2 ? c9.nextVoice.after === c9.nextVoice.before : c9.nextVoice.after !== c9.nextVoice.before) &&
       JSON.stringify(c9.previewed) === JSON.stringify(['Pick a colour']) &&
       c9.saved.cue === 'Pick a colour' && c9.saved.mode === 'tts' && c9.saved.closed &&
       c9.reopenedValue === 'Pick a colour' && c9.closedByX,
