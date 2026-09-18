@@ -154,7 +154,7 @@ fun NavigationBarView(
         val title = store.currentPage.title.uppercase()
         val sidePad = if (store.isEditMode) 180.dp else 120.dp
         val titleSize = when {
-            store.isEditMode -> when { title.length > 16 -> 14.sp; title.length > 10 -> 17.sp; else -> 21.sp }
+            store.isEditMode -> when { title.length > 13 -> 13.sp; title.length > 9 -> 17.sp; else -> 21.sp }
             title.length > 18 -> 17.sp
             title.length > 12 -> 22.sp
             else -> 30.sp

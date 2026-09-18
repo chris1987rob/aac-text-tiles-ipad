@@ -16,18 +16,20 @@ val keystorePass: String? = System.getenv("KS_PASS")
 
 android {
     namespace = "com.talktiles.tablet"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.talktiles.tablet"
+        // The Play listing is tied to this id forever; it was chosen before
+        // the first upload. The code package stays com.talktiles.tablet.
+        applicationId = "com.talktiles.app"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        targetSdk = 36
+        versionCode = 3
+        versionName = "1.2"
         vectorDrawables { useSupportLibrary = true }
     }
 
-    buildToolsVersion = "34.0.0"
+    buildToolsVersion = "36.1.0"
 
     signingConfigs {
         if (keystoreFile.exists() && keystorePass != null) {
@@ -42,9 +44,20 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 shrinks the code (Compose + icons-extended are the bulk of
+            // the dex); the assets are what make the bundle big and are left
+            // alone. Rules for kotlinx.serialization are in proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("talktiles") ?: signingConfigs.getByName("debug")
         }
+    }
+
+    bundle {
+        // One bundle, no per-language/density splits worth making: the app
+        // has one language and almost no drawables.
+        language { enableSplit = false }
     }
 
     // The pictures and Bella's clips are the SwiftUI app's folders: the

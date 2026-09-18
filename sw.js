@@ -2,7 +2,7 @@
    AAC Text Tiles iPad — Service Worker (Offline CacheStorage)
    ========================================================================== */
 
-const CACHE_NAME = 'aac-text-tiles-ipad-v10'; // v9: pictures recompressed WITH alpha (v8 shipped them on black squares); v8: voice picker (Bella/Jake/Maya), type-to-say pipeline, AAC_VOICES in symbols_data.js; v7: clips trimmed of leading silence, decoded ahead of the tap, phrase clips for the built-in boards; v6: voice clips re-rendered with the bella voice; v5: pre-rendered voice clips (symbols/audio); v2: in-house symbol pictures replace the Mulberry SVGs; v3: 29 regenerated; v4: catalogue expanded 558 -> 2210
+const CACHE_NAME = 'aac-text-tiles-ipad-v11'; /* v11: 343 more Bella phrase clips - every built-in word and label */ // v9: pictures recompressed WITH alpha (v8 shipped them on black squares); v8: voice picker (Bella/Jake/Maya), type-to-say pipeline, AAC_VOICES in symbols_data.js; v7: clips trimmed of leading silence, decoded ahead of the tap, phrase clips for the built-in boards; v6: voice clips re-rendered with the bella voice; v5: pre-rendered voice clips (symbols/audio); v2: in-house symbol pictures replace the Mulberry SVGs; v3: 29 regenerated; v4: catalogue expanded 558 -> 2210
 
 const CORE_ASSETS = [
   './',

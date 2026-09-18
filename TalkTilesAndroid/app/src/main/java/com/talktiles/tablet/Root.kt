@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -65,7 +66,9 @@ fun RootView(store: AACStore) {
     fun enterEditor() { store.isEditMode = true; showingHome = false }
     fun requestEditor() { if (store.isLocked) sheet = RootSheet.Pin else enterEditor() }
 
-    Box(Modifier.fillMaxSize().background(BoardTheme.background)) {
+    // targetSdk 35+ draws edge to edge: the white behind the status bar is the
+    // top bar's own colour continuing up, and the content keeps clear of both bars.
+    Box(Modifier.fillMaxSize().background(BoardTheme.bar).safeDrawingPadding().background(BoardTheme.background)) {
         if (showingHome) {
             HomeView(
                 onLaunchPlayer = { store.isEditMode = false; showingHome = false },

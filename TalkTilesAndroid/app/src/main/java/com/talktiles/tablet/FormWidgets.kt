@@ -381,7 +381,7 @@ fun PictureSourceRows(hasPicture: Boolean, maxDimension: Int, onPicked: (ByteArr
     fun launchCamera() {
         val dir = File(context.cacheDir, "shared").apply { mkdirs() }
         val f = File(dir, "camera-${System.currentTimeMillis()}.jpg")
-        val uri = FileProvider.getUriForFile(context, "com.talktiles.tablet.files", f)
+        val uri = FileProvider.getUriForFile(context, context.packageName + ".files", f)
         cameraUri = uri
         takePicture.launch(uri)
     }

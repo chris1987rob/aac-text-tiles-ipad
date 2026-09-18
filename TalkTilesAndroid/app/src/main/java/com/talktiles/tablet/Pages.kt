@@ -68,7 +68,7 @@ import java.io.File
 
 /** Hands a file to the system share sheet. */
 fun shareFile(context: android.content.Context, file: File, mime: String = "application/json") {
-    val uri = FileProvider.getUriForFile(context, "com.talktiles.tablet.files", file)
+    val uri = FileProvider.getUriForFile(context, context.packageName + ".files", file)
     val send = Intent(Intent.ACTION_SEND).apply {
         type = mime
         putExtra(Intent.EXTRA_STREAM, uri)
