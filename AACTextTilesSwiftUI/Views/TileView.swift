@@ -1,6 +1,11 @@
 import SwiftUI
 
 public struct TileView: View {
+    /// Touch-access settings, passed in rather than read from a singleton so a
+    /// tile stays previewable and testable on its own.
+    public var activationDelay: Double = 0
+    public var activateOnRelease: Bool = false
+
     public let slotId: Int
     public let tile: TileModel?
     public let isEditMode: Bool
@@ -9,8 +14,12 @@ public struct TileView: View {
     public let onTap: () -> Void
 
     @State private var isPressed: Bool = false
+    @State private var dwellWork: DispatchWorkItem? = nil
+    @State private var didFire: Bool = false
 
     public init(
+        activationDelay: Double = 0,
+        activateOnRelease: Bool = false,
         slotId: Int,
         tile: TileModel?,
         isEditMode: Bool,
@@ -18,6 +27,8 @@ public struct TileView: View {
         cellHeight: CGFloat = 160,
         onTap: @escaping () -> Void
     ) {
+        self.activationDelay = activationDelay
+        self.activateOnRelease = activateOnRelease
         self.slotId = slotId
         self.tile = tile
         self.isEditMode = isEditMode
@@ -28,18 +39,11 @@ public struct TileView: View {
 
     public var body: some View {
         let minDim = min(cellWidth, cellHeight)
-        let cornerRadius = min(22.0, max(8.0, minDim * 0.09))
+        // Rounder than before: the reference look is soft pastel cards.
+        let cornerRadius = min(26.0, max(10.0, minDim * 0.13))
         let pad = max(4.0, min(14.0, minDim * 0.05))
 
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.12)) {
-                isPressed = true
-            }
-            onTap()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                isPressed = false
-            }
-        }) {
+        Group {
             ZStack {
                 if let t = tile, (!t.label.isEmpty || t.symbolName != nil || t.photoData != nil) {
                     let hasLabel = !t.label.isEmpty
@@ -62,15 +66,18 @@ public struct TileView: View {
                     .padding(pad)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(hex: t.bgHex))
+                    // The border colour a person picked is kept, but drawn
+                    // faintly: the pastel look is a soft card, not an outlined
+                    // box. A press still lights the edge up green.
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .stroke(
-                                isPressed ? Color(hex: "#00E676") : Color(hex: t.borderHex),
-                                lineWidth: isPressed ? 4 : max(2, minDim * 0.02)
+                                isPressed ? Color(hex: "#00E676") : Color(hex: t.borderHex).opacity(0.35),
+                                lineWidth: isPressed ? 4 : 1.5
                             )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-                    .shadow(color: Color.black.opacity(0.12), radius: 5, x: 0, y: 3)
+                    .shadow(color: Color.black.opacity(0.07), radius: 6, x: 0, y: 3)
                     .scaleEffect(isPressed ? 1.03 : 1.0)
                 } else if isEditMode {
                     // Empty Editor Tile
@@ -99,14 +106,56 @@ public struct TileView: View {
                 }
             }
         }
-        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
+        // In the editor a press opens the editor: no dwell, no lockout, since
+        // those exist to protect a child using the board, not an adult building it.
+        .gesture(isEditMode
+                 ? nil
+                 : DragGesture(minimumDistance: 0)
+                     .onChanged { _ in if !isPressed { pressDown() } }
+                     .onEnded { _ in pressUp() })
+        .onTapGesture { if isEditMode { onTap() } }
+    }
+
+    // MARK: - Press handling
+
+    private func pressDown() {
+        didFire = false
+        withAnimation(.easeInOut(duration: 0.12)) { isPressed = true }
+
+        if activationDelay > 0 {
+            // Dwell: the finger has to stay put. Lifting early cancels, which
+            // is the whole point - a resting hand or a brushing sleeve no
+            // longer speaks.
+            let work = DispatchWorkItem { fire() }
+            dwellWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + activationDelay, execute: work)
+        } else if !activateOnRelease {
+            fire()
+        }
+    }
+
+    private func pressUp() {
+        dwellWork?.cancel()
+        dwellWork = nil
+        if activationDelay == 0 && activateOnRelease { fire() }
+        withAnimation(.easeInOut(duration: 0.12)) { isPressed = false }
+    }
+
+    private func fire() {
+        guard !didFire else { return }
+        didFire = true
+        onTap()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.12)) { isPressed = false }
+        }
     }
 
     @ViewBuilder
     private func labelView(_ t: TileModel, hasSymbol: Bool, minDim: CGFloat) -> some View {
         let baseSize: CGFloat = hasSymbol ? min(32, max(14, minDim * 0.13)) : min(44, max(18, minDim * 0.22))
         Text(t.label)
-            .font(.system(size: baseSize * t.labelSize, weight: .bold))
+            .font(.system(size: baseSize * t.labelSize, weight: .semibold))
             .foregroundColor(Color(hex: t.labelHex))
             .lineLimit(2)
             .minimumScaleFactor(0.5)
@@ -149,6 +198,14 @@ public struct TileView: View {
                 // genuinely unknown name falls through to the star.
                 if TileView.isEmoji(t.symbolName) {
                     Text(t.symbolName ?? "").font(.system(size: symSize))
+                } else if let name = t.symbolName, let img = SymbolLibrary.image(named: name) {
+                    // A bundled Mulberry symbol. The switch above only ever
+                    // covered twenty hardcoded words; the library carries
+                    // thousands and is what the editor now picks from.
+                    Image(uiImage: img)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: symSize * 1.5, height: symSize * 1.5)
                 } else {
                     Image(systemName: "star.fill")
                         .font(.system(size: symSize * 0.75))
@@ -192,5 +249,14 @@ extension Color {
             blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
+    }
+
+    /// The round trip back out, so a colour chosen with the system picker can be
+    /// stored in the same "#RRGGBB" field every page background already uses.
+    var hexString: String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a)
+        let clamp: (CGFloat) -> Int = { Int((max(0, min(1, $0)) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", clamp(r), clamp(g), clamp(b))
     }
 }

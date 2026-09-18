@@ -5,7 +5,7 @@ import Foundation
 public final class SpeechManager {
     public static let shared = SpeechManager()
     public private(set) var spoken: [String] = []
-    public func speak(_ text: String, rate: Float = 0.5) { spoken.append(text) }
+    public func speak(_ text: String, rate: Float = 0.5, voiceId: String? = nil) { spoken.append(text) }
     public func playAudioData(_ data: Data) { spoken.append("<audio:\(data.count)b>") }
     public func soundItOut(word: String, completion: (() -> Void)? = nil) { spoken.append("<sound:\(word)>") }
     public func reset() { spoken.removeAll() }

@@ -1,0 +1,835 @@
+<title>Lite's First Five Minutes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:      #F5F8F7;
+    --surface:     #FFFFFF;
+    --surface-sub: #EDF2F0;
+    --ink:         #14201E;
+    --ink-mid:     #4A5C58;
+    --ink-soft:    #7C8F8A;
+    --rule:        #D9E3E0;
+    --rule-soft:   #E8EEEC;
+    --accent:      #00795F;
+    --accent-ink:  #005E4A;
+    --accent-wash: #E2F0EB;
+    --warm:        #D9601C;
+    --warm-wash:   #FBEADF;
+    --shadow:      0 1px 2px rgba(20,32,30,.06), 0 8px 24px -12px rgba(20,32,30,.14);
+
+    --tile-ink:    #1E293B;
+    --tile-edge:   rgba(20,32,30,.16);
+
+    --step:  1.5rem;
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0F1614;
+      --surface:     #17201E;
+      --surface-sub: #1D2825;
+      --ink:         #E7EFEC;
+      --ink-mid:     #A9BAB5;
+      --ink-soft:    #7E918C;
+      --rule:        #293733;
+      --rule-soft:   #202B29;
+      --accent:      #45BE9F;
+      --accent-ink:  #63D2B4;
+      --accent-wash: #12302A;
+      --warm:        #F0873F;
+      --warm-wash:   #33200F;
+      --shadow:      0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+      --tile-edge:   rgba(0,0,0,.3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0F1614;
+    --surface:     #17201E;
+    --surface-sub: #1D2825;
+    --ink:         #E7EFEC;
+    --ink-mid:     #A9BAB5;
+    --ink-soft:    #7E918C;
+    --rule:        #293733;
+    --rule-soft:   #202B29;
+    --accent:      #45BE9F;
+    --accent-ink:  #63D2B4;
+    --accent-wash: #12302A;
+    --warm:        #F0873F;
+    --warm-wash:   #33200F;
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    --tile-edge:   rgba(0,0,0,.3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Literata", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1.1rem, 4vw, 2.5rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  h1, h2, h3, .eyebrow, .chip, .mono {
+    font-family: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  }
+  .mono, code, .rail-num {
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  h1 {
+    font-size: clamp(2.1rem, 6vw, 3.3rem);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -.022em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: clamp(1.35rem, 3vw, 1.7rem);
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -.014em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: -.006em;
+    margin: 0;
+  }
+  p { margin: 0; max-width: var(--measure); }
+  a { color: var(--accent-ink); }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .69rem;
+    font-weight: 500;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- masthead ---------- */
+
+  header { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .lede {
+    font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+    color: var(--ink-mid);
+    max-width: 56ch;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: center;
+    padding-top: .3rem;
+  }
+  .chip {
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    padding: .3rem .62rem;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    color: var(--ink-mid);
+    background: var(--surface);
+  }
+  .chip--flag {
+    color: var(--warm);
+    border-color: color-mix(in srgb, var(--warm) 42%, transparent);
+    background: var(--warm-wash);
+  }
+
+  /* ---------- generic section ---------- */
+
+  section { display: flex; flex-direction: column; gap: 1.25rem; }
+  .sec-head { display: flex; flex-direction: column; gap: .35rem; }
+
+  .rule-top { border-top: 1px solid var(--rule); padding-top: 1.6rem; }
+
+  /* ---------- stance ---------- */
+
+  .stance {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stance > div {
+    background: var(--surface);
+    padding: 1.15rem 1.25rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .stance p { font-size: .95rem; color: var(--ink-mid); }
+
+  /* ---------- home mock ---------- */
+
+  .mock {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: clamp(1rem, 3vw, 1.75rem);
+    box-shadow: var(--shadow);
+  }
+  .mock-caption {
+    font-size: .84rem;
+    color: var(--ink-soft);
+    margin-top: .9rem;
+    font-family: "Familjen Grotesk", sans-serif;
+  }
+
+  .home-tier1 {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: .8rem;
+  }
+  @media (max-width: 34rem) { .home-tier1 { grid-template-columns: 1fr; } }
+
+  .home-tier2 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .8rem;
+    margin-top: .8rem;
+  }
+  @media (max-width: 34rem) { .home-tier2 { grid-template-columns: repeat(2, 1fr); } }
+
+  .hbtn {
+    border-radius: 10px;
+    padding: 1rem .85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    text-align: center;
+    font-family: "Familjen Grotesk", sans-serif;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .hbtn .k { font-size: 1.5rem; line-height: 1; }
+  .hbtn .t { font-size: .95rem; }
+  .hbtn .s { font-size: .72rem; font-weight: 500; opacity: .78; }
+
+  .hbtn--player { background: #E8721F; color: #fff; min-height: 8rem; }
+  .hbtn--player .t { font-size: 1.35rem; }
+  .hbtn--hand   { background: #00795F; color: #fff; min-height: 8rem; }
+  .hbtn--quiet  {
+    background: var(--surface-sub);
+    color: var(--ink);
+    border-color: var(--rule);
+    min-height: 5rem;
+  }
+  .hbtn--quiet .t { font-size: .87rem; font-weight: 500; }
+  .hbtn--new {
+    outline: 2px dashed var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- flow ---------- */
+
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .flow-step {
+    display: grid;
+    grid-template-columns: 3.4rem 1fr;
+    gap: 0 1.1rem;
+    align-items: start;
+  }
+  .flow-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-wash);
+    border-radius: 999px;
+    width: 2.1rem; height: 2.1rem;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: .1rem;
+  }
+  .flow-line {
+    grid-column: 1;
+    justify-self: center;
+    width: 1px;
+    background: var(--rule);
+    min-height: 1.5rem;
+    height: 100%;
+  }
+  .flow-body { padding-bottom: 1.6rem; display: flex; flex-direction: column; gap: .4rem; }
+  .flow-body p { font-size: .96rem; color: var(--ink-mid); }
+
+  /* ---------- demo board tiles ---------- */
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .6rem;
+  }
+  @media (max-width: 34rem) { .board { grid-template-columns: repeat(2, 1fr); } }
+
+  .tile {
+    border-radius: 9px;
+    border: 1px solid var(--tile-edge);
+    padding: .85rem .7rem .8rem;
+    min-height: 7.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    text-align: center;
+    color: var(--tile-ink);
+    font-family: "Familjen Grotesk", sans-serif;
+  }
+  .tile .g { font-size: 1.55rem; line-height: 1; }
+  .tile .w { font-size: .88rem; font-weight: 600; line-height: 1.25; }
+  .tile .d { font-size: .69rem; font-weight: 500; opacity: .72; line-height: 1.3; }
+
+  .t-person { background: #FFF9C4; }
+  .t-verb   { background: #C8E6C9; }
+  .t-desc   { background: #BBDEFB; }
+  .t-noun   { background: #FFE0B2; }
+  .t-social { background: #F8BBD0; }
+  .t-quest  { background: #D1C4E9; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.1rem;
+    margin-top: 1rem;
+    font-family: "Familjen Grotesk", sans-serif;
+    font-size: .78rem;
+    color: var(--ink-soft);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; }
+  .sw { width: .8rem; height: .8rem; border-radius: 3px; border: 1px solid var(--tile-edge); }
+
+  /* ---------- decisions ---------- */
+
+  .round {
+    display: grid;
+    grid-template-columns: 4.6rem 1fr;
+    gap: 0 1.1rem;
+  }
+  @media (max-width: 40rem) {
+    .round { grid-template-columns: 1fr; gap: .6rem; }
+    .rail { flex-direction: row !important; align-items: center !important; gap: .6rem !important; }
+    .rail-line { display: none; }
+  }
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .5rem;
+    padding-top: .15rem;
+  }
+  .rail-num {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    color: var(--ink-soft);
+  }
+  .rail-line {
+    width: 1px;
+    flex: 1;
+    background: var(--rule);
+    margin-right: .95rem;
+  }
+  .rail-tag {
+    font-family: "Familjen Grotesk", sans-serif;
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--ink-soft);
+    text-align: right;
+    max-width: 4.6rem;
+    line-height: 1.25;
+  }
+
+  .decisions { display: flex; flex-direction: column; gap: .55rem; padding-bottom: 2rem; }
+
+  .dec {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .95rem 1.1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+  }
+  .dec-q {
+    font-family: "Familjen Grotesk", sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: .01em;
+  }
+  .dec-a {
+    font-family: "Familjen Grotesk", sans-serif;
+    font-size: 1.04rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    line-height: 1.3;
+    display: flex;
+    gap: .5rem;
+    align-items: baseline;
+  }
+  .dec-a::before {
+    content: "→";
+    color: var(--accent);
+    font-weight: 400;
+    flex: none;
+  }
+  .dec p { font-size: .93rem; color: var(--ink-mid); }
+  .dec-not {
+    font-size: .82rem;
+    color: var(--ink-soft);
+    font-family: "Familjen Grotesk", sans-serif;
+    border-top: 1px dashed var(--rule-soft);
+    padding-top: .5rem;
+    margin-top: .1rem;
+  }
+  .dec-not b { font-weight: 600; color: var(--ink-mid); }
+
+  .overrode {
+    border-left: 3px solid var(--warm);
+  }
+
+  /* ---------- open items ---------- */
+
+  .open { display: flex; flex-direction: column; gap: .5rem; }
+  .open-item {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: .7rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--warm);
+    border-radius: 4px;
+    padding: .85rem 1rem .9rem;
+  }
+  .open-box {
+    width: 1.05rem; height: 1.05rem;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 3px;
+    margin-top: .28rem;
+  }
+  .open-item h3 { font-size: .95rem; }
+  .open-item p { font-size: .89rem; color: var(--ink-mid); margin-top: .18rem; }
+
+  code {
+    font-size: .86em;
+    background: var(--surface-sub);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    padding: .08em .32em;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.4rem;
+    color: var(--ink-soft);
+    font-size: .88rem;
+    font-family: "Familjen Grotesk", sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Talk Tiles Lite &middot; design session, 6 September 2026</div>
+    <h1>Lite&rsquo;s first five minutes</h1>
+    <p class="lede">What a parent sees between opening the app for the first time and hearing it say something. Twenty decisions, reached by grilling, none of them built.</p>
+    <div class="meta">
+      <span class="chip chip--flag">Nothing built yet</span>
+      <span class="chip">5 rounds &middot; 20 decisions</span>
+      <span class="chip">Brainstorm only &mdash; no code changed</span>
+    </div>
+  </header>
+
+  <section class="rule-top">
+    <div class="sec-head">
+      <div class="eyebrow">The stance</div>
+      <h2>Four answers that decided everything after them</h2>
+    </div>
+    <div class="stance">
+      <div>
+        <h3>Lite is the real app</h3>
+        <p>Not a scratch copy any more. Whatever ships in its book <em>is</em> the product&rsquo;s first-run experience, so it has to be deliberate.</p>
+      </div>
+      <div>
+        <h3>Built for other AAC parents</h3>
+        <p>The audience that turns into users, and the one you can speak to honestly. Clinicians are a harder crowd and come second.</p>
+      </div>
+      <div>
+        <h3>They hold the iPad</h3>
+        <p>Design for a stranger poking at it, not for you narrating. Survive that and you survive the other case too.</p>
+      </div>
+      <div>
+        <h3>Two boards, not one</h3>
+        <p>A shareable board with bundled photos for handing over. CJ&rsquo;s real board stays for when you&rsquo;re holding it and telling the story.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="rule-top">
+    <div class="sec-head">
+      <div class="eyebrow">The main menu</div>
+      <h2>Home, in two tiers</h2>
+      <p>Size does the explaining. The two things you actually touch are large; the four you occasionally need are quiet. Nobody has to read the menu to know what it&rsquo;s for.</p>
+    </div>
+    <div class="mock">
+      <div class="home-tier1">
+        <div class="hbtn hbtn--player">
+          <span class="k">&#9654;</span>
+          <span class="t">Player</span>
+          <span class="s">Start talking</span>
+        </div>
+        <div class="hbtn hbtn--hand hbtn--new">
+          <span class="k">&#128274;</span>
+          <span class="t">Hand It Over</span>
+          <span class="s">Locks the editor</span>
+        </div>
+      </div>
+      <div class="home-tier2">
+        <div class="hbtn hbtn--quiet"><span class="k">&#9998;</span><span class="t">Page Editor</span></div>
+        <div class="hbtn hbtn--quiet hbtn--new"><span class="k">&#128218;</span><span class="t">Board Library</span></div>
+        <div class="hbtn hbtn--quiet"><span class="k">&#9881;</span><span class="t">Settings</span></div>
+        <div class="hbtn hbtn--quiet"><span class="k">?</span><span class="t">Help</span></div>
+      </div>
+      <p class="mock-caption">Dashed outline marks what&rsquo;s new or renamed. <strong>Hand It Over</strong> is one tap to lock the editor before passing the iPad across, and your PIN to get back in &mdash; child lock stays off by default so a new parent never hits a wall. <strong>Board Library</strong> is today&rsquo;s &ldquo;Downloads&rdquo;, which sounded like it fetched things from the internet and actually opens the same 28 starter boards the <span class="mono">+</span> wizard offers.</p>
+    </div>
+  </section>
+
+  <section class="rule-top">
+    <div class="sec-head">
+      <div class="eyebrow">The first run</div>
+      <h2>Welcome, then a book worth having</h2>
+    </div>
+    <div class="flow">
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-body">
+          <h3>One welcome screen</h3>
+          <p>Two things on it: the child&rsquo;s name, and a starting board chosen from three big cards &mdash; <strong>First Words</strong>, <strong>Yes &amp; No</strong>, <strong>My People</strong> &mdash; plus <strong>Start Blank</strong>. Three is scannable in one look and each is obviously different from the others. Re-runnable later from Settings, which is also how you reset the iPad between showing it to two different parents.</p>
+        </div>
+      </div>
+      <div class="flow-line" aria-hidden="true"></div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-body">
+          <h3>Four pages in the book</h3>
+          <p>The board they picked, plus <strong>Core Words</strong> and <strong>Yes / No</strong> because almost nobody regrets having those, plus the demo board below. Enough to be useful on day one, small enough to understand in one sitting. Everything else is in the Board Library when they&rsquo;re ready.</p>
+        </div>
+      </div>
+      <div class="flow-line" aria-hidden="true"></div>
+
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-body">
+          <h3>One board they can delete</h3>
+          <p><strong>What Talk Tiles Can Do</strong> &mdash; a real board whose buttons do the thing they describe, rather than a leaflet read aloud. Because it <em>is</em> the app, nothing on it can drift out of date. When they&rsquo;ve looked, they delete it.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="rule-top">
+    <div class="sec-head">
+      <div class="eyebrow">The demo board</div>
+      <h2>Photos and voices lead; the rest gets a door</h2>
+      <p>You named real photos and recorded family voices as the thing that sells this &mdash; the one thing no competitor&rsquo;s screenshot can match. Six of the nine buttons are about that. The last three exist so a parent at least learns scene pages and the sentence keyboard are in there, because a parent who never finds scene pages is a non-grid child never reached.</p>
+    </div>
+    <div class="mock">
+      <div class="board">
+        <div class="tile t-noun"><span class="g">&#128049;</span><span class="w">This is my cat</span><span class="d">A real photo, not a symbol</span></div>
+        <div class="tile t-person"><span class="g">&#127908;</span><span class="w">Hear a real voice</span><span class="d">Plays a recording</span></div>
+        <div class="tile t-noun"><span class="g">&#127859;</span><span class="w">My favourite cup</span><span class="d">A real photo</span></div>
+
+        <div class="tile t-verb"><span class="g">&#128247;</span><span class="w">Put your own photo here</span><span class="d">Opens the camera</span></div>
+        <div class="tile t-verb"><span class="g">&#127897;</span><span class="w">Record your own voice</span><span class="d">Opens the recorder</span></div>
+        <div class="tile t-verb"><span class="g">&#11088;</span><span class="w">Save it to use again</span><span class="d">Saved Buttons</span></div>
+
+        <div class="tile t-desc"><span class="g">&#128444;</span><span class="w">Point at the picture</span><span class="d">Goes to a scene page</span></div>
+        <div class="tile t-quest"><span class="g">&#128172;</span><span class="w">Build a sentence</span><span class="d">Goes to the keyboard</span></div>
+        <div class="tile t-social"><span class="g">&#127912;</span><span class="w">Colours mean something</span><span class="d">Explains the colour code</span></div>
+      </div>
+      <div class="legend">
+        <span><span class="sw t-person"></span> people</span>
+        <span><span class="sw t-verb"></span> actions</span>
+        <span><span class="sw t-noun"></span> things</span>
+        <span><span class="sw t-desc"></span> describing</span>
+        <span><span class="sw t-quest"></span> questions</span>
+        <span><span class="sw t-social"></span> social</span>
+      </div>
+      <p class="mock-caption">Coloured by the Fitzgerald key the starter boards already use, so the board demonstrates the colour code while explaining it. The two navigation buttons need somewhere to land &mdash; see the open items.</p>
+    </div>
+  </section>
+
+  <section class="rule-top">
+    <div class="sec-head">
+      <div class="eyebrow">The record</div>
+      <h2>Twenty decisions, round by round</h2>
+      <p>Each round only asked what the previous round unblocked. An orange edge marks where you went against the recommendation &mdash; worth knowing later, when someone asks why.</p>
+    </div>
+
+    <div class="round">
+      <div class="rail">
+        <span class="rail-num">R1</span>
+        <span class="rail-tag">What it&rsquo;s for</span>
+        <span class="rail-line" aria-hidden="true"></span>
+      </div>
+      <div class="decisions">
+        <div class="dec overrode">
+          <div class="dec-q">What is Talk Tiles Lite for now?</div>
+          <div class="dec-a">This becomes the real app</div>
+          <p>Not the demo copy I suggested. Lite is where the good version lives from here, so the first-run design lands in the shipping product rather than a throwaway.</p>
+          <div class="dec-not"><b>Not:</b> demo copy &middot; still my scratch copy</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Who are you showing it to?</div>
+          <div class="dec-a">Other AAC parents</div>
+          <div class="dec-not"><b>Not:</b> SLPs and teachers &middot; family and friends &middot; potential buyers</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Whose photos are in the demo?</div>
+          <div class="dec-a">Two boards &mdash; generic to hand over, CJ&rsquo;s to tell the story</div>
+          <p>The feature is &ldquo;real photos of real people&rdquo;. Proving it doesn&rsquo;t require it to be your people.</p>
+          <div class="dec-not"><b>Not:</b> CJ&rsquo;s real board only &middot; generic content only</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Do they hold it, or do you drive it?</div>
+          <div class="dec-a">They hold it</div>
+          <div class="dec-not"><b>Not:</b> you drive while they watch &middot; both equally</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="round">
+      <div class="rail">
+        <span class="rail-num">R2</span>
+        <span class="rail-tag">Shape</span>
+        <span class="rail-line" aria-hidden="true"></span>
+      </div>
+      <div class="decisions">
+        <div class="dec">
+          <div class="dec-q">Usable starter book, or a showcase?</div>
+          <div class="dec-a">Both, kept separate</div>
+          <p>A small genuinely-usable book plus one clearly-labelled demo board they can delete. Neither job compromises the other.</p>
+          <div class="dec-not"><b>Not:</b> real board wins &middot; showcase wins</div>
+        </div>
+        <div class="dec overrode">
+          <div class="dec-q">Where does a new parent land?</div>
+          <div class="dec-a">A one-screen welcome first</div>
+          <p>Against my recommendation of going straight into a board. It costs a beat before the app talks, and buys a book that already has the child&rsquo;s name on it.</p>
+          <div class="dec-not"><b>Not:</b> straight into the board &middot; Home menu as it is</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">What happens to &ldquo;Downloads&rdquo;?</div>
+          <div class="dec-a">Rename it Board Library</div>
+          <div class="dec-not"><b>Not:</b> remove it from Home &middot; keep it exactly as-is</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Child lock on a fresh install?</div>
+          <div class="dec-a">Off, with a Hand It Over button</div>
+          <p>A new parent hitting a PIN wall on a fresh install is baffling. One obvious control solves the hand-over case without punishing anyone.</p>
+          <div class="dec-not"><b>Not:</b> off as it is now &middot; on by default</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="round">
+      <div class="rail">
+        <span class="rail-num">R3</span>
+        <span class="rail-tag">Content</span>
+        <span class="rail-line" aria-hidden="true"></span>
+      </div>
+      <div class="decisions">
+        <div class="dec">
+          <div class="dec-q">What does the welcome ask?</div>
+          <div class="dec-a">Child&rsquo;s name, and a starting board</div>
+          <div class="dec-not"><b>Not:</b> name only &middot; board only &middot; name, board and voice</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">What form does the demo board take?</div>
+          <div class="dec-a">Buttons that actually do the thing</div>
+          <p>Because it is the app, nothing on it can go stale.</p>
+          <div class="dec-not"><b>Not:</b> buttons that speak an explanation &middot; a guided tour across screens</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Which features sell this?</div>
+          <div class="dec-a">Real photos and family voices</div>
+          <p>Picked alone, out of four. The single sharpest claim the app has.</p>
+          <div class="dec-not"><b>Not chosen:</b> visual scene pages &middot; symbol keyboard &middot; colour-coded core words</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Where does Hand It Over live?</div>
+          <div class="dec-a">On Home, beside Player</div>
+          <div class="dec-not"><b>Not:</b> in Settings &middot; in the board&rsquo;s nav bar</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="round">
+      <div class="rail">
+        <span class="rail-num">R4</span>
+        <span class="rail-tag">Detail</span>
+        <span class="rail-line" aria-hidden="true"></span>
+      </div>
+      <div class="decisions">
+        <div class="dec">
+          <div class="dec-q">Did you mean photos and voices only?</div>
+          <div class="dec-a">Headline them, still mention the rest</div>
+          <p>One button each for scene pages and the sentence keyboard, so nobody leaves without knowing they exist.</p>
+          <div class="dec-not"><b>Not:</b> only photos and voices &middot; add all four back</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">How many starting-board cards?</div>
+          <div class="dec-a">Three, plus Start Blank</div>
+          <div class="dec-not"><b>Not:</b> ask about the child instead &middot; all five current defaults</div>
+        </div>
+        <div class="dec overrode">
+          <div class="dec-q">Where do the hand-over photos come from?</div>
+          <div class="dec-a">Bundled stock photos</div>
+          <p>Against my recommendation of shooting your own. Ships pictures to every new user rather than only your device &mdash; at the cost of a licence to get right.</p>
+          <div class="dec-not"><b>Not:</b> photos you take, no faces &middot; photos used with consent</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">What does the book end up containing?</div>
+          <div class="dec-a">Their pick, plus a small core set</div>
+          <div class="dec-not"><b>Not:</b> only what they picked &middot; a full day&rsquo;s worth, eight boards</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="round">
+      <div class="rail">
+        <span class="rail-num">R5</span>
+        <span class="rail-tag">Loose ends</span>
+      </div>
+      <div class="decisions">
+        <div class="dec">
+          <div class="dec-q">How is Home laid out?</div>
+          <div class="dec-a">Two tiers</div>
+          <div class="dec-not"><b>Not:</b> keep four buttons &middot; Player only, everything behind Set Up</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Which photo licence?</div>
+          <div class="dec-a">Pexels or Unsplash</div>
+          <p>Both are meant to allow commercial use without attribution &mdash; but this is the ARASAAC decision again, and it has to be checked rather than assumed.</p>
+          <div class="dec-not"><b>Not:</b> your own photos &middot; CC0 and public domain only</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Where does CJ&rsquo;s real board go?</div>
+          <div class="dec-a">Export to a file, keep it on the Mac</div>
+          <p>Share Page and whole-book backup already exist. Re-import in thirty seconds when you want to tell the story.</p>
+          <div class="dec-not"><b>Not:</b> move it to TalkTiles 2 &middot; leave it in Lite for now</div>
+        </div>
+        <div class="dec">
+          <div class="dec-q">Can the welcome be run again?</div>
+          <div class="dec-a">Yes, from Settings</div>
+          <div class="dec-not"><b>Not:</b> one time only &middot; full multi-child profiles</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="rule-top">
+    <div class="sec-head">
+      <div class="eyebrow">Before any of this ships</div>
+      <h2>Six things still open</h2>
+      <p>Five came out of the decisions above. One is a hole the grilling found in the plan itself.</p>
+    </div>
+    <div class="open">
+
+      <div class="open-item">
+        <div class="open-box" aria-hidden="true"></div>
+        <div>
+          <h3>Read the photo licence before bundling anything</h3>
+          <p>Bundling stock photos into a paid app is the ARASAAC problem again. The bar is <em>commercial use allowed</em> <strong>and</strong> <em>redistribution inside a binary allowed</em> &mdash; plenty of &ldquo;free stock&rdquo; sites pass the first and fail the second, and Unsplash has tightened its terms before. Check the current wording, and keep a copy of it with the photos.</p>
+        </div>
+      </div>
+
+      <div class="open-item">
+        <div class="open-box" aria-hidden="true"></div>
+        <div>
+          <h3>The welcome can hand you the same board twice</h3>
+          <p>Pick <strong>Yes &amp; No</strong> as your starting board and the book gives you Yes / No again in the core set. Either drop the duplicate, or make the core set adapt to what was chosen.</p>
+        </div>
+      </div>
+
+      <div class="open-item">
+        <div class="open-box" aria-hidden="true"></div>
+        <div>
+          <h3>Two demo buttons have nowhere to land</h3>
+          <p>&ldquo;Point at the picture&rdquo; and &ldquo;Build a sentence&rdquo; need a scene page and a keyboard page to jump to &mdash; but the book is meant to be four pages. Either they&rsquo;re hidden pages that don&rsquo;t appear in page navigation, or the demo board opens them from the Board Library.</p>
+        </div>
+      </div>
+
+      <div class="open-item">
+        <div class="open-box" aria-hidden="true"></div>
+        <div>
+          <h3>Clear the shipping book</h3>
+          <p>Lite currently holds CJ&rsquo;s real board and two empty &ldquo;New Board&rdquo; pages. Export CJ&rsquo;s board first, then delete all three &mdash; if Lite is the real app, that book is what every new user would receive.</p>
+        </div>
+      </div>
+
+      <div class="open-item">
+        <div class="open-box" aria-hidden="true"></div>
+        <div>
+          <h3>Shoot or source about fifteen objects</h3>
+          <p>The hand-over board needs a cat, a cup, a fridge, a door, a toy and so on. Whatever the source, they want to look like a real family&rsquo;s house rather than a catalogue &mdash; that&rsquo;s the whole point being made.</p>
+        </div>
+      </div>
+
+      <div class="open-item">
+        <div class="open-box" aria-hidden="true"></div>
+        <div>
+          <h3>Decide what Help says now</h3>
+          <p>It survived the round untouched because nothing forced a decision about it. If the demo board explains the app, Help&rsquo;s job changes &mdash; and nobody has looked at what&rsquo;s in it.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    <div>No code was changed. The app on the iPad is exactly as it was after this morning&rsquo;s reinstall.</div>
+    <div>Reached by grilling &mdash; five rounds, each asking only what the last one unblocked.</div>
+  </footer>
+
+</div>

@@ -6,8 +6,6 @@ public struct VisualSceneView: View {
     public let onAddHotspot: () -> Void
 
     @State private var activeHotspotId: Int? = nil
-    @State private var isShowingSourceDialog: Bool = false
-    @State private var pickerRequest: ImagePickerRequest? = nil
 
     // Gesture bookkeeping: original percent geometry captured at gesture start
     @State private var dragOrigin: [Int: CGPoint] = [:]
@@ -15,6 +13,16 @@ public struct VisualSceneView: View {
     @State private var movingHotspotId: Int? = nil
 
     private let minSizePct: Double = 6.0
+
+    /// A drag gesture's default coordinate space is `.local` - the space of the
+    /// view the gesture is attached to. Both of these gestures are attached to
+    /// views that the gesture itself repositions, so in `.local` the origin
+    /// moved out from under the finger on every event: the reported translation
+    /// collapsed back towards zero, the hotspot snapped back, the next event
+    /// reported the full translation again, and the hotspot visibly SHOOK while
+    /// still roughly following the finger. Measuring in a named space anchored
+    /// to the (stationary) canvas breaks that feedback loop.
+    private static let canvasSpace = "sceneCanvas"
 
     public var body: some View {
         let p = store.currentPage
@@ -48,6 +56,7 @@ public struct VisualSceneView: View {
                     }
                 }
             }
+            .coordinateSpace(name: VisualSceneView.canvasSpace)
 
             // Top Toolbar in Editor Mode
             if store.isEditMode {
@@ -57,43 +66,6 @@ public struct VisualSceneView: View {
                     Spacer()
                 }
             }
-        }
-        .confirmationDialog(
-            "Scene Background Picture",
-            isPresented: $isShowingSourceDialog,
-            titleVisibility: .visible
-        ) {
-            Button("📷 Take Photo with Camera") { requestPicker(.camera) }
-            Button("🖼️ Choose from Photo Library") { requestPicker(.photoLibrary) }
-            Button("Reset to Preset Scene", role: .destructive) {
-                var page = store.currentPage
-                page.sceneImageData = nil
-                store.currentPage = page
-                store.save()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Upload a photo to use for this visual scene page")
-        }
-        .sheet(item: $pickerRequest) { request in
-            ImagePicker(sourceType: request.source) { img in
-                let sized = img.downscaled(maxDimension: 2048)
-                if let data = sized.jpegData(compressionQuality: 0.85) {
-                    var page = store.currentPage
-                    page.sceneImageData = data
-                    store.currentPage = page
-                    store.save()
-                }
-            }
-        }
-    }
-
-    /// Deferred to the next runloop turn so the confirmation dialog is fully
-    /// dismissed before the picker is asked for. Presenting during the
-    /// dismissal is what made these buttons do nothing.
-    private func requestPicker(_ preferred: UIImagePickerController.SourceType) {
-        DispatchQueue.main.async {
-            pickerRequest = ImagePickerRequest.resolving(preferred)
         }
     }
 
@@ -114,10 +86,6 @@ public struct VisualSceneView: View {
             .padding(.leading, 4)
 
             Spacer(minLength: 8)
-
-            barButton(icon: "photo.on.rectangle.angled", title: "Picture", tint: "#0284C7") {
-                isShowingSourceDialog = true
-            }
 
             barButton(icon: "plus.circle.fill", title: "Add Hotspot", tint: "#008369") {
                 onAddHotspot()
@@ -246,7 +214,7 @@ public struct VisualSceneView: View {
     // MARK: - Gestures
 
     private func moveGesture(spot: HotspotModel, canvas: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 4)
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(VisualSceneView.canvasSpace))
             .onChanged { value in
                 guard store.isEditMode, canvas.width > 0, canvas.height > 0 else { return }
                 if dragOrigin[spot.id] == nil {
@@ -269,7 +237,7 @@ public struct VisualSceneView: View {
     }
 
     private func resizeGesture(spot: HotspotModel, canvas: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 2)
+        DragGesture(minimumDistance: 2, coordinateSpace: .named(VisualSceneView.canvasSpace))
             .onChanged { value in
                 guard store.isEditMode, canvas.width > 0, canvas.height > 0 else { return }
                 if resizeOrigin[spot.id] == nil {
@@ -305,6 +273,11 @@ public struct VisualSceneView: View {
     // MARK: - Speech
 
     private func triggerHotspotSpeech(_ spot: HotspotModel) {
+        guard TouchAccess.shared.shouldFire(
+            key: "\(store.currentPage.id)-hotspot-\(spot.id)",
+            lockout: store.settings.repeatLockout
+        ) else { return }
+
         withAnimation(.easeInOut(duration: 0.15)) {
             activeHotspotId = spot.id
         }
@@ -317,7 +290,7 @@ public struct VisualSceneView: View {
             if let audioData = spot.audioData {
                 SpeechManager.shared.playAudioData(audioData)
             } else {
-                SpeechManager.shared.speak(spot.tts.isEmpty ? spot.label : spot.tts)
+                SpeechManager.shared.speak(spot.tts.isEmpty ? spot.label : spot.tts, rate: Float(store.settings.speechRate), voiceId: store.settings.voiceId)
             }
         case .jump:
             if let target = spot.jumpPageId,
@@ -325,7 +298,7 @@ public struct VisualSceneView: View {
                 store.currentPageIndex = idx
             }
         case .tts:
-            SpeechManager.shared.speak(spot.tts.isEmpty ? spot.label : spot.tts)
+            SpeechManager.shared.speak(spot.tts.isEmpty ? spot.label : spot.tts, rate: Float(store.settings.speechRate), voiceId: store.settings.voiceId)
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -337,7 +310,7 @@ public struct VisualSceneView: View {
 
     @ViewBuilder
     private func sceneBackgroundView(_ p: PageModel) -> some View {
-        if let data = p.sceneImageData, let img = UIImage(data: data) {
+        if let data = p.sceneImageData, let img = SceneImageCache.image(for: data, pageId: p.id) {
             GeometryReader { geo in
                 Image(uiImage: img)
                     .resizable()
@@ -375,6 +348,24 @@ public struct VisualSceneView: View {
                 }
             }
         }
+    }
+}
+
+/// A page's photo lives in the model as JPEG bytes, and `UIImage(data:)` decodes
+/// them again on every `body` pass. Dragging a hotspot re-publishes the store on
+/// every touch event, so a 2048px scene photo was being decoded 60 times a second
+/// underneath the drag - juddering the whole layer, not just the hotspot.
+/// Keyed on page id plus byte count: the count changes whenever a new photo is
+/// chosen, which is the only way the bytes for one page can change.
+enum SceneImageCache {
+    private static let cache = NSCache<NSString, UIImage>()
+
+    static func image(for data: Data, pageId: UUID) -> UIImage? {
+        let key = "\(pageId.uuidString)-\(data.count)" as NSString
+        if let hit = cache.object(forKey: key) { return hit }
+        guard let img = UIImage(data: data) else { return nil }
+        cache.setObject(img, forKey: key)
+        return img
     }
 }
 

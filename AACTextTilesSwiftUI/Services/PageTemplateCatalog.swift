@@ -110,6 +110,22 @@ public enum PageTemplateCatalog {
             TemplateTile("I don't know", "I don't know", "❓", TemplateColor.question)
         ]),
 
+        // Each tile is tinted the colour it names, so the board teaches the
+        // word by looking like it - the one template where the Fitzgerald
+        // coding gives way to the subject itself.
+        PageTemplate(id: "colors", title: "Colors", summary: "Name and choose colours - each button is its own colour",
+            category: "Essential", icon: "🎨", accent: "#E11D48", gridSize: 9, tiles: [
+            TemplateTile("Red", "Red", "🔴", "#FFB4B4"),
+            TemplateTile("Orange", "Orange", "🟠", "#FFD1A3"),
+            TemplateTile("Yellow", "Yellow", "🟡", "#FFF3A3"),
+            TemplateTile("Green", "Green", "🟢", "#BDEBC8"),
+            TemplateTile("Blue", "Blue", "🔵", "#B9DDFF"),
+            TemplateTile("Purple", "Purple", "🟣", "#DCC9FF"),
+            TemplateTile("Pink", "Pink", "🌸", "#FFC9E3"),
+            TemplateTile("Brown", "Brown", "🟤", "#E2C9B0"),
+            TemplateTile("Black", "Black", "⚫", "#D6D9E0")
+        ]),
+
         PageTemplate(id: "help", title: "Help & Requests", summary: "Ask for help, a break, or attention",
             category: "Essential", icon: "🙋", accent: "#0284C7", gridSize: 9, tiles: [
             TemplateTile("Help me", "Help me please", "🙋", TemplateColor.verb),

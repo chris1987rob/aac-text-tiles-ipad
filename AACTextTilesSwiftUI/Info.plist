@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>AAC Text Tiles</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,15 +23,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>AAC Text Tiles needs photo library access so you can choose pictures for visual scene pages and communication buttons.</string>
+	<string>Talk Tiles needs photo library access so you can choose pictures for visual scene pages and communication buttons.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>AAC Text Tiles saves captured photos used on communication pages to your photo library.</string>
+	<string>Talk Tiles saves captured photos used on communication pages to your photo library.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>AAC Text Tiles needs camera access to capture photos for communication buttons and visual scene pages.</string>
+	<string>Talk Tiles needs camera access to capture photos for communication buttons and visual scene pages.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>AAC Text Tiles needs microphone access to record custom audio cues for communication buttons.</string>
+	<string>Talk Tiles needs microphone access to record custom audio cues for communication buttons.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>AAC Text Tiles uses speech recognition and synthesis for communication assistance.</string>
+	<string>Talk Tiles uses speech recognition and synthesis for communication assistance.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

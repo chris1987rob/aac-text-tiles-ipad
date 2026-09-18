@@ -30,6 +30,8 @@ public struct TileGridView: View {
                             if slotId <= p.gridSize {
                                 let tile = p.tiles[slotId]
                                 TileView(
+                                    activationDelay: store.settings.activationDelay,
+                                    activateOnRelease: store.settings.activateOnRelease,
                                     slotId: slotId,
                                     tile: tile,
                                     isEditMode: store.isEditMode,
@@ -39,6 +41,12 @@ public struct TileGridView: View {
                                         if store.isEditMode {
                                             onSelectTile(slotId)
                                         } else if let t = tile, !t.label.isEmpty || !t.tts.isEmpty {
+                                            // A tremor turning one intended press
+                                            // into five is stopped here.
+                                            guard TouchAccess.shared.shouldFire(
+                                                key: "\(p.id)-\(slotId)",
+                                                lockout: store.settings.repeatLockout
+                                            ) else { return }
                                             if p.express {
                                                 store.addExpressChip(t.label.isEmpty ? t.tts : t.label)
                                             }
@@ -47,7 +55,9 @@ public struct TileGridView: View {
                                             } else if t.isSoundItOut {
                                                 SpeechManager.shared.soundItOut(word: t.tts.isEmpty ? t.label : t.tts)
                                             } else {
-                                                SpeechManager.shared.speak(t.tts.isEmpty ? t.label : t.tts)
+                                                SpeechManager.shared.speak(t.tts.isEmpty ? t.label : t.tts,
+                                                                           rate: Float(store.settings.speechRate),
+                                                                           voiceId: store.settings.voiceId)
                                             }
                                         } else if store.isEditMode {
                                             onSelectTile(slotId)

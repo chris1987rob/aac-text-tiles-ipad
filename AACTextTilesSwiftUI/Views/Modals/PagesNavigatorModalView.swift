@@ -22,7 +22,7 @@ public struct PagesNavigatorModalView: View {
                                 Text(page.title)
                                     .font(.headline)
                                     .foregroundColor(Color(hex: "#1E293B"))
-                                Text("\(page.type.rawValue) • \(page.gridSize) buttons")
+                                Text("\(page.type.displayName) • \(page.gridSize) buttons")
                                     .font(.caption)
                                     .foregroundColor(Color(hex: "#64748B"))
                             }
@@ -61,5 +61,10 @@ public struct PagesNavigatorModalView: View {
                       dismissButton: .default(Text("OK")))
             }
         }
+        // On iPad a bare NavigationView defaults to the split-view style, so
+        // inside a sheet it renders as a sidebar next to an empty detail pane
+        // instead of one plain form. Every modal in this app is a single
+        // column and must say so.
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }

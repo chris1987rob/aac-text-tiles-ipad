@@ -5,7 +5,16 @@ public class AACStore: ObservableObject {
     @Published public var pages: [PageModel] = []
     @Published public var currentPageIndex: Int = 0
     @Published public var isEditMode: Bool = false
-    @Published public var isLocked: Bool = false
+    /// Kept as the single source of truth for the lock. It is persisted through
+    /// `settings`, unlike the plain flag this replaced.
+    @Published public var settings: AppSettings = AppSettings() {
+        didSet { if settings != oldValue { saveSettings() } }
+    }
+
+    public var isLocked: Bool {
+        get { settings.childLock }
+        set { settings.childLock = newValue }
+    }
     @Published public var expressChips: [String] = []
     @Published public var customTemplates: [PageModel] = []
 
@@ -26,6 +35,7 @@ public class AACStore: ObservableObject {
 
     public init() {
         loadPages()
+        loadSettings()
     }
 
     public func loadPages() {
@@ -105,20 +115,24 @@ public class AACStore: ObservableObject {
             .map { $0.makePage() }
     }
 
+    /// Steps to the next / previous page, wrapping at either end.
+    ///
+    /// The "Include in page navigation" switch was removed from Page Options
+    /// on 2026-09-13 at the user's request, so `PageModel.enabled` is no
+    /// longer read here - a page saved with it off must still be reachable,
+    /// since there is nothing left in the app to switch it back on.
     public func nextPage() {
-        if currentPageIndex < pages.count - 1 {
-            currentPageIndex += 1
-        } else {
-            currentPageIndex = 0
-        }
+        currentPageIndex = step(from: currentPageIndex, by: 1)
     }
 
     public func prevPage() {
-        if currentPageIndex > 0 {
-            currentPageIndex -= 1
-        } else {
-            currentPageIndex = pages.count - 1
-        }
+        currentPageIndex = step(from: currentPageIndex, by: -1)
+    }
+
+    private func step(from index: Int, by delta: Int) -> Int {
+        guard !pages.isEmpty else { return 0 }
+        let count = pages.count
+        return ((index + delta) % count + count) % count
     }
 
     public func addExpressChip(_ chip: String) {
@@ -132,7 +146,7 @@ public class AACStore: ObservableObject {
     public func playExpressSentence() {
         let sentence = expressChips.joined(separator: " ")
         if !sentence.isEmpty {
-            SpeechManager.shared.speak(sentence)
+            SpeechManager.shared.speak(sentence, rate: Float(settings.speechRate), voiceId: settings.voiceId)
         }
     }
 
@@ -172,6 +186,22 @@ public class AACStore: ObservableObject {
         } catch {
             print("AACStore save failed: \(error)")
         }
+    }
+
+    private static var settingsURL: URL {
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return dir.appendingPathComponent("aac_settings.json")
+    }
+
+    public func loadSettings() {
+        guard let data = try? Data(contentsOf: AACStore.settingsURL),
+              let restored = try? JSONDecoder().decode(AppSettings.self, from: data) else { return }
+        settings = restored
+    }
+
+    public func saveSettings() {
+        guard let data = try? JSONEncoder().encode(settings) else { return }
+        try? data.write(to: AACStore.settingsURL, options: .atomic)
     }
 
     public static func loadFromDisk() -> [PageModel]? {

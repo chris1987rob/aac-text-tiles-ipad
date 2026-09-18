@@ -8,6 +8,12 @@ xcrun swiftc -O \
   Tools/StoreTests/Stub.swift \
   AACTextTilesSwiftUI/Models/*.swift \
   AACTextTilesSwiftUI/Services/AACStore.swift \
+  AACTextTilesSwiftUI/Services/PageTemplateCatalog.swift \
+  AACTextTilesSwiftUI/Services/TouchAccess.swift \
+  AACTextTilesSwiftUI/Services/BookBackup.swift \
+  AACTextTilesSwiftUI/Services/SymbolWordBank.swift \
+  AACTextTilesSwiftUI/Services/TileFavorites.swift \
+  AACTextTilesSwiftUI/Services/SpokenText.swift \
   Tools/StoreTests/main.swift \
   -o "$OUT/t"
 "$OUT/t"; rm -rf "$OUT"

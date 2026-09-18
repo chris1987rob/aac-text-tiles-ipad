@@ -1,5 +1,9 @@
 import SwiftUI
 
+/// The main menu, in the same pastel language as the board (2026-09-13): a
+/// white bar with the app name in spaced capitals, then soft rounded cards on
+/// the pale ground. Player is the big orange one because it is the one a
+/// child reaches for; the four adult jobs are pastel cards underneath.
 public struct HomeView: View {
     @ObservedObject public var store: AACStore
     public let onLaunchPlayer: () -> Void
@@ -10,165 +14,109 @@ public struct HomeView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            // Teal Header with Signature Arch
-            ZStack {
-                Color(hex: "#008369")
-                VStack {
-                    HStack {
-                        Text("talk tiles")
-                            .font(.system(size: 34, weight: .black))
-                            .foregroundColor(.white)
-                        Text("NEW")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(Color(hex: "#008369"))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                    }
-                }
+            // Top bar, matching the board's.
+            HStack {
+                Spacer()
+                Text("TALK TILES")
+                    .font(.system(size: 30, weight: .bold))
+                    .tracking(3.5)
+                    .foregroundColor(BoardTheme.ink)
+                Spacer()
             }
-            .frame(height: 120)
+            .frame(height: 64)
+            .background(BoardTheme.bar)
+            .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
+            .zIndex(1)
+
+            // A thin rainbow band under the bar - the same ring the Play
+            // button wears - so the menu is not a white bar on a grey ground.
+            LinearGradient(gradient: Gradient(colors: [
+                Color(hex: "#FF7A7A"), Color(hex: "#FFB35C"), Color(hex: "#FFE66D"),
+                Color(hex: "#7AE582"), Color(hex: "#5CC8FF"), Color(hex: "#A78BFA")
+            ]), startPoint: .leading, endPoint: .trailing)
+            .frame(height: 6)
 
             // Main Hub Body
             VStack(spacing: 20) {
-                // High-visibility Orange Player Button
+                // The big orange Player card.
                 Button(action: onLaunchPlayer) {
-                    HStack(spacing: 16) {
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 44))
-                        Text("Player")
-                            .font(.system(size: 32, weight: .black))
+                    HStack(spacing: 18) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(BoardTheme.accent)
+                            .frame(width: 74, height: 74)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(BoardTheme.rainbow, lineWidth: 6))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("PLAYER")
+                                .font(.system(size: 36, weight: .bold))
+                                .tracking(3)
+                            Text("Tap tiles to talk")
+                                .font(.system(size: 17, weight: .semibold))
+                                .opacity(0.9)
+                        }
+                        .foregroundColor(.white)
                     }
-                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 110)
-                    .background(Color(hex: "#F27935"))
-                    .cornerRadius(20)
-                    .shadow(color: Color.black.opacity(0.12), radius: 8, y: 4)
+                    .frame(height: 130)
+                    .background(
+                        LinearGradient(gradient: Gradient(colors: [Color(hex: "#FF9A3C"), Color(hex: "#F5722B")]),
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .cornerRadius(28)
+                    .shadow(color: Color(hex: "#F5722B").opacity(0.35), radius: 10, y: 5)
                 }
+                .buttonStyle(PlainButtonStyle())
 
-                // 2x2 Secondary Action Grid
+                // 2x2 cards for the adult jobs, each in its own bright colour.
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 16) {
-                    // Page Editor
-                    homeActionButton(title: "Page Editor", icon: "pencil.circle.fill", color: "#008369", action: onLaunchEditor)
-                    // Settings
-                    homeActionButton(title: "Settings", icon: "gearshape.fill", color: "#008369", action: onOpenSettings)
-                    // Downloads
-                    homeActionButton(title: "Downloads", icon: "arrow.down.circle.fill", color: "#008369", action: onOpenDownloads)
-                    // Help
-                    homeActionButton(title: "Help", icon: "questionmark.circle.fill", color: "#008369", action: onOpenHelp)
+                    homeCard(title: "Page Editor", subtitle: "Build and change pages",
+                             icon: "pencil", color: "#4DB2FF", action: onLaunchEditor)
+                    homeCard(title: "Settings", subtitle: "Voice, touch, child lock, backup",
+                             icon: "gearshape.fill", color: "#9B7BFF", action: onOpenSettings)
+                    homeCard(title: "Downloads", subtitle: "Ready-made boards to add",
+                             icon: "arrow.down.to.line", color: "#2EC98A", action: onOpenDownloads)
+                    homeCard(title: "Help", subtitle: "How everything works",
+                             icon: "questionmark", color: "#FFC93C", action: onOpenHelp)
                 }
             }
             .padding(24)
             .frame(maxWidth: 800)
 
-            templateShelf()
-
             Spacer(minLength: 12)
         }
-        .background(Color(hex: "#F8FAFC"))
-        .edgesIgnoringSafeArea(.top)
+        .background(BoardTheme.background.edgesIgnoringSafeArea(.all))
     }
 
-    /// The boards that are not already in the book, one tap to add. Keeping
-    /// them here rather than only behind Downloads means a parent setting the
-    /// device up sees what is available without going looking for it.
-    @ViewBuilder
-    private func templateShelf() -> some View {
-        let existing = Set(store.pages.map { $0.title.lowercased() })
-        let available = PageTemplateCatalog.extras.filter { !existing.contains($0.title.lowercased()) }
-
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Add a Board")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(Color(hex: "#1E293B"))
-                Text("\(available.count) templates")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Color(hex: "#64748B"))
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-
-            if available.isEmpty {
-                Text("Every template is already in your book.")
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(hex: "#64748B"))
-                    .padding(.horizontal, 24)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(available) { template in
-                            templateChip(template)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 6)
+    private func homeCard(title: String, subtitle: String, icon: String, color: String,
+                          action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(Color(hex: color))
+                    .frame(width: 58, height: 58)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.10), radius: 3, y: 2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 22, weight: .bold))
+                    Text(subtitle)
+                        .font(.system(size: 14, weight: .medium))
+                        .opacity(0.9)
                 }
-            }
-        }
-        .frame(maxWidth: 800)
-    }
-
-    private func templateChip(_ template: PageTemplate) -> some View {
-        Button(action: {
-            store.pages.append(template.makePage())
-            store.currentPageIndex = store.pages.count - 1
-            store.save()
-        }) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(template.icon).font(.system(size: 30))
-                Text(template.title)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(Color(hex: "#1E293B"))
-                    .lineLimit(1)
-                Text(template.summary)
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(hex: "#64748B"))
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                .foregroundColor(.white)
                 Spacer(minLength: 0)
-                Text("+ \(template.buttonCount) buttons")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(hex: template.accent))
-                    .cornerRadius(6)
             }
-            .padding(12)
-            .frame(width: 168, height: 150, alignment: .topLeading)
-            .background(Color.white)
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color(hex: template.accent).opacity(0.45), lineWidth: 1.5)
-            )
-            .shadow(color: Color.black.opacity(0.06), radius: 5, y: 2)
+            .padding(.horizontal, 18)
+            .frame(maxWidth: .infinity)
+            .frame(height: 110)
+            .background(Color(hex: color))
+            .cornerRadius(24)
+            .shadow(color: Color(hex: color).opacity(0.35), radius: 8, y: 4)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-
-    private func homeActionButton(title: String, icon: String, color: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 34))
-                    .foregroundColor(Color(hex: color))
-                Text(title)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(Color(hex: "#1E293B"))
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 120)
-            .background(Color.white)
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(hex: "#E2E8F0"), lineWidth: 1.5)
-            )
-            .shadow(color: Color.black.opacity(0.06), radius: 6, y: 2)
-        }
     }
 }

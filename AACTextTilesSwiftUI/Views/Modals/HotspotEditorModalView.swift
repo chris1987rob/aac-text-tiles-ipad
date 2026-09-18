@@ -22,7 +22,7 @@ public struct HotspotEditorModalView: View {
         NavigationView {
             Form {
                 Section(header: Text("Label")) {
-                    TextField("Name on Photo (e.g. Cat, Sofa, TV)", text: $label)
+                    LabeledField(label: "On the photo", placeholder: "e.g. Cat, Sofa, TV", text: $label)
                 }
 
                 // Size is editable as a number here as well as by dragging the
@@ -47,7 +47,7 @@ public struct HotspotEditorModalView: View {
                     .pickerStyle(SegmentedPickerStyle())
 
                     if action == .tts {
-                        TextField("What to speak when tapped", text: $tts)
+                        LabeledField(label: "Voice says", placeholder: "What to speak when tapped", text: $tts)
                         playbackButton(
                             title: "Play Preview",
                             enabled: !spokenText.isEmpty
@@ -99,6 +99,11 @@ public struct HotspotEditorModalView: View {
                 .foregroundColor(Color(hex: "#008369"))
             )
         }
+        // On iPad a bare NavigationView defaults to the split-view style, so
+        // inside a sheet it renders as a sidebar next to an empty detail pane
+        // instead of one plain form. Every modal in this app is a single
+        // column and must say so.
+        .navigationViewStyle(StackNavigationViewStyle())
         .onAppear {
             label = hotspot.label
             tts = hotspot.tts

@@ -44,7 +44,39 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
         }
     }
 
-    public func speak(_ text: String, rate: Float? = nil) {
+    /// The voice every utterance uses, chosen in Settings. Nil keeps the old
+    /// behaviour of taking whatever the system gives for English.
+    ///
+    /// A child's voice is part of who they are, and the app used to speak for
+    /// every child in the same default adult American one.
+    public var preferredVoiceId: String? = nil
+
+    /// Every English voice the iPad actually has, best-known first. iPadOS
+    /// ships a range including child voices; this is a list the system hands us
+    /// rather than anything the app has to carry.
+    public static func availableVoices() -> [AVSpeechSynthesisVoice] {
+        AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix("en") }
+            .sorted {
+                if $0.language == $1.language { return $0.name < $1.name }
+                // Whatever the iPad is set to comes first.
+                let here = Locale.current.identifier.replacingOccurrences(of: "_", with: "-")
+                if $0.language == here { return true }
+                if $1.language == here { return false }
+                return $0.language < $1.language
+            }
+    }
+
+    private func resolvedVoice() -> AVSpeechSynthesisVoice? {
+        if let want = preferredVoiceId,
+           let match = AVSpeechSynthesisVoice.speechVoices().first(where: { $0.identifier == want }) {
+            return match
+        }
+        return AVSpeechSynthesisVoice(language: "en-US")
+            ?? AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("en") }
+    }
+
+    public func speak(_ text: String, rate: Float? = nil, voiceId: String? = nil) {
         let rate = rate ?? defaultRate
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         ensureSessionActive()
@@ -52,12 +84,15 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
             synthesizer.stopSpeaking(at: .immediate)
         }
 
-        let utterance = AVSpeechUtterance(string: text)
+        let utterance = AVSpeechUtterance(string: SpokenText.forSpeech(text))
         utterance.rate = rate
         utterance.pitchMultiplier = 1.0
         utterance.volume = 1.0
 
-        if let voice = AVSpeechSynthesisVoice(language: "en-US") {
+        if let want = voiceId,
+           let match = AVSpeechSynthesisVoice.speechVoices().first(where: { $0.identifier == want }) {
+            utterance.voice = match
+        } else if let voice = resolvedVoice() {
             utterance.voice = voice
         }
 

@@ -22,7 +22,17 @@
 		B10000172C60000100000001 /* VisualSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000182C60000100000001 /* VisualSceneView.swift */; };
 		B10000192C60000100000001 /* KeyboardPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100001A2C60000100000001 /* KeyboardPageView.swift */; };
 		B100001B2C60000100000001 /* ExpressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100001C2C60000100000001 /* ExpressBarView.swift */; };
-		B100001D2C60000100000001 /* BottomToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100001E2C60000100000001 /* BottomToolbarView.swift */; };
+		B1000092AA60000100000001 /* SymbolWordBank.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000091AA60000100000001 /* SymbolWordBank.swift */; };
+		B10000B5AA60000100000001 /* TileFavorites.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000B4AA60000100000001 /* TileFavorites.swift */; };
+		B10000B7AA60000100000001 /* SpokenText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000B6AA60000100000001 /* SpokenText.swift */; };
+		B1000094AA60000100000001 /* ScenePicturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000093AA60000100000001 /* ScenePicturePicker.swift */; };
+		B1000096AA60000100000001 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000095AA60000100000001 /* AppSettings.swift */; };
+		B1000098AA60000100000001 /* PinPromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000097AA60000100000001 /* PinPromptView.swift */; };
+		B100009BAA60000100000001 /* SymbolLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100009AAA60000100000001 /* SymbolLibrary.swift */; };
+		B100009DAA60000100000001 /* BookBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100009CAA60000100000001 /* BookBackup.swift */; };
+		B10000A1AA60000100000001 /* TouchAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000A0AA60000100000001 /* TouchAccess.swift */; };
+		B10000A3AA60000100000001 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000A2AA60000100000001 /* DocumentPickerView.swift */; };
+		B100001D2C60000100000001 /* NavigationBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100001E2C60000100000001 /* NavigationBarView.swift */; };
 		B100001F2C60000100000001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000202C60000100000001 /* HomeView.swift */; };
 		B10000212C60000100000001 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000222C60000100000001 /* BoardView.swift */; };
 		B10000232C60000100000001 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000242C60000100000001 /* RootView.swift */; };
@@ -35,6 +45,7 @@
 		BB0000000000000000000100 /* SettingsModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000100 /* SettingsModalView.swift */; };
 		B10000472C60000100000001 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000482C60000100000001 /* ImagePicker.swift */; };
 		B10000492C60000100000001 /* PageOptionsModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100004A2C60000100000001 /* PageOptionsModalView.swift */; };
+		B100009FAA60000100000001 /* Symbols in Resources */ = {isa = PBXBuildFile; fileRef = B100009EAA60000100000001 /* Symbols */; };
 		B10000312C60000100000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000322C60000100000001 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -55,7 +66,17 @@
 		B10000182C60000100000001 /* VisualSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualSceneView.swift; sourceTree = "<group>"; };
 		B100001A2C60000100000001 /* KeyboardPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardPageView.swift; sourceTree = "<group>"; };
 		B100001C2C60000100000001 /* ExpressBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressBarView.swift; sourceTree = "<group>"; };
-		B100001E2C60000100000001 /* BottomToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomToolbarView.swift; sourceTree = "<group>"; };
+		B1000091AA60000100000001 /* SymbolWordBank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolWordBank.swift; sourceTree = "<group>"; };
+		B10000B4AA60000100000001 /* TileFavorites.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileFavorites.swift; sourceTree = "<group>"; };
+		B10000B6AA60000100000001 /* SpokenText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpokenText.swift; sourceTree = "<group>"; };
+		B1000093AA60000100000001 /* ScenePicturePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenePicturePicker.swift; sourceTree = "<group>"; };
+		B1000095AA60000100000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		B1000097AA60000100000001 /* PinPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinPromptView.swift; sourceTree = "<group>"; };
+		B100009AAA60000100000001 /* SymbolLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolLibrary.swift; sourceTree = "<group>"; };
+		B100009CAA60000100000001 /* BookBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookBackup.swift; sourceTree = "<group>"; };
+		B10000A0AA60000100000001 /* TouchAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchAccess.swift; sourceTree = "<group>"; };
+		B10000A2AA60000100000001 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
+		B100001E2C60000100000001 /* NavigationBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationBarView.swift; sourceTree = "<group>"; };
 		B10000202C60000100000001 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		B10000222C60000100000001 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		B10000242C60000100000001 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -68,6 +89,7 @@
 		AA0000000000000000000100 /* SettingsModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModalView.swift; sourceTree = "<group>"; };
 		B10000482C60000100000001 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		B100004A2C60000100000001 /* PageOptionsModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageOptionsModalView.swift; sourceTree = "<group>"; };
+		B100009EAA60000100000001 /* Symbols */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Symbols; sourceTree = "<group>"; };
 		B10000322C60000100000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10000332C60000100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -99,6 +121,7 @@
 				B100003A2C60000100000001 /* Services */,
 				B100003B2C60000100000001 /* Views */,
 				B10000322C60000100000001 /* Assets.xcassets */,
+				B100009EAA60000100000001 /* Symbols */,
 				B10000332C60000100000001 /* Info.plist */,
 			);
 			path = AACTextTilesSwiftUI;
@@ -116,6 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				B10000042C60000100000001 /* PageModel.swift */,
+				B1000095AA60000100000001 /* AppSettings.swift */,
 				B10000062C60000100000001 /* TileModel.swift */,
 				B10000082C60000100000001 /* HotspotModel.swift */,
 				B100000A2C60000100000001 /* SymbolItem.swift */,
@@ -130,6 +154,12 @@
 				B100000E2C60000100000001 /* AudioRecorder.swift */,
 				B10000102C60000100000001 /* SymbolCatalog.swift */,
 				B10000912C60000100000001 /* PageTemplateCatalog.swift */,
+				B10000A0AA60000100000001 /* TouchAccess.swift */,
+				B100009CAA60000100000001 /* BookBackup.swift */,
+				B100009AAA60000100000001 /* SymbolLibrary.swift */,
+				B1000091AA60000100000001 /* SymbolWordBank.swift */,
+				B10000B4AA60000100000001 /* TileFavorites.swift */,
+				B10000B6AA60000100000001 /* SpokenText.swift */,
 				B10000122C60000100000001 /* AACStore.swift */,
 			);
 			path = Services;
@@ -143,7 +173,10 @@
 				B10000182C60000100000001 /* VisualSceneView.swift */,
 				B100001A2C60000100000001 /* KeyboardPageView.swift */,
 				B100001C2C60000100000001 /* ExpressBarView.swift */,
-				B100001E2C60000100000001 /* BottomToolbarView.swift */,
+				B100001E2C60000100000001 /* NavigationBarView.swift */,
+				B10000A2AA60000100000001 /* DocumentPickerView.swift */,
+				B1000097AA60000100000001 /* PinPromptView.swift */,
+				B1000093AA60000100000001 /* ScenePicturePicker.swift */,
 				B10000202C60000100000001 /* HomeView.swift */,
 				B10000222C60000100000001 /* BoardView.swift */,
 				B10000242C60000100000001 /* RootView.swift */,
@@ -235,6 +268,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000312C60000100000001 /* Assets.xcassets in Resources */,
+				B100009FAA60000100000001 /* Symbols in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -254,13 +288,23 @@
 				B100000D2C60000100000001 /* AudioRecorder.swift in Sources */,
 				B100000F2C60000100000001 /* SymbolCatalog.swift in Sources */,
 				B10000902C60000100000001 /* PageTemplateCatalog.swift in Sources */,
+				B1000092AA60000100000001 /* SymbolWordBank.swift in Sources */,
+				B10000B5AA60000100000001 /* TileFavorites.swift in Sources */,
+				B10000B7AA60000100000001 /* SpokenText.swift in Sources */,
 				B10000112C60000100000001 /* AACStore.swift in Sources */,
 				B10000132C60000100000001 /* TileView.swift in Sources */,
 				B10000152C60000100000001 /* TileGridView.swift in Sources */,
 				B10000172C60000100000001 /* VisualSceneView.swift in Sources */,
 				B10000192C60000100000001 /* KeyboardPageView.swift in Sources */,
 				B100001B2C60000100000001 /* ExpressBarView.swift in Sources */,
-				B100001D2C60000100000001 /* BottomToolbarView.swift in Sources */,
+				B100001D2C60000100000001 /* NavigationBarView.swift in Sources */,
+				B10000A3AA60000100000001 /* DocumentPickerView.swift in Sources */,
+				B10000A1AA60000100000001 /* TouchAccess.swift in Sources */,
+				B100009DAA60000100000001 /* BookBackup.swift in Sources */,
+				B100009BAA60000100000001 /* SymbolLibrary.swift in Sources */,
+				B1000098AA60000100000001 /* PinPromptView.swift in Sources */,
+				B1000096AA60000100000001 /* AppSettings.swift in Sources */,
+				B1000094AA60000100000001 /* ScenePicturePicker.swift in Sources */,
 				B100001F2C60000100000001 /* HomeView.swift in Sources */,
 				B10000212C60000100000001 /* BoardView.swift in Sources */,
 				B10000232C60000100000001 /* RootView.swift in Sources */,
@@ -410,6 +454,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
+				APP_DISPLAY_NAME = "Talk Tiles";
 				PRODUCT_BUNDLE_IDENTIFIER = com.chris1987rob.talktiles;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -435,6 +480,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
+				APP_DISPLAY_NAME = "Talk Tiles";
 				PRODUCT_BUNDLE_IDENTIFIER = com.chris1987rob.talktiles;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
