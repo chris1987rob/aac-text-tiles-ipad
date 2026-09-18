@@ -422,6 +422,55 @@ if let word = theI {
     check("and comes back with no edits", older?.keyboardEdits == nil)
 }
 
+// ------------------------------------------- pictures, Bella, and old settings
+// Two picture sets and a recorded voice arrived together. What matters most
+// is that a settings file or backup from before them still loads whole.
+do {
+    // The clip index is keyed by this; Tools/sync-native-assets.py mirrors it.
+    eq("phrase key: case and punctuation", SpokenText.normalisedPhrase("I Want!"), "i want")
+    eq("phrase key: spacing", SpokenText.normalisedPhrase("  my   Schedule "), "my schedule")
+    eq("phrase key: apostrophes stay", SpokenText.normalisedPhrase("don\u{2019}t"), "don't")
+    eq("phrase key: underscore breaks", SpokenText.normalisedPhrase("thank_you"), "thank you")
+    eq("phrase key: nothing left", SpokenText.normalisedPhrase("...!"), "")
+
+    eq("bella id names her folder", SpokenText.recordedVoiceFolder(SpokenText.bellaVoiceId), "bella")
+    eq("a system voice is not a folder", SpokenText.recordedVoiceFolder("com.apple.voice.compact.en-US.Samantha"), nil)
+    check("bella is a recorded voice", VoiceClips.isRecordedVoice(SpokenText.bellaVoiceId))
+    check("the system default is not", !VoiceClips.isRecordedVoice(nil))
+    eq("no clip for a system voice", VoiceClips.clip(for: "hello", voiceId: nil), nil)
+
+    eq("new settings speak with Bella", AppSettings().voiceId, SpokenText.bellaVoiceId)
+    eq("new settings open our pictures", AppSettings().symbolSet, SymbolSet.talkTiles)
+
+    let dec = JSONDecoder()
+    let old = "{\"speechRate\":0.6,\"childLock\":true,\"lockPIN\":\"4321\",\"activationDelay\":0,\"repeatLockout\":0,\"activateOnRelease\":false}"
+    let a = try? dec.decode(AppSettings.self, from: Data(old.utf8))
+    check("a settings file from before the sets still loads", a != nil)
+    eq("and keeps its PIN", a?.lockPIN, "4321")
+    eq("and keeps its lock", a?.childLock, true)
+    eq("and gets Bella", a?.voiceId, SpokenText.bellaVoiceId)
+    eq("and gets our pictures", a?.symbolSet, SymbolSet.talkTiles)
+
+    let sys = try? dec.decode(AppSettings.self, from: Data("{\"voiceId\":null,\"symbolSet\":\"mulberry\"}".utf8))
+    eq("an explicit iPad-default voice stays that way", sys?.voiceId, String?.none)
+    eq("mulberry stays chosen", sys?.symbolSet, SymbolSet.mulberry)
+
+    var chosen = AppSettings()
+    chosen.voiceId = nil
+    chosen.symbolSet = .mulberry
+    let data = try! JSONEncoder().encode(chosen)
+    eq("iPad default survives a save", (try? dec.decode(AppSettings.self, from: data))?.voiceId, String?.none)
+    eq("the set survives a save", (try? dec.decode(AppSettings.self, from: data))?.symbolSet, SymbolSet.mulberry)
+
+    let future = try? dec.decode(AppSettings.self, from: Data("{\"symbolSet\":\"picto\"}".utf8))
+    eq("a set this build does not know falls back", future?.symbolSet, SymbolSet.talkTiles)
+
+    // The catalogue is a bundle resource, so a command-line test sees none of
+    // it; what it can prove is that the empty case is quiet, not a crash.
+    check("no catalogue here, no crash", TalkTilesCatalog.search("cat").isEmpty)
+    check("no voices here, no crash", VoiceClips.available.isEmpty)
+}
+
 restore()
 if fails.isEmpty {
     print("STORE / BUTTON LOGIC OK — all checks passed")

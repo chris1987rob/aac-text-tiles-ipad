@@ -111,9 +111,7 @@ public struct QuickEditModalView: View {
 
                 // Section 3: Symbol Selection
                 Section(header: Text("Symbol & Icon"),
-                        footer: Text(SymbolLibrary.isAvailable
-                                     ? "\(SymbolLibrary.names.count) picture symbols are built in. The emoji below cover core words the symbol set does not have - yes, no, please, stop."
-                                     : "No symbol library is bundled with this build.")) {
+                        footer: Text(symbolFooter)) {
 
                     if let chosen = selectedSymbol, let img = SymbolLibrary.image(named: chosen) {
                         HStack(spacing: 12) {
@@ -205,9 +203,15 @@ public struct QuickEditModalView: View {
                     }
                 }
             case .symbols:
-                SymbolPickerView { name in
+                SymbolPickerView(set: store.settings.symbolSet) { name in
                     selectedSymbol = name
                     photoData = nil
+                    // One of our pictures knows its own word; a blank button
+                    // takes it so the picture and the voice clip line up.
+                    if let sym = SymbolLibrary.talkTilesSymbol(named: name) {
+                        if label.isEmpty { label = sym.label }
+                        if tts.isEmpty { tts = sym.tts }
+                    }
                 }
             }
         }
@@ -382,6 +386,20 @@ public struct QuickEditModalView: View {
 
     private var spokenText: String {
         tts.isEmpty ? label : tts
+    }
+
+    /// Names the set the picker opens on, and how many pictures it holds, so
+    /// the footer does not claim 3,436 symbols when the picker is about to
+    /// show 2,210 of ours.
+    private var symbolFooter: String {
+        let set = store.settings.symbolSet
+        guard SymbolLibrary.anyAvailable else { return "No symbol library is bundled with this build." }
+        let open = SymbolLibrary.has(set)
+            ? set : (SymbolSet.allCases.first { SymbolLibrary.has($0) } ?? set)
+        var text = "\(SymbolLibrary.count(of: open)) \(open.title) are built in"
+        if open == .talkTiles { text += ", each with Bella's voice" }
+        text += ". Change the set under Settings › Pictures. The emoji below cover core words - yes, no, please, stop."
+        return text
     }
 
     @ViewBuilder

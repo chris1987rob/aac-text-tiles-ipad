@@ -37,6 +37,7 @@ public struct SettingsModalView: View {
         NavigationView {
             Form {
                 voiceSection
+                picturesSection
                 accessSection
                 lockSection
                 backupSection
@@ -78,16 +79,27 @@ public struct SettingsModalView: View {
     @ViewBuilder
     private var voiceSection: some View {
         Section(header: Text("Voice"),
-                footer: Text("Pick a voice that fits the person speaking. More voices can be added under iPad Settings › Accessibility › Spoken Content › Voices.")) {
+                footer: Text(voiceFooter)) {
 
             Picker("Voice", selection: Binding(
                 get: { store.settings.voiceId ?? "" },
                 set: { store.settings.voiceId = $0.isEmpty ? nil : $0 }
             )) {
-                Text("System default").tag("")
+                ForEach(VoiceClips.available, id: \.id) { voice in
+                    Text("\(voice.name) – Talk Tiles voice").tag(voice.id)
+                }
+                Text("iPad default").tag("")
                 ForEach(voices, id: \.identifier) { voice in
                     Text("\(voice.name) (\(voice.language))").tag(voice.identifier)
                 }
+            }
+
+            if let voice = VoiceClips.voice(for: store.settings.voiceId) {
+                Text(voice.description.isEmpty
+                     ? "A recorded voice. Every built-in picture and phrase has a clip; anything she has no clip for, the iPad voice below reads out."
+                     : "\(voice.description). Every built-in picture and phrase has a clip; anything she has no clip for, the iPad voice reads out.")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -103,11 +115,90 @@ public struct SettingsModalView: View {
             }
 
             Button("Test the voice") {
-                SpeechManager.shared.speak("Hello. This is how I will sound.",
-                                           rate: Float(store.settings.speechRate),
-                                           voiceId: store.settings.voiceId)
+                let clips = VoiceClips.previewClips(voiceId: store.settings.voiceId)
+                if !clips.isEmpty {
+                    SpeechManager.shared.playClipSequence(clips, rate: Float(store.settings.speechRate))
+                } else {
+                    SpeechManager.shared.speak("Hello. This is how I will sound.",
+                                               rate: Float(store.settings.speechRate),
+                                               voiceId: store.settings.voiceId)
+                }
             }
         }
+    }
+
+    private var voiceFooter: String {
+        if VoiceClips.isAvailable {
+            return "Bella is the app's own recorded voice and speaks every Talk Tiles picture. The iPad voices read anything typed or edited. More of those can be added under iPad Settings › Accessibility › Spoken Content › Voices."
+        }
+        return "Pick a voice that fits the person speaking. More voices can be added under iPad Settings › Accessibility › Spoken Content › Voices."
+    }
+
+    // MARK: - Pictures
+
+    /// Two picture sets ship in the app; this is where the picker is told
+    /// which one to open on. Neither is ever removed from a board - a button
+    /// keeps whichever picture it was given.
+    @ViewBuilder
+    private var picturesSection: some View {
+        Section(header: Text("Pictures"),
+                footer: Text("The set the symbol picker opens on when you choose a picture for a button. You can still switch sets inside the picker, and buttons already made keep their pictures.")) {
+
+            Picker("Symbol set", selection: Binding(
+                get: { store.settings.symbolSet },
+                set: { store.settings.symbolSet = $0 }
+            )) {
+                ForEach(SymbolSet.allCases.filter { SymbolLibrary.has($0) }) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(SegmentedPickerStyle())
+
+            ForEach(SymbolSet.allCases.filter { SymbolLibrary.has($0) }) { option in
+                HStack(alignment: .top, spacing: 12) {
+                    symbolSample(option)
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text(option.title)
+                                .font(.system(size: 15, weight: .semibold))
+                            if option == store.settings.symbolSet {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(Color(hex: "#008369"))
+                            }
+                        }
+                        Text("\(SymbolLibrary.count(of: option)) pictures. \(option.blurb)")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+                .onTapGesture { store.settings.symbolSet = option }
+            }
+        }
+    }
+
+    /// Three pictures from a set, so the choice is visible, not just named.
+    private func sampleNames(_ set: SymbolSet) -> [String] {
+        switch set {
+        case .talkTiles: return ["tt:cat", "tt:dog", "tt:apple"]
+        case .mulberry:  return ["cat", "dog", "apple"]
+        }
+    }
+
+    private func symbolSample(_ set: SymbolSet) -> some View {
+        HStack(spacing: 4) {
+            ForEach(sampleNames(set), id: \.self) { name in
+                if let img = SymbolLibrary.image(named: name) {
+                    Image(uiImage: img)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 34, height: 34)
+                }
+            }
+        }
+        .frame(width: 114, alignment: .leading)
     }
 
     private var speedLabel: String {
@@ -270,11 +361,31 @@ public struct SettingsModalView: View {
     @ViewBuilder
     private var aboutSection: some View {
         Section(header: Text("About")) {
-            if SymbolLibrary.isAvailable {
+            if SymbolLibrary.has(.talkTiles) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("\(SymbolLibrary.names.count) picture symbols")
+                    Text("\(SymbolLibrary.count(of: .talkTiles)) Talk Tiles pictures")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Drawn in-house for Talk Tiles. No third-party licence.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            if SymbolLibrary.has(.mulberry) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(SymbolLibrary.count(of: .mulberry)) Mulberry Symbols")
                         .font(.system(size: 15, weight: .semibold))
                     Text(SymbolLibrary.attribution)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            ForEach(VoiceClips.available, id: \.id) { voice in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(voice.name) voice")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Recorded for Talk Tiles: one clip for every picture and built-in phrase.")
                         .font(.footnote)
                         .foregroundColor(.secondary)
                 }

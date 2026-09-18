@@ -1,7 +1,7 @@
 import Foundation
 import AVFoundation
 
-public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
+public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate, AVAudioPlayerDelegate {
     public static let shared = SpeechManager()
 
     /// Rate used when a caller does not pass one. Settable so the Settings
@@ -14,6 +14,11 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
 
     private let synthesizer = AVSpeechSynthesizer()
     private var audioPlayer: AVAudioPlayer?
+
+    /// Clips still to play after `audioPlayer` finishes - a sentence Bella
+    /// says one word at a time. See `VoiceClips.chain`.
+    private var clipQueue: [URL] = []
+    private var clipRate: Float = 1.0
 
     @Published public var isSpeaking: Bool = false
     @Published public var activeSyllable: String = ""
@@ -83,6 +88,16 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
         }
+        stopClips()
+
+        // Bella (or another recorded voice): the clip that says exactly this,
+        // else the word clips in order, else the iPad voice says it. A clip
+        // is a real recording, so it starts instantly and never says
+        // "capital I".
+        let want = voiceId ?? preferredVoiceId
+        if VoiceClips.isRecordedVoice(want), playClips(for: text, voiceId: want, rate: rate) {
+            return
+        }
 
         let utterance = AVSpeechUtterance(string: SpokenText.forSpeech(text))
         utterance.rate = rate
@@ -102,11 +117,86 @@ public class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDeleg
 
     public func playAudioData(_ data: Data) {
         ensureSessionActive()
+        stopClips()
         do {
             audioPlayer = try AVAudioPlayer(data: data)
             audioPlayer?.play()
         } catch {
             print("Audio playback error: \(error)")
+        }
+    }
+
+    // MARK: - Recorded voice clips
+
+    /// True when something started playing. False means "no clip for these
+    /// words" and the caller should let the synthesiser have them.
+    @discardableResult
+    private func playClips(for text: String, voiceId: String?, rate: Float) -> Bool {
+        var urls: [URL] = []
+        if let one = VoiceClips.clip(for: text, voiceId: voiceId) {
+            urls = [one]
+        } else if let chain = VoiceClips.chain(for: text, voiceId: voiceId) {
+            urls = chain
+        }
+        guard !urls.isEmpty else { return false }
+        return playClipSequence(urls, rate: rate)
+    }
+
+    /// Plays clips back to back. Public so Settings can preview a voice.
+    @discardableResult
+    public func playClipSequence(_ urls: [URL], rate: Float? = nil) -> Bool {
+        guard let first = urls.first else { return false }
+        ensureSessionActive()
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+        clipQueue = Array(urls.dropFirst())
+        clipRate = SpeechManager.clipRate(for: rate ?? defaultRate)
+        return startClip(first)
+    }
+
+    private func startClip(_ url: URL) -> Bool {
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.delegate = self
+            if clipRate != 1.0 {
+                player.enableRate = true
+                player.rate = clipRate
+            }
+            audioPlayer = player
+            isSpeaking = true
+            return player.play()
+        } catch {
+            print("Clip playback error: \(error) \(url.lastPathComponent)")
+            clipQueue.removeAll()
+            isSpeaking = false
+            return false
+        }
+    }
+
+    private func stopClips() {
+        clipQueue.removeAll()
+        if let p = audioPlayer, p.isPlaying { p.stop() }
+    }
+
+    /// The Settings speed slider is an `AVSpeechUtterance` rate (0.3-0.7,
+    /// 0.45 normal). A recording cannot take that number directly, so the
+    /// three bands the slider labels (Slow / Normal / Fast) become playback
+    /// multipliers. AVAudioPlayer keeps the pitch when the rate changes.
+    static func clipRate(for speechRate: Float) -> Float {
+        switch speechRate {
+        case ..<0.38: return 0.8
+        case ..<0.52: return 1.0
+        default:      return 1.25
+        }
+    }
+
+    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        guard player === audioPlayer else { return }
+        if flag, !clipQueue.isEmpty {
+            let next = clipQueue.removeFirst()
+            _ = startClip(next)
+        } else {
+            clipQueue.removeAll()
+            isSpeaking = false
         }
     }
 

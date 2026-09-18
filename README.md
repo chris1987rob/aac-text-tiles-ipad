@@ -64,6 +64,32 @@ It operates **100% offline** on the iPad using Service Worker CacheStorage and I
 
 *See [XCODE_GUIDE.md](XCODE_GUIDE.md) for full detailed step-by-step instructions.*
 
+#### Pictures and voices in the SwiftUI app
+
+The native app ships **two picture sets** and picks between them under
+**Settings › Pictures** (the symbol picker also has a switch at the top):
+
+| Set | Where | Stored on a button as | Spoken by |
+|---|---|---|---|
+| **Talk Tiles pictures** (default) — 2,210 originals drawn in-house | `AACTextTilesSwiftUI/TalkTilesSymbols/` + `catalog.json` | `tt:<id>` | Bella's recorded clip |
+| **Mulberry Symbols** — 3,436, CC BY-SA 2.0 UK | `AACTextTilesSwiftUI/Symbols/` | `<name>` | the iPad voice |
+
+**Bella** is the app's own recorded voice (`AACTextTilesSwiftUI/Voices/bella/`,
+2,210 word clips + 74 board phrases, `index.json` keyed by the normalised
+phrase). She is the default under **Settings › Voice**; a button whose words
+match a clip plays it, a sentence made only of clip words is chained, and
+anything else falls back to the iPad voice. A recording on the button always
+wins.
+
+Both folders are generated — never edit them by hand. After `aac-board`'s
+`symbol_gen/write_symbols_data.py` refreshes `symbols_data.js` and `symbols/`
+here, run:
+
+```bash
+python3 Tools/sync-native-assets.py                 # pictures + Bella
+python3 Tools/sync-native-assets.py --voices bella,jake,maya
+```
+
 ---
 
 ### Option 2: Safari PWA "Add to Home Screen" (No Mac Required)

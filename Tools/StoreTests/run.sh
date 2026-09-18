@@ -14,6 +14,8 @@ xcrun swiftc -O \
   AACTextTilesSwiftUI/Services/SymbolWordBank.swift \
   AACTextTilesSwiftUI/Services/TileFavorites.swift \
   AACTextTilesSwiftUI/Services/SpokenText.swift \
+  AACTextTilesSwiftUI/Services/TalkTilesCatalog.swift \
+  AACTextTilesSwiftUI/Services/VoiceClips.swift \
   Tools/StoreTests/main.swift \
   -o "$OUT/t"
 "$OUT/t"; rm -rf "$OUT"

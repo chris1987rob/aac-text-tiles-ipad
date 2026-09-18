@@ -22,3 +22,46 @@ public enum SpokenText {
         return trimmed.lowercased()
     }
 }
+
+// MARK: - Recorded voice
+
+public extension SpokenText {
+
+    /// The `AppSettings.voiceId` that means "Bella", the app's own recorded
+    /// voice, rather than an `AVSpeechSynthesisVoice` identifier. Clips for
+    /// her live in the bundle under `Voices/bella/`; see `VoiceClips`.
+    static let bellaVoiceId = "talktiles:bella"
+
+    /// The folder under `Voices/` for a recorded voice id, nil for a system
+    /// voice. `talktiles:bella` -> `bella`.
+    static func recordedVoiceFolder(_ voiceId: String?) -> String? {
+        guard let id = voiceId, id.hasPrefix("talktiles:") else { return nil }
+        let name = String(id.dropFirst("talktiles:".count))
+        return name.isEmpty ? nil : name
+    }
+
+    /// The key a phrase is looked up by in a voice's clip index: lowercase,
+    /// letters, digits and apostrophes kept, everything else collapsed to one
+    /// space. "I Want!" and "i want" are the same clip.
+    ///
+    /// Tools/sync-native-assets.py writes the index with the same rule. If
+    /// this changes, that must change with it, or every clip goes missing.
+    static func normalisedPhrase(_ text: String) -> String {
+        var out = ""
+        var pendingSpace = false
+        for scalar in text.lowercased().unicodeScalars {
+            let keep = scalar.properties.isAlphabetic
+                || CharacterSet.decimalDigits.contains(scalar)
+                || scalar == "'"
+                || scalar == "\u{2019}"
+            if keep {
+                if pendingSpace && !out.isEmpty { out.append(" ") }
+                pendingSpace = false
+                out.unicodeScalars.append(scalar == "\u{2019}" ? "'" : scalar)
+            } else {
+                pendingSpace = true
+            }
+        }
+        return out
+    }
+}

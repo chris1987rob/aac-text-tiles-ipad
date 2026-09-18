@@ -25,6 +25,8 @@
 		B1000092AA60000100000001 /* SymbolWordBank.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000091AA60000100000001 /* SymbolWordBank.swift */; };
 		B10000B5AA60000100000001 /* TileFavorites.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000B4AA60000100000001 /* TileFavorites.swift */; };
 		B10000B7AA60000100000001 /* SpokenText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000B6AA60000100000001 /* SpokenText.swift */; };
+		B10000C2AA60000100000001 /* TalkTilesCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000C1AA60000100000001 /* TalkTilesCatalog.swift */; };
+		B10000C4AA60000100000001 /* VoiceClips.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000C3AA60000100000001 /* VoiceClips.swift */; };
 		B1000094AA60000100000001 /* ScenePicturePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000093AA60000100000001 /* ScenePicturePicker.swift */; };
 		B1000096AA60000100000001 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000095AA60000100000001 /* AppSettings.swift */; };
 		B1000098AA60000100000001 /* PinPromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000097AA60000100000001 /* PinPromptView.swift */; };
@@ -46,6 +48,8 @@
 		B10000472C60000100000001 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000482C60000100000001 /* ImagePicker.swift */; };
 		B10000492C60000100000001 /* PageOptionsModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100004A2C60000100000001 /* PageOptionsModalView.swift */; };
 		B100009FAA60000100000001 /* Symbols in Resources */ = {isa = PBXBuildFile; fileRef = B100009EAA60000100000001 /* Symbols */; };
+		B10000C6AA60000100000001 /* TalkTilesSymbols in Resources */ = {isa = PBXBuildFile; fileRef = B10000C5AA60000100000001 /* TalkTilesSymbols */; };
+		B10000C8AA60000100000001 /* Voices in Resources */ = {isa = PBXBuildFile; fileRef = B10000C7AA60000100000001 /* Voices */; };
 		B10000312C60000100000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000322C60000100000001 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -69,6 +73,8 @@
 		B1000091AA60000100000001 /* SymbolWordBank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolWordBank.swift; sourceTree = "<group>"; };
 		B10000B4AA60000100000001 /* TileFavorites.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileFavorites.swift; sourceTree = "<group>"; };
 		B10000B6AA60000100000001 /* SpokenText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpokenText.swift; sourceTree = "<group>"; };
+		B10000C1AA60000100000001 /* TalkTilesCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkTilesCatalog.swift; sourceTree = "<group>"; };
+		B10000C3AA60000100000001 /* VoiceClips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceClips.swift; sourceTree = "<group>"; };
 		B1000093AA60000100000001 /* ScenePicturePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenePicturePicker.swift; sourceTree = "<group>"; };
 		B1000095AA60000100000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		B1000097AA60000100000001 /* PinPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinPromptView.swift; sourceTree = "<group>"; };
@@ -90,6 +96,8 @@
 		B10000482C60000100000001 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		B100004A2C60000100000001 /* PageOptionsModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageOptionsModalView.swift; sourceTree = "<group>"; };
 		B100009EAA60000100000001 /* Symbols */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Symbols; sourceTree = "<group>"; };
+		B10000C5AA60000100000001 /* TalkTilesSymbols */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TalkTilesSymbols; sourceTree = "<group>"; };
+		B10000C7AA60000100000001 /* Voices */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Voices; sourceTree = "<group>"; };
 		B10000322C60000100000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10000332C60000100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -122,6 +130,8 @@
 				B100003B2C60000100000001 /* Views */,
 				B10000322C60000100000001 /* Assets.xcassets */,
 				B100009EAA60000100000001 /* Symbols */,
+				B10000C5AA60000100000001 /* TalkTilesSymbols */,
+				B10000C7AA60000100000001 /* Voices */,
 				B10000332C60000100000001 /* Info.plist */,
 			);
 			path = AACTextTilesSwiftUI;
@@ -160,6 +170,8 @@
 				B1000091AA60000100000001 /* SymbolWordBank.swift */,
 				B10000B4AA60000100000001 /* TileFavorites.swift */,
 				B10000B6AA60000100000001 /* SpokenText.swift */,
+				B10000C1AA60000100000001 /* TalkTilesCatalog.swift */,
+				B10000C3AA60000100000001 /* VoiceClips.swift */,
 				B10000122C60000100000001 /* AACStore.swift */,
 			);
 			path = Services;
@@ -269,6 +281,8 @@
 			files = (
 				B10000312C60000100000001 /* Assets.xcassets in Resources */,
 				B100009FAA60000100000001 /* Symbols in Resources */,
+				B10000C6AA60000100000001 /* TalkTilesSymbols in Resources */,
+				B10000C8AA60000100000001 /* Voices in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +305,8 @@
 				B1000092AA60000100000001 /* SymbolWordBank.swift in Sources */,
 				B10000B5AA60000100000001 /* TileFavorites.swift in Sources */,
 				B10000B7AA60000100000001 /* SpokenText.swift in Sources */,
+				B10000C2AA60000100000001 /* TalkTilesCatalog.swift in Sources */,
+				B10000C4AA60000100000001 /* VoiceClips.swift in Sources */,
 				B10000112C60000100000001 /* AACStore.swift in Sources */,
 				B10000132C60000100000001 /* TileView.swift in Sources */,
 				B10000152C60000100000001 /* TileGridView.swift in Sources */,

@@ -8,7 +8,18 @@ public class AACStore: ObservableObject {
     /// Kept as the single source of truth for the lock. It is persisted through
     /// `settings`, unlike the plain flag this replaced.
     @Published public var settings: AppSettings = AppSettings() {
-        didSet { if settings != oldValue { saveSettings() } }
+        didSet {
+            applySpeechSettings()
+            if settings != oldValue { saveSettings() }
+        }
+    }
+
+    /// The editors preview a button with a bare `speak(text)`, so the voice
+    /// and speed chosen in Settings have to be on the speech manager itself,
+    /// not only passed along by the board's own call sites.
+    private func applySpeechSettings() {
+        SpeechManager.shared.preferredVoiceId = settings.voiceId
+        SpeechManager.shared.defaultRate = Float(settings.speechRate)
     }
 
     public var isLocked: Bool {
@@ -36,6 +47,7 @@ public class AACStore: ObservableObject {
     public init() {
         loadPages()
         loadSettings()
+        applySpeechSettings()
     }
 
     public func loadPages() {

@@ -1,25 +1,35 @@
 import UIKit
 import SwiftUI
 
-/// The picture symbols shipped inside the app.
+/// The picture symbols shipped inside the app - two sets behind one name.
 ///
-/// Mulberry Symbols, CC BY-SA 2.0 UK. Chosen over ARASAAC deliberately:
-/// ARASAAC is BY-**NC**-SA, which would forbid ever selling or commercially
-/// distributing this app. Mulberry permits commercial use, so the choice does
-/// not quietly close a door.
+/// **Talk Tiles pictures** (`tt:<id>`, `TalkTilesSymbols/<id>.webp`): our own
+/// 2,210 pictures, one per vocabulary word, each with a Bella clip. The
+/// default set.
 ///
-/// Mulberry is aimed at adults with language difficulties, so it is strong on
-/// concrete nouns and verbs and thin on a child's core words — it has no
-/// "yes", "no", "please", "stop", "like" or "love". It sits alongside the emoji
-/// picker rather than replacing it.
+/// **Mulberry Symbols** (`<name>`, `Symbols/<name>.png`), CC BY-SA 2.0 UK.
+/// Chosen over ARASAAC deliberately: ARASAAC is BY-**NC**-SA, which would
+/// forbid ever selling or commercially distributing this app. Mulberry is
+/// aimed at adults with language difficulties, so it is strong on concrete
+/// nouns and verbs and thin on a child's core words - it has no "yes", "no",
+/// "please", "stop", "like" or "love".
+///
+/// A tile stores one name string (`TileModel.symbolName`). Talk Tiles names
+/// carry the `tt:` prefix so "cat" (Mulberry) and "tt:cat" (ours) never
+/// collide, and every board keeps working whichever set is picked in Settings.
 public enum SymbolLibrary {
 
     public static let attribution = "Mulberry Symbols © Garry Paxton and Steve Lee, licensed CC BY-SA 2.0 UK."
     public static let licenceURL = "https://creativecommons.org/licenses/by-sa/2.0/uk/"
 
+    /// Prefix on a `symbolName` that means "one of our own pictures".
+    public static let talkTilesPrefix = "tt:"
+
     private static var cache: [String: UIImage] = [:]
 
-    /// Every bundled symbol name, sorted. Read once from the bundle directory.
+    // MARK: Mulberry
+
+    /// Every bundled Mulberry symbol name, sorted. Read once from the bundle directory.
     public static let names: [String] = {
         guard let dir = Bundle.main.url(forResource: "Symbols", withExtension: nil),
               let items = try? FileManager.default.contentsOfDirectory(
@@ -30,27 +40,84 @@ public enum SymbolLibrary {
             .sorted()
     }()
 
+    /// True when the Mulberry set is in this build.
     public static var isAvailable: Bool { !names.isEmpty }
+
+    // MARK: Sets
+
+    public static func has(_ set: SymbolSet) -> Bool {
+        switch set {
+        case .talkTiles: return TalkTilesCatalog.isAvailable
+        case .mulberry:  return isAvailable
+        }
+    }
+
+    public static func count(of set: SymbolSet) -> Int {
+        switch set {
+        case .talkTiles: return TalkTilesCatalog.symbols.count
+        case .mulberry:  return names.count
+        }
+    }
+
+    /// True when at least one set made it into the build.
+    public static var anyAvailable: Bool { SymbolSet.allCases.contains { has($0) } }
+
+    /// The set a stored symbol name belongs to.
+    public static func symbolSet(of name: String) -> SymbolSet {
+        name.hasPrefix(talkTilesPrefix) ? .talkTiles : .mulberry
+    }
+
+    /// The stored name for one of our pictures.
+    public static func talkTilesName(_ id: String) -> String { talkTilesPrefix + id }
+
+    /// The catalogue entry behind a `tt:` name, nil for a Mulberry name.
+    public static func talkTilesSymbol(named name: String) -> TalkTilesSymbol? {
+        guard name.hasPrefix(talkTilesPrefix) else { return nil }
+        return TalkTilesCatalog.byId[String(name.dropFirst(talkTilesPrefix.count))]
+    }
+
+    // MARK: Pictures
 
     public static func image(named name: String) -> UIImage? {
         if let hit = cache[name] { return hit }
-        guard let url = Bundle.main.url(forResource: name, withExtension: "png",
-                                        subdirectory: "Symbols"),
-              let data = try? Data(contentsOf: url),
+        let url: URL?
+        if name.hasPrefix(talkTilesPrefix) {
+            url = Bundle.main.url(forResource: String(name.dropFirst(talkTilesPrefix.count)),
+                                  withExtension: "webp", subdirectory: TalkTilesCatalog.folder)
+        } else {
+            url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Symbols")
+        }
+        guard let u = url, let data = try? Data(contentsOf: u),
               let img = UIImage(data: data) else { return nil }
         cache[name] = img
         return img
     }
 
-    /// Turns `fire_engine_2` into `fire engine 2` for display and searching.
+    /// What to show under a picture: the catalogue label for one of ours,
+    /// and `fire_engine_2` -> `fire engine 2` for a Mulberry name.
     public static func readable(_ name: String) -> String {
-        name.replacingOccurrences(of: "_,_", with: " ")
+        if let sym = talkTilesSymbol(named: name) { return sym.label }
+        return name.replacingOccurrences(of: "_,_", with: " ")
             .replacingOccurrences(of: "_", with: " ")
             .trimmingCharacters(in: .whitespaces)
     }
 
-    /// Ranked search. Exact and prefix matches come first, because typing
-    /// "cat" should not bury the cat under "communicate" and "certificate".
+    // MARK: Search
+
+    /// Ranked search over one set. Exact and prefix matches come first,
+    /// because typing "cat" should not bury the cat under "communicate" and
+    /// "certificate". Results are stored names (`tt:` prefixed for ours).
+    public static func search(_ query: String, in set: SymbolSet,
+                              category: String? = nil, limit: Int = 300) -> [String] {
+        switch set {
+        case .talkTiles:
+            return TalkTilesCatalog.search(query, category: category, limit: limit).map { talkTilesName($0.id) }
+        case .mulberry:
+            return search(query, limit: limit)
+        }
+    }
+
+    /// Mulberry-only search, kept for callers that predate the second set.
     public static func search(_ query: String, limit: Int = 300) -> [String] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return Array(names.prefix(limit)) }
@@ -69,21 +136,47 @@ public enum SymbolLibrary {
 }
 
 /// Searchable grid of bundled symbols.
+///
+/// Opens on the set chosen in Settings; the segmented control at the top
+/// switches between the two for this one pick without changing the setting.
 public struct SymbolPickerView: View {
     public var onPick: (String) -> Void
     @Environment(\.presentationMode) private var presentation
 
-    public init(onPick: @escaping (String) -> Void) { self.onPick = onPick }
+    public init(set: SymbolSet = .talkTiles, onPick: @escaping (String) -> Void) {
+        self.onPick = onPick
+        _activeSet = State(initialValue: SymbolLibrary.has(set)
+                           ? set
+                           : (SymbolSet.allCases.first { SymbolLibrary.has($0) } ?? set))
+    }
 
+    @State private var activeSet: SymbolSet
     @State private var query = ""
+    @State private var category: String? = nil
 
-    private var results: [String] { SymbolLibrary.search(query) }
+    private var results: [String] {
+        SymbolLibrary.search(query, in: activeSet, category: activeSet == .talkTiles ? category : nil)
+    }
 
     private let columns = [GridItem(.adaptive(minimum: 92), spacing: 12)]
+
+    /// Both sets present: offer the switch. Only one: no control to confuse.
+    private var setsInBuild: [SymbolSet] { SymbolSet.allCases.filter { SymbolLibrary.has($0) } }
 
     public var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                if setsInBuild.count > 1 {
+                    Picker("Picture set", selection: $activeSet) {
+                        ForEach(setsInBuild) { s in
+                            Text("\(s.title) (\(SymbolLibrary.count(of: s)))").tag(s)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.horizontal, 14)
+                    .padding(.top, 10)
+                }
+
                 HStack {
                     Image(systemName: "magnifyingglass").foregroundColor(.secondary)
                     TextField("Search symbols", text: $query)
@@ -102,7 +195,11 @@ public struct SymbolPickerView: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 10)
 
-                if !SymbolLibrary.isAvailable {
+                if activeSet == .talkTiles && !TalkTilesCatalog.categories.isEmpty {
+                    categoryChips
+                }
+
+                if !SymbolLibrary.anyAvailable {
                     Spacer()
                     Text("No symbols are bundled with this build.")
                         .foregroundColor(.secondary)
@@ -146,7 +243,9 @@ public struct SymbolPickerView: View {
                         }
                         .padding(14)
 
-                        Text(SymbolLibrary.attribution)
+                        Text(activeSet == .mulberry
+                             ? SymbolLibrary.attribution
+                             : "Talk Tiles pictures are drawn in-house. Every one has Bella's voice behind it.")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -159,5 +258,35 @@ public struct SymbolPickerView: View {
             .navigationBarItems(trailing: Button("Cancel") { presentation.wrappedValue.dismiss() })
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+
+    /// One row of category chips. "All" plus the catalogue's sixteen groups;
+    /// a search box alone is no use to someone who does not know the word yet.
+    @ViewBuilder
+    private var categoryChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                categoryChip(title: "All", value: nil)
+                ForEach(TalkTilesCatalog.categories, id: \.self) { c in
+                    categoryChip(title: TalkTilesCatalog.categoryTitle(c), value: c)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func categoryChip(title: String, value: String?) -> some View {
+        let on = category == value
+        return Button { category = value } label: {
+            Text(title)
+                .font(.system(size: 13, weight: on ? .semibold : .regular))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(on ? Color(hex: "#008369") : Color.secondary.opacity(0.12))
+                .foregroundColor(on ? .white : .primary)
+                .cornerRadius(14)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }

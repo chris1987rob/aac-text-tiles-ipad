@@ -588,7 +588,7 @@ public struct KeyboardKeyEditorModalView: View {
                     photoData = sized.jpegData(compressionQuality: 0.85)
                 }
             case .symbols:
-                SymbolPickerView { name in
+                SymbolPickerView(set: store.settings.symbolSet) { name in
                     icon = name
                     photoData = nil
                 }
