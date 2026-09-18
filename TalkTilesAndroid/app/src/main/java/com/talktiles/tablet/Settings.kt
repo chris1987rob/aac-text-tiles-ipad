@@ -18,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -43,6 +45,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
     val s = store.settings
     var confirmReset by remember { mutableStateOf(false) }
     var showPin by remember { mutableStateOf(false) }
+    var showVoiceMenu by remember { mutableStateOf(false) }
     var pendingRestore by remember { mutableStateOf<Pair<BookArchive, BookBackup.Summary>?>(null) }
     var restoreError by remember { mutableStateOf<String?>(null) }
     var backupNote by remember { mutableStateOf<String?>(null) }
@@ -63,23 +66,22 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
         s.speechRate < 0.52 -> "Normal"
         else -> "Fast"
     }
-    val systemVoices = remember { SpeechManager.shared.availableSystemVoices() }
 
     ModalSheet(title = "Settings", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss) {
-        // Voice
+        // Voice: one button that opens the voice menu, so the section stays short.
         FormSection("Voice", if (VoiceClips.isAvailable)
             "Bella is the app's own recorded voice and speaks every Talk Tiles picture. The device voices read anything typed or edited. More of those can be added under Android Settings › Accessibility › Text-to-speech output."
         else "Pick a voice that fits the person speaking.") {
-            for (v in VoiceClips.available) {
-                VoiceRow("${v.name} – Talk Tiles voice", s.voiceId == v.id) { store.updateSettings { it.copy(voiceId = v.id) } }
-            }
-            VoiceRow("Device default", s.voiceId == null) { store.updateSettings { it.copy(voiceId = null) } }
-            for (v in systemVoices) {
-                VoiceRow(v.title, s.voiceId == v.id) { store.updateSettings { it.copy(voiceId = v.id) } }
-            }
-            VoiceClips.voice(s.voiceId)?.let { v ->
-                Text((if (v.description.isEmpty()) "A recorded voice" else v.description) + ". Every built-in picture and phrase has a clip; anything she has no clip for, the device voice reads out.",
-                    fontSize = 13.sp, color = BoardTheme.slate, modifier = Modifier.padding(16.dp))
+            val currentVoice = if (s.voiceId == null) "Device default"
+                else VoiceClips.voice(s.voiceId)?.let { "${it.name} – Talk Tiles voice" } ?: s.voiceId
+            FormRow(onClick = { showVoiceMenu = true }) {
+                Icon(Icons.Default.RecordVoiceOver, null, tint = BoardTheme.blue)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Voice", fontSize = 16.sp, color = BoardTheme.ink)
+                    Text(currentVoice, fontSize = 13.sp, color = BoardTheme.slate)
+                }
+                Icon(Icons.Default.KeyboardArrowRight, null, tint = BoardTheme.slate)
             }
             SliderRow("Speaking speed", speedLabel, s.speechRate.toFloat(), 0.3f..0.7f, 7) { v -> store.updateSettings { it.copy(speechRate = (Math.round(v * 20) / 20.0)) } }
             FormButton("Test the voice") {
@@ -194,6 +196,44 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
     }
     if (showPin) {
         PinChangeSheet(onDismiss = { showPin = false }) { pin -> store.updateSettings { it.copy(lockPIN = pin) } }
+    }
+    if (showVoiceMenu) {
+        VoiceMenuSheet(store, onDismiss = { showVoiceMenu = false })
+    }
+}
+
+/** The voice menu: every voice in one place. Pressing a voice hears it first
+ *  (the preview plays, then it is chosen), because picking a voice you have
+ *  not heard is guessing. */
+@Composable
+private fun VoiceMenuSheet(store: AACStore, onDismiss: () -> Unit) {
+    val s = store.settings
+    val systemVoices = remember { SpeechManager.shared.availableSystemVoices() }
+    ModalSheet(title = "Voice", onDismiss = onDismiss, trailing = "Done", onTrailing = onDismiss) {
+        FormSection(if (VoiceClips.isAvailable)
+            "Press a voice to hear it - it becomes the voice Talk Tiles uses."
+        else "Pick a voice that fits the person speaking.") {
+            for (v in VoiceClips.available) {
+                VoiceRow("${v.name} – Talk Tiles voice", s.voiceId == v.id) {
+                    SpeechManager.shared.playClipSequence(VoiceClips.previewClips(v.id), s.speechRate.toFloat())
+                    store.updateSettings { it.copy(voiceId = v.id) }
+                }
+            }
+            VoiceRow("Device default", s.voiceId == null) {
+                SpeechManager.shared.speak("Hello. This is how I will sound.", s.speechRate.toFloat(), null)
+                store.updateSettings { it.copy(voiceId = null) }
+            }
+            for (v in systemVoices) {
+                VoiceRow(v.title, s.voiceId == v.id) {
+                    SpeechManager.shared.speak("Hello. This is how I will sound.", s.speechRate.toFloat(), v.id)
+                    store.updateSettings { it.copy(voiceId = v.id) }
+                }
+            }
+            VoiceClips.voice(s.voiceId)?.let { v ->
+                Text((if (v.description.isEmpty()) "A recorded voice" else v.description) + ". Every built-in picture and phrase has a clip; anything she has no clip for, the device voice reads out.",
+                    fontSize = 13.sp, color = BoardTheme.slate, modifier = Modifier.padding(16.dp))
+            }
+        }
     }
 }
 
