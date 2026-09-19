@@ -217,7 +217,7 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
         Row(
             Modifier
                 .weight(1f)
-                .heightIn(min = 44.dp)
+                .heightIn(min = 40.dp)
                 .clip(TTShape.medium)
                 .accessibleClickable(label = if (items.isEmpty()) "Sentence, empty" else "Speak sentence again", ripple = false) { store.speakSentence() }
                 // Words scroll sideways; the hint does not, so at a large font it wraps instead of being cut off.
@@ -234,32 +234,26 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
                 }
             }
         }
-        BarButton(Icons.Default.Backspace, "Remove last word", size = 44.dp, enabled = items.isNotEmpty()) { store.sentence.removeLast() }
+        BarButton(Icons.Default.Backspace, "Remove last word", size = TTSpace.compact, enabled = items.isNotEmpty()) { store.sentence.removeLast() }
         if (speaking) {
-            BarButton(Icons.Default.Stop, "Stop speaking", filled = true, size = 44.dp, fill = c.accent) { SpeechManager.shared.stop() }
+            BarButton(Icons.Default.Stop, "Stop speaking", filled = true, size = TTSpace.compact, fill = c.accent) { SpeechManager.shared.stop() }
         } else {
-            BarButton(Icons.Default.PlayArrow, "Speak sentence", filled = true, size = 44.dp, enabled = items.isNotEmpty()) { store.speakSentence() }
+            BarButton(Icons.Default.PlayArrow, "Speak sentence", filled = true, size = TTSpace.compact, enabled = items.isNotEmpty()) { store.speakSentence() }
         }
     }
 }
 
-/** One word in the bar. Tapping it takes it out of the sentence. */
+/** One word in the bar - just the word, no picture. Tapping it takes it out of the sentence. */
 @Composable
 fun SentenceWord(item: SentenceItem, key: String, onRemove: () -> Unit) {
     val c = TT.colors
-    Row(
-        Modifier.heightIn(min = 36.dp).clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small)
+    Box(
+        Modifier.heightIn(min = 32.dp).clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small)
             .semantics(mergeDescendants = true) { contentDescription = "Remove ${item.label}" }
             .accessibleClickable(label = "Remove ${item.label}", shape = TTShape.small, onClick = onRemove)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+            .padding(horizontal = 10.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
     ) {
-        val photo = PhotoCache.bitmap(item.photoData, key)
-        when {
-            photo != null -> Image(photo.asImageBitmap(), null, Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
-            item.symbolName != null -> SymbolPicture(item.symbolName, 22.dp)
-        }
         Text(item.label, style = TTType.bodyStrong, color = c.ink, maxLines = 1)
     }
 }

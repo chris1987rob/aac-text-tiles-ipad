@@ -160,8 +160,8 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
         }
 
         // Keep on screen (Android screen pinning, the soft kind: Back + Overview held together leaves it)
-        FormSection("Keep on screen", if (pinned) "Talk Tiles is pinned to the screen. To leave, hold Back and Overview together."
-            else "Uses Android's screen pinning so Talk Tiles stays in front. Android asks once to confirm. Every button keeps working; to leave, hold Back and Overview together.") {
+        FormSection("Keep on screen", if (pinned) "Talk Tiles is pinned to the screen. To leave, swipe up from the bottom and hold (or hold Back and Overview together)."
+            else "Uses Android's screen pinning so Talk Tiles stays in front. Android asks once to confirm. Every button keeps working; to leave, swipe up from the bottom and hold (or hold Back and Overview together).") {
             FormButton(if (pinned) "Stop keeping on screen" else "Keep Talk Tiles on screen", icon = Icons.Default.PushPin) {
                 val activity = context.findActivity()
                 try {
