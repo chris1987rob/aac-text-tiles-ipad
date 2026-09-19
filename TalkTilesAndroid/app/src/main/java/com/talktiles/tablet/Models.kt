@@ -1,6 +1,5 @@
 package com.talktiles.tablet
 
-import android.util.Base64
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -202,7 +201,16 @@ data class AppSettings(
     val lockPIN: String = "1234",
     val activationDelay: Double = 0.0,
     val repeatLockout: Double = 0.0,
-    val activateOnRelease: Boolean = false
+    val activateOnRelease: Boolean = false,
+    // Fields below are Android additions. The iPad ignores keys it does not
+    // know, and a file without them takes these defaults.
+    /** The page the reader was on, by id, so the book opens there next time. */
+    val lastPageId: String? = null,
+    val openOnLastPage: Boolean = true,
+    /** Stronger ink, full-strength borders, no translucency on the board chrome. */
+    val highContrast: Boolean = false,
+    /** No press animation or colour fades; feedback is instant and static. */
+    val reduceMotion: Boolean = false
 )
 
 /** A button kept aside so it can be put on another page without building it again. */
@@ -238,13 +246,17 @@ data class SavedTile(
 
 // MARK: - Serializers
 
-/** Swift `Data` <-> base64 text. */
+/**
+ * Swift `Data` <-> base64 text. java.util (API 26+) rather than android.util
+ * so the models run in plain JVM tests; the MIME decoder tolerates the line
+ * breaks and stray whitespace a hand-edited or mailed file may carry.
+ */
 object Base64Serializer : KSerializer<ByteArray> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Base64Data", PrimitiveKind.STRING)
     override fun serialize(encoder: Encoder, value: ByteArray) =
-        encoder.encodeString(Base64.encodeToString(value, Base64.NO_WRAP))
+        encoder.encodeString(java.util.Base64.getEncoder().encodeToString(value))
     override fun deserialize(decoder: Decoder): ByteArray =
-        Base64.decode(decoder.decodeString(), Base64.DEFAULT)
+        java.util.Base64.getMimeDecoder().decode(decoder.decodeString())
 }
 
 /**
@@ -290,14 +302,20 @@ object IntKeyedTilesSerializer : KSerializer<Map<Int, TileModel>> {
     }
 }
 
-/** Kept for symmetry with the iPad's BookBackup.Archive. */
+/**
+ * The iPad's BookBackup.Archive, plus two optional fields the iPad ignores:
+ * saved buttons and saved phrases. Absent in an older or iPad archive, they
+ * decode as null and the restore leaves what is on the device alone.
+ */
 @Serializable
 data class BookArchive(
     val format: String = "talktiles.book",
     val version: Int = 1,
     val createdAt: String,
     val pages: List<PageModel>,
-    val settings: AppSettings? = null
+    val settings: AppSettings? = null,
+    val savedTiles: List<SavedTile>? = null,
+    val phrases: List<SavedPhrase>? = null
 )
 
 val pageListSerializer = ListSerializer(PageModel.serializer())

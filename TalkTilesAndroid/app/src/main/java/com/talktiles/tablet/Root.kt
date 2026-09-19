@@ -5,12 +5,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -18,13 +20,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -37,10 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -52,30 +53,52 @@ sealed class RootSheet {
     object PageOptions : RootSheet()
     object PageWizard : RootSheet()
     object Gallery : RootSheet()
-    object Pages : RootSheet()
+    object Find : RootSheet()
+    object Phrases : RootSheet()
     object Help : RootSheet()
     object Settings : RootSheet()
-    object Pin : RootSheet()
+    /** The PIN prompt, and what opens once it is right. */
+    data class Pin(val then: Protected) : RootSheet()
 }
+
+/** The doors that "Protect editing" puts a PIN on. Talking is never one of them. */
+enum class Protected { EDITOR, SETTINGS, LIBRARY }
 
 @Composable
 fun RootView(store: AACStore) {
     var showingHome by remember { mutableStateOf(true) }
     var sheet by remember { mutableStateOf<RootSheet?>(null) }
+    // A right PIN opens every protected door until the person goes back to talking.
+    var unlocked by remember { mutableStateOf(false) }
 
-    fun enterEditor() { store.isEditMode = true; showingHome = false }
-    fun requestEditor() { if (store.isLocked) sheet = RootSheet.Pin else enterEditor() }
+    fun open(target: Protected) {
+        when (target) {
+            Protected.EDITOR -> { store.isEditMode = true; showingHome = false; sheet = null }
+            Protected.SETTINGS -> sheet = RootSheet.Settings
+            Protected.LIBRARY -> sheet = RootSheet.Gallery
+        }
+    }
+    fun request(target: Protected) {
+        if (store.isLocked && !unlocked) sheet = RootSheet.Pin(target) else open(target)
+    }
+    fun startTalking() {
+        unlocked = false
+        store.enterPlayer()
+        showingHome = false
+    }
 
-    // targetSdk 35+ draws edge to edge: the white behind the status bar is the
+    val c = TT.colors
+    // targetSdk 35+ draws edge to edge: the surface behind the status bar is the
     // top bar's own colour continuing up, and the content keeps clear of both bars.
-    Box(Modifier.fillMaxSize().background(BoardTheme.bar).safeDrawingPadding().background(BoardTheme.background)) {
+    Box(Modifier.fillMaxSize().background(c.surface).safeDrawingPadding().background(c.canvas)) {
         if (showingHome) {
             HomeView(
-                onLaunchPlayer = { store.isEditMode = false; showingHome = false },
-                onLaunchEditor = { requestEditor() },
-                onOpenHelp = { sheet = RootSheet.Help },
-                onOpenSettings = { sheet = RootSheet.Settings },
-                onOpenDownloads = { sheet = RootSheet.Gallery }
+                store = store,
+                onStartTalking = { startTalking() },
+                onEditPages = { request(Protected.EDITOR) },
+                onOpenLibrary = { request(Protected.LIBRARY) },
+                onOpenSettings = { request(Protected.SETTINGS) },
+                onOpenHelp = { sheet = RootSheet.Help }
             )
         } else {
             // Back from the board returns to the menu rather than leaving the app.
@@ -89,13 +112,14 @@ fun RootView(store: AACStore) {
                 onAddHotspot = {
                     // Highest id + 1, not count + 1, so a deleted hotspot's id is never reused.
                     val newId = (store.currentPage.hotspots.maxOfOrNull { it.id } ?: 0) + 1
-                    val spot = HotspotModel(id = newId, label = "Hotspot $newId", tts = "Hotspot $newId")
+                    val spot = HotspotModel(id = newId, label = "Spot $newId", tts = "Spot $newId")
                     store.updateCurrentPage { it.copy(hotspots = it.hotspots + spot) }
                     sheet = RootSheet.Hotspot(spot)
                 },
-                onOpenPages = { sheet = RootSheet.Pages },
+                onOpenFind = { sheet = RootSheet.Find },
                 onOpenOptions = { sheet = RootSheet.PageOptions },
-                onOpenNewPage = { sheet = RootSheet.PageWizard }
+                onOpenNewPage = { sheet = RootSheet.PageWizard },
+                onOpenPhrases = { sheet = RootSheet.Phrases }
             )
         }
     }
@@ -109,83 +133,126 @@ fun RootView(store: AACStore) {
         RootSheet.PageOptions -> PageOptionsSheet(store, dismiss)
         RootSheet.PageWizard -> PageWizardSheet(store, dismiss)
         RootSheet.Gallery -> GallerySheet(store, dismiss)
-        RootSheet.Pages -> PagesListSheet(store, dismiss)
+        RootSheet.Find -> FindSheet(store, dismiss)
+        RootSheet.Phrases -> PhrasesSheet(store, dismiss)
         RootSheet.Help -> HelpSheet(dismiss)
         RootSheet.Settings -> SettingsSheet(store, dismiss)
-        RootSheet.Pin -> PinPromptSheet(store.settings.lockPIN, dismiss) { enterEditor() }
+        is RootSheet.Pin -> PinPromptSheet(store.settings.lockPIN, dismiss) { unlocked = true; open(s.then) }
     }
 }
 
-/** The main menu, in the same pastel language as the board. */
+/**
+ * The front door. One strong action - talking - and four quiet ones. Lays
+ * out as a column on a portrait tablet and side by side in landscape; every
+ * card grows with the font rather than clipping it.
+ */
 @Composable
 fun HomeView(
-    onLaunchPlayer: () -> Unit,
-    onLaunchEditor: () -> Unit,
-    onOpenHelp: () -> Unit,
+    store: AACStore,
+    onStartTalking: () -> Unit,
+    onEditPages: () -> Unit,
+    onOpenLibrary: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenDownloads: () -> Unit
+    onOpenHelp: () -> Unit
 ) {
-    Column(Modifier.fillMaxSize().background(BoardTheme.background)) {
-        Box(Modifier.fillMaxWidth().shadow(4.dp).background(BoardTheme.bar).height(64.dp), contentAlignment = Alignment.Center) {
-            Text("TALK TILES", fontSize = 30.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.5.sp, color = BoardTheme.ink)
-        }
-        RainbowBand()
+    val c = TT.colors
+    val hasHistory = store.settings.lastPageId != null || !store.sentence.isEmpty
+    val primaryTitle = if (hasHistory) "Continue talking" else "Start talking"
+    val openOn = store.pages.getOrNull(store.currentPageIndex)?.title
+    val primarySub = when {
+        !store.sentence.isEmpty -> "Your sentence is still in the bar"
+        openOn != null -> "Opens on $openOn"
+        else -> "Tap a button and it speaks"
+    }
+    val pageCount = store.pages.count { it.enabled }
+    val lockNote = if (store.isLocked) "PIN protected" else null
+
+    BoxWithConstraints(Modifier.fillMaxSize().background(c.canvas)) {
+        val wide = maxWidth >= 720.dp
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp).widthIn(max = 800.dp).align(Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = TTSpace.xl, vertical = TTSpace.l)
+                .widthIn(max = 1100.dp).align(Alignment.TopCenter),
+            verticalArrangement = Arrangement.spacedBy(TTSpace.l)
         ) {
-            // The big orange Player card.
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
-                    .shadow(10.dp, RoundedCornerShape(28.dp))
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(Brush.linearGradient(listOf(hexColor("#FF9A3C"), hexColor("#F5722B"))))
-                    .plainClickable(onClick = onLaunchPlayer)
-                    .padding(horizontal = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                Box(Modifier.size(74.dp).clip(CircleShape).background(Color.White).border(6.dp, BoardTheme.rainbow, CircleShape), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.PlayArrow, null, tint = BoardTheme.accent, modifier = Modifier.size(40.dp))
+            // Masthead
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.m)) {
+                Box(Modifier.size(40.dp).clip(CircleShape).background(c.primary), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.PlayArrow, null, tint = c.onPrimary, modifier = Modifier.size(24.dp))
                 }
                 Column {
-                    Text("PLAYER", fontSize = 36.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp, color = Color.White)
-                    Text("Tap tiles to talk", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.9f))
+                    Text("Talk Tiles", style = TTType.title, color = c.ink)
+                    Text("$pageCount pages in this book", style = TTType.caption, color = c.inkSoft)
                 }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                HomeCard("Page Editor", "Build and change pages", Icons.Default.Edit, "#4DB2FF", Modifier.weight(1f), onLaunchEditor)
-                HomeCard("Settings", "Voice, touch, child lock, backup", Icons.Default.Settings, "#9B7BFF", Modifier.weight(1f), onOpenSettings)
+
+            val primary: @Composable (Modifier) -> Unit = { m ->
+                Column(
+                    m
+                        .shadow(if (c.highContrast) 0.dp else 6.dp, TTShape.large)
+                        .clip(TTShape.large)
+                        .background(c.primary)
+                        .border(if (c.highContrast) 2.dp else 0.dp, c.ink.copy(alpha = if (c.highContrast) 1f else 0f), TTShape.large)
+                        .accessibleClickable(label = primaryTitle, shape = TTShape.large, onClick = onStartTalking)
+                        .padding(TTSpace.xl),
+                    verticalArrangement = Arrangement.spacedBy(TTSpace.m)
+                ) {
+                    Box(Modifier.size(64.dp).clip(CircleShape).background(c.onPrimary.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.PlayArrow, null, tint = c.onPrimary, modifier = Modifier.size(40.dp))
+                    }
+                    Text(primaryTitle, style = TTType.display, color = c.onPrimary)
+                    Text(primarySub, style = TTType.body, color = c.onPrimary.copy(alpha = 0.9f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                HomeCard("Downloads", "Ready-made boards to add", Icons.Default.Download, "#2EC98A", Modifier.weight(1f), onOpenDownloads)
-                HomeCard("Help", "How everything works", Icons.Default.QuestionMark, "#FFC93C", Modifier.weight(1f), onOpenHelp)
+            val secondary: @Composable (Modifier) -> Unit = { m ->
+                Column(m, verticalArrangement = Arrangement.spacedBy(TTSpace.m)) {
+                    HomeCard("Edit pages", "Change buttons, pages and pictures", Icons.Default.Edit, lockNote, onEditPages)
+                    HomeCard("Page library", "Ready-made boards to add", Icons.Default.LibraryBooks, lockNote, onOpenLibrary)
+                    HomeCard("Settings", "Voice, touch, protection, backup", Icons.Default.Settings, lockNote, onOpenSettings)
+                    HomeCard("Help", "How everything works", Icons.Default.HelpOutline, null, onOpenHelp)
+                }
+            }
+
+            if (wide) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TTSpace.l)) {
+                    primary(Modifier.weight(1.1f).heightIn(min = 220.dp))
+                    secondary(Modifier.weight(1f))
+                }
+            } else {
+                primary(Modifier.fillMaxWidth().heightIn(min = 200.dp))
+                secondary(Modifier.fillMaxWidth())
             }
         }
     }
 }
 
 @Composable
-private fun HomeCard(title: String, subtitle: String, icon: ImageVector, color: String, modifier: Modifier, onClick: () -> Unit) {
+private fun HomeCard(title: String, subtitle: String, icon: ImageVector, note: String?, onClick: () -> Unit) {
+    val c = TT.colors
     Row(
-        modifier
-            .height(110.dp)
-            .shadow(8.dp, RoundedCornerShape(24.dp))
-            .clip(RoundedCornerShape(24.dp))
-            .background(hexColor(color))
-            .plainClickable(onClick = onClick)
-            .padding(horizontal = 18.dp),
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 76.dp)
+            .shadow(if (c.highContrast) 0.dp else 2.dp, TTShape.medium)
+            .clip(TTShape.medium)
+            .background(c.surface)
+            .border(if (c.highContrast) 2.dp else 1.dp, if (c.highContrast) c.ink else c.line, TTShape.medium)
+            .accessibleClickable(label = title, shape = TTShape.medium, onClick = onClick)
+            .padding(horizontal = TTSpace.l, vertical = TTSpace.m),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(TTSpace.l)
     ) {
-        Box(Modifier.size(58.dp).shadow(3.dp, CircleShape).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = hexColor(color), modifier = Modifier.size(28.dp))
+        Box(Modifier.size(48.dp).clip(CircleShape).background(c.primarySoft), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = c.primaryDeep, modifier = Modifier.size(26.dp))
         }
-        Column {
-            Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            Text(subtitle, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.White.copy(alpha = 0.9f))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = TTType.heading, color = c.ink)
+            Text(subtitle, style = TTType.caption, color = c.inkSoft)
+        }
+        if (note != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(Icons.Default.Lock, null, tint = c.inkFaint, modifier = Modifier.size(16.dp))
+                Text(note, style = TTType.caption, color = c.inkFaint)
+            }
         }
     }
 }

@@ -53,6 +53,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -64,12 +69,13 @@ import kotlin.math.sqrt
 
 /**
  * A keyboard made of pictures instead of letters. The keys FILL the space
- * under the sentence bar; the rest of a group goes on numbered pages.
+ * under the sentence bar; the rest of a group goes on numbered pages. The
+ * sentence bar itself is the book's one bar, drawn by BoardView.
  */
 @Composable
 fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
     val page = store.currentPage
-    val sentence = remember { mutableStateListOf<SymbolWord>() }
+    val c = TT.colors
     var groupId by remember { mutableStateOf("") }
     var justPressed by remember { mutableStateOf<String?>(null) }
     var wordPage by remember { mutableStateOf(0) }
@@ -99,16 +105,16 @@ fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
         if (groupId !in ids) { groupId = ids.firstOrNull() ?: ""; wordPage = 0 }
         if (wordPage >= pageCount) wordPage = 0
     }
-
-    fun speakSentence() {
-        val text = sentence.joinToString(" ") { it.tts }
-        if (text.isBlank()) return
-        SpeechManager.shared.speak(text, store.settings.speechRate.toFloat(), store.settings.voiceId)
+    // A search result can ask for a group to be shown.
+    LaunchedEffect(store.requestedKeyGroup) {
+        val wanted = store.requestedKeyGroup ?: return@LaunchedEffect
+        if (visibleGroups.any { it.id == wanted }) { groupId = wanted; wordPage = 0 }
+        store.requestedKeyGroup = null
     }
 
     fun press(word: SymbolWord) {
         if (!TouchAccess.shouldFire("keyboard-${word.id}", store.settings.repeatLockout)) return
-        sentence.add(word)
+        store.sentence.add(SentenceItem.from(word))
         val audio = word.audioData
         if (audio != null) SpeechManager.shared.playAudioData(audio)
         else SpeechManager.shared.speak(word.tts, store.settings.speechRate.toFloat(), store.settings.voiceId)
@@ -116,47 +122,31 @@ fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
         scope.launch { delay(220); if (justPressed == word.id) justPressed = null }
     }
 
-    Column(Modifier.fillMaxSize().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // Sentence bar
-        Box(Modifier.padding(horizontal = 14.dp)) {
-            SentencePill(
-                words = sentence.map { it.label },
-                placeholder = "Press a picture to start a sentence",
-                onClear = { sentence.clear() },
-                onTap = { speakSentence() }
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    RoundBarButton(Icons.Default.Backspace, "Remove last word", fill = BoardTheme.chip, tint = BoardTheme.inkSoft, size = 36.dp) {
-                        if (sentence.isNotEmpty()) sentence.removeAt(sentence.size - 1)
-                    }
-                    SpeakNowButton { speakSentence() }
-                }
-            }
-        }
-
+    Column(Modifier.fillMaxSize().padding(vertical = TTSpace.s), verticalArrangement = Arrangement.spacedBy(TTSpace.s)) {
         // Group tabs and page arrows share one row.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(horizontal = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(horizontal = TTSpace.m), horizontalArrangement = Arrangement.spacedBy(TTSpace.s)) {
                 for (group in visibleGroups) {
                     val selected = group.id == groupId
-                    Text(
-                        group.title.uppercase(),
-                        fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp,
-                        color = if (selected) BoardTheme.ink else BoardTheme.inkSoft,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(hexColor(group.color).copy(alpha = if (selected) 1f else 0.55f))
-                            .border(2.dp, if (selected) BoardTheme.ink.copy(alpha = 0.35f) else Color.Transparent, RoundedCornerShape(14.dp))
-                            .plainClickable { groupId = group.id; wordPage = 0 }
-                            .padding(horizontal = 18.dp, vertical = 10.dp)
-                    )
+                    Box(
+                        Modifier
+                            .heightIn(min = TTSpace.touch)
+                            .clip(TTShape.pill)
+                            .background(hexColor(group.color).copy(alpha = if (selected) 1f else 0.5f))
+                            .border(2.dp, if (selected) c.ink.copy(alpha = 0.5f) else Color.Transparent, TTShape.pill)
+                            .accessibleClickable(label = "${group.title} words", role = Role.Tab, shape = TTShape.pill) { groupId = group.id; wordPage = 0 }
+                            .padding(horizontal = 18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(group.title, style = TTType.label.copy(fontWeight = FontWeight.Bold), color = if (selected) c.ink else c.inkSoft)
+                    }
                 }
             }
             if (pageCount > 1) {
-                Row(Modifier.padding(end = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    PageArrow(Icons.Default.KeyboardArrowLeft, wordPage > 0) { wordPage-- }
-                    Text("${min(wordPage, pageCount - 1) + 1}/$pageCount", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = hexColor("#475569"), modifier = Modifier.widthIn(min = 34.dp))
-                    PageArrow(Icons.Default.KeyboardArrowRight, wordPage < pageCount - 1) { wordPage++ }
+                Row(Modifier.padding(end = TTSpace.m), horizontalArrangement = Arrangement.spacedBy(TTSpace.xs), verticalAlignment = Alignment.CenterVertically) {
+                    BarButton(Icons.Default.KeyboardArrowLeft, "Previous keys", size = TTSpace.touch, enabled = wordPage > 0) { wordPage-- }
+                    Text("${min(wordPage, pageCount - 1) + 1}/$pageCount", style = TTType.label, color = c.inkSoft, modifier = Modifier.widthIn(min = 36.dp), textAlign = TextAlign.Center)
+                    BarButton(Icons.Default.KeyboardArrowRight, "More keys", size = TTSpace.touch, enabled = wordPage < pageCount - 1) { wordPage++ }
                 }
             }
         }
@@ -171,15 +161,15 @@ fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
             cols = max(1, ceil(keys.toDouble() / rows).toInt())
             val spacing = when { keys <= 6 -> 14.dp; keys <= 12 -> 12.dp; keys <= 20 -> 10.dp; else -> 8.dp }
             val pad = if (keys <= 12) 14.dp else 10.dp
-            val cellW = ((maxWidth - pad * 2 - spacing * (cols - 1)) / cols).coerceAtLeast(40.dp)
-            val cellH = ((maxHeight - pad * 2 - spacing * (rows - 1)) / rows).coerceAtLeast(40.dp)
+            val cellW = ((maxWidth - pad * 2 - spacing * (cols - 1)) / cols).coerceAtLeast(48.dp)
+            val cellH = ((maxHeight - pad * 2 - spacing * (rows - 1)) / rows).coerceAtLeast(48.dp)
             val words = wordsOnScreen
 
             Column(Modifier.fillMaxSize().padding(pad), verticalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterVertically)) {
                 for (r in 0 until rows) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally)) {
-                        for (c in 0 until cols) {
-                            val i = r * cols + c
+                        for (col in 0 until cols) {
+                            val i = r * cols + col
                             if (i < words.size) {
                                 val word = words[i]
                                 SymbolKey(word, cellW, cellH, editing = store.isEditMode, hidden = store.isEditMode && isHidden(word),
@@ -198,38 +188,33 @@ fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
 }
 
 @Composable
-private fun PageArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(hexColor("#F1F5F9")).plainClickable(enabled) { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(icon, null, tint = if (enabled) hexColor("#1E293B") else BoardTheme.line)
-    }
-}
-
-@Composable
 private fun SymbolKey(word: SymbolWord, width: Dp, height: Dp, editing: Boolean, hidden: Boolean, pressed: Boolean, onClick: () -> Unit) {
-    val labelSize = min(22f, max(11f, height.value * 0.15f))
+    val c = TT.colors
+    val reduceMotion = TT.reduceMotion
+    val labelSize = min(22f, max(13f, height.value * 0.15f))
     val iconSize = max(20f, height.value - labelSize - 18f).dp
+    val says = if (word.tts.isNotEmpty() && !word.tts.equals(word.label, ignoreCase = true)) ". Says: ${word.tts}" else ""
+    val label = if (editing) "Edit key ${word.label}" + (if (hidden) ", hidden on this page" else "") else word.label + says
     Box(
         Modifier
             .size(width, height)
-            .scale(if (pressed) 0.95f else 1f)
+            .scale(if (pressed && !reduceMotion) 0.96f else 1f)
             .alpha(if (hidden) 0.4f else 1f)
             .clip(RoundedCornerShape(12.dp))
             .background(hexColor(word.color))
-            .border(if (pressed) 4.dp else 1.dp, if (pressed) BoardTheme.green else BoardTheme.line, RoundedCornerShape(12.dp))
-            .plainClickable(onClick = onClick)
+            .border(if (pressed) 4.dp else if (c.highContrast) 2.dp else 1.dp, if (pressed) c.pressed else if (c.highContrast) c.ink else c.line, RoundedCornerShape(12.dp))
+            .semantics { contentDescription = label }
+            .accessibleClickable(ripple = false, shape = RoundedCornerShape(12.dp), onClick = onClick)
     ) {
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             KeyPicture(word, iconSize)
             Spacer(Modifier.height(4.dp))
-            Text(word.label, fontSize = labelSize.sp, fontWeight = FontWeight.Bold, color = hexColor("#1E293B"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(word.label, fontSize = labelSize.sp, fontWeight = FontWeight.Bold, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (editing) {
             Box(
                 Modifier.align(Alignment.TopEnd).padding(5.dp).size(min(22f, max(13f, height.value * 0.16f)).dp + 6.dp)
-                    .clip(CircleShape).background(hexColor(if (hidden) "#94A3B8" else "#008369")),
+                    .clip(CircleShape).background(if (hidden) c.inkFaint else c.primary),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(if (hidden) Icons.Default.VisibilityOff else Icons.Default.Edit, null, tint = Color.White, modifier = Modifier.fillMaxSize().padding(3.dp))

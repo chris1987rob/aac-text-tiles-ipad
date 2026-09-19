@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import kotlinx.serialization.builtins.ListSerializer
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -16,29 +15,50 @@ import java.util.Locale
 import java.util.TimeZone
 
 /** The book: every page, the page on screen, edit mode, settings, the sentence bar. */
-class AACStore(context: Context) {
-    private val app = context.applicationContext
+class AACStore(context: Context, val storage: BookStorage = BookStorage(context.applicationContext.filesDir)) {
     private val handler = Handler(Looper.getMainLooper())
 
     var pages by mutableStateOf<List<PageModel>>(emptyList())
         private set
-    var currentPageIndex by mutableStateOf(0)
+
+    /**
+     * The page on screen. In the player the page is remembered so the book
+     * opens where it was left; the editor's position is not (a parent
+     * fixing page 9 should not strand the child there).
+     */
+    var currentPageIndex: Int
+        get() = pageIndexState
+        set(value) {
+            pageIndexState = value
+            if (!isEditMode) rememberPage(value)
+        }
+    private var pageIndexState by mutableStateOf(0)
+
     var isEditMode by mutableStateOf(false)
-    val expressChips = mutableStateListOf<String>()
+
+    /** A keyboard word group the next keyboard page should open on (set by Find). */
+    var requestedKeyGroup by mutableStateOf<String?>(null)
+
+    /** One sentence bar for the whole book: the grid and the keyboard share it and turning a page keeps it. */
+    val sentence = SentenceBuilder()
 
     var settings by mutableStateOf(AppSettings())
         private set
 
-    var isLocked: Boolean
-        get() = settings.childLock
-        set(v) { updateSettings { it.copy(childLock = v) } }
+    /** Files that could not be read at launch and were kept aside - shown in Settings. */
+    val recoveryNotices: List<String> get() = storage.notices
+
+    /** "Protect editing": every way to change the book asks for the PIN. Speaking never does. */
+    val isLocked: Boolean get() = settings.childLock
 
     val currentPage: PageModel
         get() = pages.getOrNull(currentPageIndex) ?: PageModel(title = "Default")
 
     init {
-        loadPages()
         loadSettings()
+        loadPages()
+        pageIndexState = if (settings.openOnLastPage) BookNavigation.startIndex(pages, settings.lastPageId)
+            else BookNavigation.startIndex(pages, null)
         applySpeechSettings()
     }
 
@@ -57,11 +77,19 @@ class AACStore(context: Context) {
         SpeechManager.shared.defaultRate = settings.speechRate.toFloat()
     }
 
+    private fun rememberPage(index: Int) {
+        val id = pages.getOrNull(index)?.id ?: return
+        if (id == settings.lastPageId) return
+        settings = settings.copy(lastPageId = id)
+        // Debounced with the book so a run of page turns is one write.
+        scheduleSettingsSave()
+    }
+
     // MARK: - Pages
 
     fun replacePages(list: List<PageModel>) {
         pages = list
-        if (currentPageIndex >= list.size) currentPageIndex = maxOf(0, list.size - 1)
+        if (currentPageIndex >= list.size) pageIndexState = maxOf(0, list.size - 1)
         save()
     }
 
@@ -83,46 +111,66 @@ class AACStore(context: Context) {
 
     fun addPage(page: PageModel) {
         pages = pages + page
-        currentPageIndex = pages.size - 1
+        pageIndexState = pages.size - 1
         save()
     }
 
     fun removePage(index: Int) {
         if (pages.size <= 1 || index !in pages.indices) return
         pages = pages.toMutableList().also { it.removeAt(index) }
-        if (currentPageIndex >= pages.size) currentPageIndex = maxOf(0, pages.size - 1)
+        if (currentPageIndex >= pages.size) pageIndexState = maxOf(0, pages.size - 1)
         save()
     }
 
-    fun nextPage() { currentPageIndex = step(1) }
-    fun prevPage() { currentPageIndex = step(-1) }
-    private fun step(delta: Int): Int {
-        if (pages.isEmpty()) return 0
-        val n = pages.size
-        return ((currentPageIndex + delta) % n + n) % n
+    /** Moves a page in the book's order - the editor's reorder control. Slot positions inside pages are untouched. */
+    fun movePage(from: Int, to: Int) {
+        if (from !in pages.indices || to !in pages.indices || from == to) return
+        val currentId = currentPage.id
+        pages = pages.toMutableList().also { it.add(to, it.removeAt(from)) }
+        pageIndexState = pages.indexOfFirst { it.id == currentId }.coerceAtLeast(0)
+        save()
+    }
+
+    fun nextPage() { currentPageIndex = BookNavigation.step(pages, currentPageIndex, +1, isEditMode) }
+    fun prevPage() { currentPageIndex = BookNavigation.step(pages, currentPageIndex, -1, isEditMode) }
+    val pagePosition: BookNavigation.Position get() = BookNavigation.position(pages, currentPageIndex, isEditMode)
+    val canStep: Boolean get() = BookNavigation.canStep(pages, isEditMode)
+
+    /** Goes to a page by id if the reader is allowed there. Never speaks. Returns false when refused. */
+    fun goToPage(id: String?): Boolean {
+        val idx = BookNavigation.indexForJump(pages, id, isEditMode) ?: return false
+        currentPageIndex = idx
+        return true
+    }
+
+    /** Leaving the editor: if the page being edited is switched off, the player must not open on it. */
+    fun enterPlayer() {
+        isEditMode = false
+        if (!currentPage.enabled) pageIndexState = BookNavigation.startIndex(pages, settings.lastPageId)
+        rememberPage(currentPageIndex)
     }
 
     // MARK: - Sentence bar
 
-    fun addExpressChip(chip: String) { expressChips.add(chip) }
-    fun clearExpressChips() { expressChips.clear() }
-    fun playExpressSentence() {
-        val sentence = expressChips.joinToString(" ")
-        if (sentence.isNotEmpty()) SpeechManager.shared.speak(sentence, settings.speechRate.toFloat(), settings.voiceId)
+    fun speakSentence() {
+        if (sentence.isEmpty) return
+        SpeechManager.shared.speakItems(sentence.items, settings.speechRate.toFloat(), settings.voiceId)
     }
 
     // MARK: - Persistence
 
-    private val storeFile: File get() = File(app.filesDir, "aac_pages.json")
-    private val settingsFile: File get() = File(app.filesDir, "aac_settings.json")
-
+    /** Counts every change; a write carries the number it was made at, so a late write can be told from a new one. */
+    private var generation = 0L
     private var pendingSave: Runnable? = null
+    private var pendingSettingsSave: Runnable? = null
 
     /** Debounced: every mutation calls this, including live hotspot drags. */
     fun save() {
+        generation += 1
         pendingSave?.let { handler.removeCallbacks(it) }
         val snapshot = pages
-        val r = Runnable { Thread { writeToDisk(snapshot) }.start() }
+        val gen = generation
+        val r = Runnable { Thread { storage.writePages(snapshot, gen) }.start() }
         pendingSave = r
         handler.postDelayed(r, 400)
     }
@@ -131,54 +179,62 @@ class AACStore(context: Context) {
     fun saveNow() {
         pendingSave?.let { handler.removeCallbacks(it) }
         pendingSave = null
-        writeToDisk(pages)
+        generation += 1
+        storage.writePages(pages, generation)
+        pendingSettingsSave?.let { handler.removeCallbacks(it); pendingSettingsSave = null }
+        saveSettings()
     }
 
-    @Synchronized
-    private fun writeToDisk(list: List<PageModel>) {
-        try {
-            val tmp = File(storeFile.path + ".tmp")
-            tmp.writeText(AppJson.encodeToString(pageListSerializer, list))
-            if (!tmp.renameTo(storeFile)) { storeFile.delete(); tmp.renameTo(storeFile) }
-        } catch (e: Exception) { Log.e("TalkTiles", "save failed", e) }
+    private fun scheduleSettingsSave() {
+        pendingSettingsSave?.let { handler.removeCallbacks(it) }
+        val r = Runnable { pendingSettingsSave = null; saveSettings() }
+        pendingSettingsSave = r
+        handler.postDelayed(r, 400)
     }
 
     private fun loadPages() {
-        val restored = loadFromDisk()
-        pages = if (!restored.isNullOrEmpty()) restored else defaultPages()
-    }
-
-    private fun loadFromDisk(): List<PageModel>? {
-        if (!storeFile.exists()) return null
-        return try { AppJson.decodeFromString(pageListSerializer, storeFile.readText()) }
-        catch (e: Exception) { Log.e("TalkTiles", "load failed", e); null }
+        pages = when (val r = storage.loadPages()) {
+            is BookStorage.Load.Ok -> r.value.ifEmpty { defaultPages() }
+            BookStorage.Load.Missing -> defaultPages()
+            is BookStorage.Load.Unreadable -> defaultPages()   // the unreadable file is kept aside by the storage
+        }
     }
 
     private fun loadSettings() {
-        if (!settingsFile.exists()) return
-        settings = try { AppJson.decodeFromString(AppSettings.serializer(), settingsFile.readText()) }
-        catch (e: Exception) { Log.e("TalkTiles", "settings load failed", e); return }
+        settings = when (val r = storage.loadSettings()) {
+            is BookStorage.Load.Ok -> r.value
+            else -> AppSettings()
+        }
     }
 
-    fun saveSettings() {
-        // "Device default" voice is stored as an explicit null so it survives
-        // a reload; a file with no key at all predates Bella and gets her.
-        try { settingsFile.writeText(SettingsJson.encodeToString(AppSettings.serializer(), settings)) }
-        catch (e: Exception) { Log.e("TalkTiles", "settings save failed", e) }
-    }
+    fun saveSettings() = storage.writeSettings(settings)
 
+    /** Puts the starter book back. The book that was there is snapshotted first, so a slip is not the end of it. */
     fun resetToDefaults() {
-        storeFile.delete()
+        saveNow()
+        storage.snapshotBook("pre-reset")
         pages = defaultPages()
-        currentPageIndex = 0
+        pageIndexState = 0
+        sentence.clear()
         saveNow()
     }
 
-    fun restore(list: List<PageModel>, restoredSettings: AppSettings?) {
-        pages = list
-        currentPageIndex = 0
-        if (restoredSettings != null) { settings = restoredSettings; applySpeechSettings() }
-        saveNow(); saveSettings()
+    /** Applies an archive that `BookBackup.read` already checked. The current book is snapshotted first. */
+    fun restore(archive: BookArchive) {
+        saveNow()
+        storage.snapshotBook("pre-restore")
+        pages = archive.pages
+        pageIndexState = BookNavigation.startIndex(pages, null)
+        archive.settings?.let { restored ->
+            // The archive's voice, touch and lock settings come across; what is remembered about THIS device does not.
+            settings = restored.copy(lastPageId = null)
+            applySpeechSettings()
+        }
+        archive.savedTiles?.let { TileFavorites.shared.replaceAll(it) }
+        archive.phrases?.let { PhraseLibrary.shared.replaceAll(it) }
+        sentence.clear()
+        storage.resetGeneration()
+        saveNow()
     }
 
     companion object {
@@ -221,9 +277,7 @@ class AACStore(context: Context) {
 }
 
 /** The saved-buttons library, on disk beside the board. */
-class TileFavorites(context: Context) {
-    private val file = File(context.applicationContext.filesDir, "aac_favorites.json")
-    private val serializer = ListSerializer(SavedTile.serializer())
+class TileFavorites(internal val storage: BookStorage) {
 
     var items by mutableStateOf<List<SavedTile>>(emptyList())
         private set
@@ -231,19 +285,18 @@ class TileFavorites(context: Context) {
     companion object {
         const val LIMIT = 200
         @Volatile private var instance: TileFavorites? = null
-        fun init(context: Context): TileFavorites =
-            instance ?: synchronized(this) { instance ?: TileFavorites(context).also { instance = it } }
+        /** Bound to `storage`; a different storage (a restore into another folder, a test) gets a fresh library. */
+        fun init(storage: BookStorage): TileFavorites = synchronized(this) {
+            instance?.takeIf { it.storage === storage } ?: TileFavorites(storage).also { instance = it }
+        }
         val shared: TileFavorites get() = instance ?: error("TileFavorites.init first")
     }
 
     init {
-        items = try { if (file.exists()) AppJson.decodeFromString(serializer, file.readText()) else emptyList() }
-        catch (e: Exception) { emptyList() }
+        items = (storage.loadFavorites() as? BookStorage.Load.Ok)?.value ?: emptyList()
     }
 
-    private fun save() {
-        try { file.writeText(AppJson.encodeToString(serializer, items)) } catch (e: Exception) { }
-    }
+    private fun save() = storage.writeFavorites(items)
 
     /** Saving the same name twice replaces the earlier copy. */
     fun add(saved: SavedTile): SavedTile {
@@ -265,6 +318,9 @@ class TileFavorites(context: Context) {
 
     fun remove(id: String) { items = items.filter { it.id != id }; save() }
 
+    /** A restore brings the archive's saved buttons in place of these. */
+    fun replaceAll(list: List<SavedTile>) { items = list.take(LIMIT); save() }
+
     fun contains(name: String) = items.any { it.name.equals(name, ignoreCase = true) }
 
     fun search(query: String): List<SavedTile> {
@@ -274,22 +330,67 @@ class TileFavorites(context: Context) {
     }
 }
 
-/** Whole-book backup and restore, in the iPad's `talktiles.book` format. */
-object BookBackup {
-    data class Summary(val pages: Int, val buttons: Int, val hotspots: Int, val createdAt: String)
+/** Sentences kept for later. Offline, on disk beside the book. */
+class PhraseLibrary(internal val storage: BookStorage) {
 
-    private fun iso(): String {
-        val f = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-        f.timeZone = TimeZone.getTimeZone("UTC")
-        return f.format(Date())
+    var items by mutableStateOf<List<SavedPhrase>>(emptyList())
+        private set
+
+    companion object {
+        const val LIMIT = 200
+        @Volatile private var instance: PhraseLibrary? = null
+        fun init(storage: BookStorage): PhraseLibrary = synchronized(this) {
+            instance?.takeIf { it.storage === storage } ?: PhraseLibrary(storage).also { instance = it }
+        }
+        val shared: PhraseLibrary get() = instance ?: error("PhraseLibrary.init first")
     }
 
-    fun write(context: Context, pages: List<PageModel>, settings: AppSettings): File {
-        val archive = BookArchive(createdAt = iso(), pages = pages, settings = settings)
-        val stamp = SimpleDateFormat("yyyy-MM-dd-HHmm", Locale.US).format(Date())
+    init {
+        items = (storage.loadPhrases() as? BookStorage.Load.Ok)?.value ?: emptyList()
+    }
+
+    private fun save() = storage.writePhrases(items)
+
+    /** Keeps the sentence exactly as built; the name defaults to its words. */
+    fun add(items: List<SentenceItem>, name: String = ""): SavedPhrase? {
+        if (items.isEmpty()) return null
+        val phrase = SavedPhrase(name = name.trim().ifEmpty { items.joinToString(" ") { it.label } }, items = items.toList())
+        this.items = (listOf(phrase) + this.items).take(LIMIT)
+        save()
+        return phrase
+    }
+
+    fun remove(id: String) { items = items.filter { it.id != id }; save() }
+
+    fun replaceAll(list: List<SavedPhrase>) { items = list.take(LIMIT); save() }
+}
+
+/** Whole-book backup and restore, in the iPad's `talktiles.book` format. */
+object BookBackup {
+    /** Bumped only if the shape changes in a way an older app could not read. */
+    const val FORMAT_VERSION = 1
+
+    data class Summary(val pages: Int, val buttons: Int, val hotspots: Int, val savedButtons: Int, val phrases: Int, val createdAt: String)
+
+    fun iso(now: Date = Date()): String {
+        val f = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+        f.timeZone = TimeZone.getTimeZone("UTC")
+        return f.format(now)
+    }
+
+    /** The archive as text - the same bytes whether shared or saved to a document. */
+    fun encode(pages: List<PageModel>, settings: AppSettings, savedTiles: List<SavedTile>, phrases: List<SavedPhrase>, createdAt: String = iso()): String {
+        val archive = BookArchive(createdAt = createdAt, pages = pages, settings = settings,
+            savedTiles = savedTiles.ifEmpty { null }, phrases = phrases.ifEmpty { null })
+        return AppJson.encodeToString(BookArchive.serializer(), archive)
+    }
+
+    fun fileName(now: Date = Date()): String = "TalkTiles-Backup-${SimpleDateFormat("yyyy-MM-dd-HHmm", Locale.US).format(now)}.json"
+
+    fun write(context: Context, pages: List<PageModel>, settings: AppSettings, savedTiles: List<SavedTile>, phrases: List<SavedPhrase>): File {
         val dir = File(context.cacheDir, "shared").apply { mkdirs() }
-        val f = File(dir, "TalkTiles-Backup-$stamp.json")
-        f.writeText(AppJson.encodeToString(BookArchive.serializer(), archive))
+        val f = File(dir, fileName())
+        f.writeText(encode(pages, settings, savedTiles, phrases))
         return f
     }
 
@@ -301,7 +402,11 @@ object BookBackup {
         return f
     }
 
-    /** Reads an archive, a bare page list, or a single shared page, without applying it. */
+    /**
+     * Reads an archive, a bare page list, or a single shared page, without
+     * applying it, and refuses anything that would leave the book in a state
+     * the app cannot show. Restoring is destructive: check first, change after.
+     */
     fun read(text: String): Pair<BookArchive, Summary> {
         val archive = try {
             AppJson.decodeFromString(BookArchive.serializer(), text)
@@ -309,16 +414,47 @@ object BookBackup {
             try {
                 BookArchive(createdAt = iso(), pages = AppJson.decodeFromString(pageListSerializer, text))
             } catch (e2: Exception) {
-                BookArchive(createdAt = iso(), pages = listOf(AppJson.decodeFromString(PageModel.serializer(), text)))
+                try {
+                    BookArchive(createdAt = iso(), pages = listOf(AppJson.decodeFromString(PageModel.serializer(), text)))
+                } catch (e3: Exception) {
+                    throw IllegalArgumentException("That file could not be read as a Talk Tiles book.")
+                }
             }
         }
-        if (archive.pages.isEmpty()) throw IllegalArgumentException("That file does not have any pages in it.")
+        validate(archive)?.let { throw IllegalArgumentException(it) }
         val summary = Summary(
             pages = archive.pages.size,
             buttons = archive.pages.sumOf { it.tiles.size },
             hotspots = archive.pages.sumOf { it.hotspots.size },
+            savedButtons = archive.savedTiles?.size ?: 0,
+            phrases = archive.phrases?.size ?: 0,
             createdAt = archive.createdAt
         )
         return archive to summary
+    }
+
+    /** The first thing wrong with an archive, in plain words, or null when it is sound. */
+    fun validate(archive: BookArchive): String? {
+        if (archive.version > FORMAT_VERSION) return "That backup was made by a newer Talk Tiles. Update the app to restore it."
+        if (archive.pages.isEmpty()) return "That file does not have any pages in it."
+        val ids = HashSet<String>()
+        for ((n, p) in archive.pages.withIndex()) {
+            val where = "Page ${n + 1}" + if (p.title.isNotBlank()) " (\"${p.title}\")" else ""
+            if (p.id.isBlank()) return "$where has no id."
+            if (!ids.add(p.id)) return "$where has the same id as an earlier page."
+            if (p.gridSize < 1 || p.gridSize > 400) return "$where has a grid size of ${p.gridSize}."
+            if (p.tiles.keys.any { it < 1 }) return "$where has a button in slot 0 or below."
+            for (h in p.hotspots) {
+                val inRange = h.x in 0.0..100.0 && h.y in 0.0..100.0 && h.w > 0.0 && h.w <= 100.0 && h.h > 0.0 && h.h <= 100.0
+                if (!inRange) return "$where has a talking spot outside the picture."
+            }
+            val keys = p.keyboardKeys
+            if (keys != null && keys < 1) return "$where has a keyboard with no keys."
+        }
+        val savedIds = HashSet<String>()
+        archive.savedTiles?.forEach { if (!savedIds.add(it.id)) return "Two saved buttons share the id ${it.id}." }
+        val phraseIds = HashSet<String>()
+        archive.phrases?.forEach { if (!phraseIds.add(it.id)) return "Two saved phrases share the id ${it.id}." }
+        return null
     }
 }

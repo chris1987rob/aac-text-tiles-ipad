@@ -141,7 +141,7 @@ fun QuickEditSheet(store: AACStore, slot: Int, onDismiss: () -> Unit) {
                     SymbolPicture(chosen, 38.dp)
                     Spacer(Modifier.width(12.dp))
                     Text(SymbolLibrary.readable(chosen), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = BoardTheme.ink, modifier = Modifier.weight(1f))
-                    Text("Remove", color = BoardTheme.danger, modifier = Modifier.plainClickable { symbol = null })
+                    TextAction("Remove", tint = BoardTheme.danger) { symbol = null }
                 }
             }
             FormButton(if (symbol == null) "Choose a Symbol" else "Choose a Different Symbol", icon = Icons.Default.Search) { showSymbols = true }
@@ -150,9 +150,9 @@ fun QuickEditSheet(store: AACStore, slot: Int, onDismiss: () -> Unit) {
                     val on = symbol == name
                     Text(emoji, fontSize = 32.sp, modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (on) hexColor("#E6F4EA") else hexColor("#F8FAFC"))
+                        .background(if (on) TT.colors.primarySoft else TT.colors.surfaceSunken)
                         .border(2.dp, if (on) BoardTheme.green else Color.Transparent, RoundedCornerShape(10.dp))
-                        .plainClickable {
+                        .accessibleClickable(label = name, ripple = false) {
                             symbol = name; photoData = null
                             if (label.isEmpty()) label = name.replaceFirstChar { it.uppercase() }
                         }
@@ -260,7 +260,7 @@ fun SavedButtonPickerSheet(onDismiss: () -> Unit, onPick: (SavedTile) -> Unit) {
                                 if (saved.symbolName != null && !saved.hasPhoto) Tag("Symbol", Icons.Default.Star, BoardTheme.green)
                             }
                         }
-                        Icon(Icons.Default.Delete, "Delete", tint = BoardTheme.danger, modifier = Modifier.plainClickable { favorites.remove(saved.id) }.padding(8.dp))
+                        IconAction(Icons.Default.Delete, "Delete ${saved.name}", tint = BoardTheme.danger) { favorites.remove(saved.id) }
                     }
                 }
             }
@@ -312,7 +312,7 @@ fun SymbolPickerSheet(set: SymbolSet, onDismiss: () -> Unit, onPick: (String) ->
             else -> LazyVerticalGrid(columns = GridCells.Adaptive(92.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
                 items(results, key = { it }) { name ->
                     Column(
-                        Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).plainClickable { onPick(name); onDismiss() }.padding(6.dp),
+                        Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).accessibleClickable(label = SymbolLibrary.readable(name), ripple = false) { onPick(name); onDismiss() }.padding(6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(Modifier.height(62.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -361,7 +361,7 @@ fun HotspotEditorSheet(store: AACStore, hotspot: HotspotModel, onDismiss: () -> 
         }
     }
 
-    ModalSheet(title = "Edit Hotspot", onDismiss = onDismiss, trailing = "Save", onTrailing = { save(); onDismiss() }) {
+    ModalSheet(title = "Edit talking spot", onDismiss = onDismiss, trailing = "Save", onTrailing = { save(); onDismiss() }) {
         FormSection("Label") {
             LabeledField("On the photo", "e.g. Cat, Sofa, TV", label) { label = it }
         }
@@ -406,7 +406,7 @@ fun HotspotEditorSheet(store: AACStore, hotspot: HotspotModel, onDismiss: () -> 
             Box(Modifier.padding(12.dp)) { SegmentedPicker(HotspotStyle.values().toList(), style, { it.raw }, { style = it }) }
         }
         FormSection {
-            FormButton("🗑 Delete Hotspot", tint = Color.Red) {
+            FormButton("Delete talking spot", tint = BoardTheme.danger, icon = Icons.Default.Delete) {
                 store.updateCurrentPage { p -> p.copy(hotspots = p.hotspots.filter { it.id != hotspot.id }) }
                 onDismiss()
             }

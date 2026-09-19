@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -69,9 +70,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.ByteArrayOutputStream
 import java.io.File
-
-/** The height of the system navigation bar, as the activity sees it. */
-val LocalNavBarBottom = androidx.compose.runtime.compositionLocalOf { 0.dp }
 
 // The iPad's Form/Section/NavigationView, rebuilt: a full-screen sheet with a
 // title bar (Cancel on the left, the action on the right) over grouped
@@ -93,26 +91,26 @@ fun ModalSheet(
     // the bar was drawn over the bottom of every sheet. The activity IS told,
     // so its inset is read there and handed down through LocalNavBarBottom.
     val navBottom = LocalNavBarBottom.current
+    val c = TT.colors
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
         BackHandler { onDismiss() }
-        Column(Modifier.fillMaxSize().background(BoardTheme.background).padding(bottom = navBottom).imePadding()) {
-            Box(Modifier.fillMaxWidth().background(Color.White).height(56.dp).padding(horizontal = 12.dp)) {
-                if (leading != null) {
-                    Text(leading, color = BoardTheme.blue, fontSize = 17.sp, modifier = Modifier.align(Alignment.CenterStart).plainClickable(onClick = onDismiss).padding(8.dp))
-                }
-                Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink,
-                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 80.dp), maxLines = 1)
-                if (trailing != null && onTrailing != null) {
-                    Text(trailing, color = if (trailingEnabled) BoardTheme.green else BoardTheme.line, fontSize = 17.sp, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.CenterEnd).plainClickable(enabled = trailingEnabled, onClick = onTrailing).padding(8.dp))
-                }
+        Column(Modifier.fillMaxSize().background(c.canvas).padding(bottom = navBottom).imePadding()) {
+            Row(
+                Modifier.fillMaxWidth().background(c.surface).heightIn(min = 60.dp).padding(horizontal = TTSpace.s, vertical = TTSpace.xs),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (leading != null) TextAction(leading, onClick = onDismiss) else Spacer(Modifier.width(TTSpace.touch))
+                Text(title, style = TTType.heading, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center, modifier = Modifier.weight(1f).padding(horizontal = TTSpace.s))
+                if (trailing != null && onTrailing != null) TextAction(trailing, strong = true, enabled = trailingEnabled, onClick = onTrailing)
+                else Spacer(Modifier.width(TTSpace.touch))
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(BoardTheme.line.copy(alpha = 0.6f)))
-            val base = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+            Divider()
+            val base = Modifier.fillMaxSize().padding(horizontal = TTSpace.l)
             Column(if (scroll) base.verticalScroll(rememberScrollState()) else base) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(TTSpace.m))
                 content()
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(TTSpace.xxl))
             }
         }
     }
@@ -123,14 +121,13 @@ fun ModalSheet(
 fun FormSection(header: String? = null, footer: String? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().padding(bottom = 18.dp)) {
         if (header != null) {
-            Text(header.uppercase(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = BoardTheme.slate,
-                letterSpacing = 0.5.sp, modifier = Modifier.padding(start = 16.dp, bottom = 6.dp))
+            Text(header.uppercase(), style = TTType.overline, color = TT.colors.inkSoft, modifier = Modifier.padding(start = 16.dp, bottom = 6.dp))
         }
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White)) {
+        Column(Modifier.fillMaxWidth().clip(TTShape.medium).background(TT.colors.surface).border(1.dp, TT.colors.line, TTShape.medium)) {
             content()
         }
         if (footer != null) {
-            Text(footer, fontSize = 13.sp, color = BoardTheme.slate, modifier = Modifier.padding(start = 16.dp, top = 6.dp, end = 16.dp), lineHeight = 17.sp)
+            Text(footer, style = TTType.caption, color = TT.colors.inkSoft, modifier = Modifier.padding(start = 16.dp, top = 6.dp, end = 16.dp))
         }
     }
 }
@@ -142,12 +139,12 @@ fun FormRow(onClick: (() -> Unit)? = null, content: @Composable RowScope.() -> U
         Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.plainClickable(onClick = onClick) else Modifier)
-            .heightIn(min = 48.dp)
+            .heightIn(min = TTSpace.touch)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         content = content
     )
-    Box(Modifier.fillMaxWidth().padding(start = 16.dp).height(0.5.dp).background(BoardTheme.line.copy(alpha = 0.6f)))
+    Box(Modifier.fillMaxWidth().padding(start = 16.dp).height(1.dp).background(TT.colors.line.copy(alpha = 0.7f)))
 }
 
 /** A tappable row of text, coloured like an iOS button row. */
@@ -158,7 +155,7 @@ fun FormButton(title: String, tint: Color = BoardTheme.blue, icon: ImageVector? 
             Icon(icon, null, tint = if (enabled) tint else BoardTheme.line, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(10.dp))
         }
-        Text(title, color = if (enabled) tint else BoardTheme.line, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Text(title, color = if (enabled) tint else BoardTheme.line, style = TTType.bodyStrong)
     }
 }
 
@@ -228,13 +225,13 @@ fun <T> SegmentedPicker(options: List<T>, selected: T, label: (T) -> String, onS
             Box(
                 Modifier
                     .weight(1f)
-                    .height(34.dp)
+                    .heightIn(min = TTSpace.touch)
                     .clip(RoundedCornerShape(7.dp))
                     .background(if (on) Color.White else Color.Transparent)
-                    .plainClickable { onSelect(o) },
+                    .accessibleClickable(label = label(o), role = androidx.compose.ui.semantics.Role.RadioButton, ripple = false) { onSelect(o) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(label(o), fontSize = 14.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium,
+                Text(label(o), style = TTType.label.copy(fontWeight = if (on) FontWeight.Bold else FontWeight.Medium),
                     color = BoardTheme.ink, maxLines = 1, textAlign = TextAlign.Center)
             }
         }
@@ -244,17 +241,18 @@ fun <T> SegmentedPicker(options: List<T>, selected: T, label: (T) -> String, onS
 /** A small round chip used for categories and filters. */
 @Composable
 fun FilterChip(title: String, selected: Boolean, color: Color = BoardTheme.green, onClick: () -> Unit) {
-    Text(
-        title,
-        fontSize = 13.sp,
-        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-        color = if (selected) Color.White else hexColor("#475569"),
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) color else hexColor("#F1F5F9"))
-            .plainClickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 7.dp)
-    )
+    Box(
+        Modifier
+            .heightIn(min = TTSpace.touch)
+            .clip(TTShape.pill)
+            .background(if (selected) color else TT.colors.surfaceSunken)
+            .accessibleClickable(label = title, role = androidx.compose.ui.semantics.Role.Tab, shape = TTShape.pill, onClick = onClick)
+            .padding(horizontal = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(title, style = TTType.label.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium),
+            color = if (selected) Color.White else TT.colors.inkSoft)
+    }
 }
 
 // MARK: - Colours
@@ -298,7 +296,7 @@ fun ColorChoiceSheet(title: String, hex: String, onChange: (String) -> Unit, onD
             LazyVerticalGrid(columns = GridCells.Fixed(4), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 items(AppPalette.swatches) { (swatch, name) ->
                     val on = swatch.equals(hex, ignoreCase = true)
-                    Column(Modifier.plainClickable { onChange(swatch) }, horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(Modifier.accessibleClickable(label = name, ripple = false) { onChange(swatch) }, horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(10.dp)).background(hexColor(swatch))
                             .border(if (on) 4.dp else 1.dp, if (on) BoardTheme.green else BoardTheme.line, RoundedCornerShape(10.dp)))
                         Spacer(Modifier.height(6.dp))

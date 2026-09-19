@@ -18,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -46,9 +48,21 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
     var confirmReset by remember { mutableStateOf(false) }
     var showPin by remember { mutableStateOf(false) }
     var showVoiceMenu by remember { mutableStateOf(false) }
+    var pinned by remember { mutableStateOf(context.isInLockTask()) }
     var pendingRestore by remember { mutableStateOf<Pair<BookArchive, BookBackup.Summary>?>(null) }
     var restoreError by remember { mutableStateOf<String?>(null) }
     var backupNote by remember { mutableStateOf<String?>(null) }
+
+    val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        try {
+            store.saveNow()
+            val text = BookBackup.encode(store.pages, store.settings, TileFavorites.shared.items, PhraseLibrary.shared.items)
+            context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) } ?: throw IllegalStateException("could not open the file")
+            backupNote = "Backup saved."
+            restoreError = null
+        } catch (e: Exception) { restoreError = "Could not save the backup: ${e.message ?: e.javaClass.simpleName}" }
+    }
 
     val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -57,7 +71,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
             pendingRestore = BookBackup.read(text)
             restoreError = null
         } catch (e: Exception) {
-            restoreError = "Could not read that file. ${e.message ?: ""}"
+            restoreError = e.message?.takeIf { e is IllegalArgumentException } ?: "Could not read that file."
         }
     }
 
@@ -127,22 +141,45 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
             ToggleRow("Speak when the finger lifts", s.activateOnRelease) { v -> store.updateSettings { it.copy(activateOnRelease = v) } }
         }
 
-        // Child lock
-        FormSection("Child Lock", "Locking hides every way into the editor, so a board cannot be rearranged by accident. To stop a child leaving Talk Tiles altogether, use Android's app pinning: Settings › Security › App pinning.") {
-            ToggleRow("Lock editing", s.childLock) { v -> store.updateSettings { it.copy(childLock = v) } }
-            if (s.childLock) FormButton("Change PIN") { showPin = true }
+        // Display
+        FormSection("Display", "High contrast deepens the text and borders and removes the soft shadows. Reduce motion turns off the press animation. The book can open on the page it was last on, or always on its first page.") {
+            ToggleRow("High contrast", s.highContrast) { v -> store.updateSettings { it.copy(highContrast = v) } }
+            ToggleRow("Reduce motion", s.reduceMotion) { v -> store.updateSettings { it.copy(reduceMotion = v) } }
+            ToggleRow("Open on the last page used", s.openOnLastPage) { v -> store.updateSettings { it.copy(openOnLastPage = v) } }
+        }
+
+        // Protect editing
+        FormSection("Protect editing", "With protection on, Edit pages, Page library and Settings ask for a four-digit PIN. Talking, Find and the sentence bar never do.") {
+            ToggleRow("Ask for a PIN before editing", s.childLock) { v -> store.updateSettings { it.copy(childLock = v) } }
+            FormButton("Change PIN") { showPin = true }
+        }
+
+        // Keep on screen (Android screen pinning, the soft kind: Back + Overview held together leaves it)
+        FormSection("Keep on screen", if (pinned) "Talk Tiles is pinned to the screen. To leave, hold Back and Overview together."
+            else "Uses Android's screen pinning so Talk Tiles stays in front. Android asks once to confirm. Every button keeps working; to leave, hold Back and Overview together.") {
+            FormButton(if (pinned) "Stop keeping on screen" else "Keep Talk Tiles on screen", icon = Icons.Default.PushPin) {
+                val activity = context.findActivity()
+                try {
+                    if (pinned) activity?.stopLockTask() else activity?.startLockTask()
+                    pinned = !pinned
+                } catch (e: Exception) { restoreError = "Screen pinning is not available on this device." }
+            }
         }
 
         // Backup
-        FormSection("Backup", "A backup holds every page, button, picture and recording in one file. Email it to yourself or keep it in your files. Do this before changing devices - there is no other way to get a book back.") {
-            FormButton("Back Up Everything", tint = BoardTheme.ink, icon = Icons.Default.FileUpload) {
+        FormSection("Backup", "A backup holds every page, button, picture, recording, saved button and saved phrase in one file. Save it to Files or share it. Do this before changing devices - there is no other way to get a book back.") {
+            FormButton("Save a backup to Files", tint = BoardTheme.ink, icon = Icons.Default.Save) {
+                restoreError = null
+                saveBackup.launch(BookBackup.fileName())
+            }
+            FormButton("Share a backup", tint = BoardTheme.ink, icon = Icons.Default.FileUpload) {
                 try {
                     store.saveNow()
-                    shareFile(context, BookBackup.write(context, store.pages, store.settings))
+                    shareFile(context, BookBackup.write(context, store.pages, store.settings, TileFavorites.shared.items, PhraseLibrary.shared.items))
                     backupNote = null
                 } catch (e: Exception) { restoreError = "Could not make a backup: ${e.message}" }
             }
-            FormButton("Restore From a Backup", tint = BoardTheme.ink, icon = Icons.Default.FileDownload) {
+            FormButton("Restore from a backup", tint = BoardTheme.ink, icon = Icons.Default.FileDownload) {
                 restoreError = null
                 openBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*"))
             }
@@ -151,29 +188,40 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
             pendingRestore?.let { (archive, summary) ->
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Backup found", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink)
-                    Text("${summary.pages} pages · ${summary.buttons} buttons · ${summary.hotspots} talking spots", fontSize = 13.sp, color = BoardTheme.slate)
-                    Text("Saved ${summary.createdAt}", fontSize = 13.sp, color = BoardTheme.slate)
-                    Text("Restoring replaces the book that is on this tablet now.", fontSize = 13.sp, color = BoardTheme.danger)
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Text("Restore", fontWeight = FontWeight.Bold, color = BoardTheme.green, modifier = Modifier.plainClickable {
-                            store.restore(archive.pages, archive.settings)
+                    Text("${summary.pages} pages · ${summary.buttons} buttons · ${summary.hotspots} talking spots · ${summary.savedButtons} saved buttons · ${summary.phrases} phrases", style = TTType.caption, color = BoardTheme.slate)
+                    Text("Saved ${summary.createdAt}", style = TTType.caption, color = BoardTheme.slate)
+                    Text("Restoring replaces the book on this tablet. The current book is kept in a snapshot first.", style = TTType.caption, color = BoardTheme.danger)
+                    Row(horizontalArrangement = Arrangement.spacedBy(TTSpace.m)) {
+                        PrimaryButton("Restore", minHeight = TTSpace.touch) {
+                            store.restore(archive)
                             pendingRestore = null
                             backupNote = "Restored ${archive.pages.size} pages."
-                        })
-                        Text("Cancel", color = BoardTheme.slate, modifier = Modifier.plainClickable { pendingRestore = null })
+                        }
+                        SecondaryButton("Cancel") { pendingRestore = null }
                     }
                 }
             }
         }
 
         // This book
-        FormSection("This Book") {
+        FormSection("This book") {
             InfoRow("Pages", "${store.pages.size}")
             InfoRow("Buttons filled in", "${store.pages.sumOf { it.tiles.size }}")
             InfoRow("Talking spots", "${store.pages.sumOf { it.hotspots.size }}")
+            InfoRow("Saved buttons", "${TileFavorites.shared.items.size}")
+            InfoRow("Saved phrases", "${PhraseLibrary.shared.items.size}")
         }
 
-        FormSection("Danger zone", "This erases every page, button and talking spot you have made and puts the original starter book back. It cannot be undone.") {
+        val notices = store.recoveryNotices
+        val speechProblem = SpeechManager.shared.lastProblem
+        if (notices.isNotEmpty() || speechProblem != null) {
+            FormSection("Needs attention") {
+                for (n in notices) Text(n, style = TTType.caption, color = BoardTheme.danger, modifier = Modifier.padding(16.dp))
+                if (speechProblem != null) Text(speechProblem, style = TTType.caption, color = BoardTheme.danger, modifier = Modifier.padding(16.dp))
+            }
+        }
+
+        FormSection("Start over", "Puts the original starter book back. The book that is there now is kept in a snapshot inside the app, but a backup file is still the safe way to keep it.") {
             FormButton("Reset to the starter book", tint = BoardTheme.danger) { confirmReset = true }
         }
 
@@ -181,7 +229,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
             if (SymbolLibrary.has(SymbolSet.TALK_TILES)) AboutRow("${SymbolLibrary.count(SymbolSet.TALK_TILES)} Talk Tiles pictures", "Drawn in-house for Talk Tiles. No third-party licence.")
             if (SymbolLibrary.has(SymbolSet.MULBERRY)) AboutRow("${SymbolLibrary.count(SymbolSet.MULBERRY)} Mulberry Symbols", SymbolLibrary.ATTRIBUTION)
             for (v in VoiceClips.available) AboutRow("${v.name} voice", "Recorded for Talk Tiles: one clip for every picture and built-in phrase.")
-            AboutRow("Talk Tiles for Android", "The same book format as Talk Tiles for iPad - backups and shared pages move between the two.")
+            AboutRow("Talk Tiles for Android ${BuildConfig.VERSION_NAME}", "The same book format as Talk Tiles for iPad - backups and shared pages move between the two.")
         }
     }
 
@@ -189,7 +237,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
         AlertDialog(
             onDismissRequest = { confirmReset = false },
             title = { Text("Reset everything?") },
-            text = { Text("Every page, button and talking spot you have made is erased and the starter book comes back. Back up first if you have not.") },
+            text = { Text("Every page, button and talking spot you have made is replaced by the starter book. A snapshot of the current book is kept inside the app; a backup file is safer still.") },
             confirmButton = { TextButton({ store.resetToDefaults(); confirmReset = false }) { Text("Reset", color = BoardTheme.danger) } },
             dismissButton = { TextButton({ confirmReset = false }) { Text("Cancel") } }
         )
@@ -260,6 +308,18 @@ private fun AboutRow(title: String, sub: String) {
         Text(sub, fontSize = 13.sp, color = BoardTheme.slate)
     }
 }
+
+/** The activity behind a Compose context, through any theme wrappers. */
+fun android.content.Context.findActivity(): android.app.Activity? {
+    var c: android.content.Context = this
+    while (c is android.content.ContextWrapper) { if (c is android.app.Activity) return c; c = c.baseContext }
+    return null
+}
+
+fun android.content.Context.isInLockTask(): Boolean = try {
+    val am = getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+    am.lockTaskModeState != android.app.ActivityManager.LOCK_TASK_MODE_NONE
+} catch (e: Exception) { false }
 
 /** Four digits, entered twice. */
 @Composable

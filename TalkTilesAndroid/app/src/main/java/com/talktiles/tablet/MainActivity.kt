@@ -7,10 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.compose.material3.MaterialTheme
+import android.provider.Settings
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.material3.lightColorScheme
 
 class MainActivity : ComponentActivity() {
     private lateinit var store: AACStore
@@ -22,8 +22,10 @@ class MainActivity : ComponentActivity() {
         VoiceClips.init(this)
         TalkTilesCatalog.init(this)
         SymbolLibrary.init(this)
-        TileFavorites.init(this)
-        store = AACStore(this)
+        val storage = BookStorage(filesDir)
+        TileFavorites.init(storage)
+        PhraseLibrary.init(storage)
+        store = AACStore(this, storage)
 
         // Keep the screen awake during communication.
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -39,7 +41,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val density = LocalDensity.current
             val navBottom = with(density) { navBottomPx.value.toDp() }
-            MaterialTheme(colorScheme = lightColorScheme(primary = BoardTheme.green, background = BoardTheme.background)) {
+            // The person's display choices, plus the system's own "no animations" setting.
+            val systemReducesMotion = remember {
+                try { Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f } catch (e: Exception) { false }
+            }
+            TalkTilesTheme(highContrast = store.settings.highContrast, reduceMotion = store.settings.reduceMotion || systemReducesMotion) {
                 CompositionLocalProvider(LocalNavBarBottom provides navBottom) {
                     RootView(store)
                 }
@@ -51,6 +57,5 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         store.saveNow()
-        store.saveSettings()
     }
 }

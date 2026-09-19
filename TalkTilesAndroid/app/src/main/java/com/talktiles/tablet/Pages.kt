@@ -39,6 +39,13 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material3.AlertDialog
@@ -89,6 +96,7 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
     var gridSize by remember { mutableStateOf(if (page.gridSize in gridSizes) page.gridSize else SymbolWordBank.nearestKeyCount(page.gridSize)) }
     var bgHex by remember { mutableStateOf(page.bgHex) }
     var express by remember { mutableStateOf(page.express) }
+    var enabled by remember { mutableStateOf(page.enabled) }
     var keyboardKeys by remember { mutableStateOf(SymbolWordBank.nearestKeyCount(page.keyboardKeys)) }
     var keyboardGroups by remember { mutableStateOf(page.keyboardGroups ?: SymbolWordBank.groups.map { it.id }) }
     var scenePhotoData by remember { mutableStateOf(page.sceneImageData) }
@@ -101,7 +109,7 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
 
     fun save() {
         store.updateCurrentPage { p ->
-            var next = p.copy(title = title, gridSize = gridSize, bgHex = bgHex, express = express)
+            var next = p.copy(title = title, gridSize = gridSize, bgHex = bgHex, express = express, enabled = enabled)
             if (p.type == PageType.SCENE) next = next.copy(sceneImageData = scenePhotoData)
             if (p.type == PageType.KEYBOARD) next = next.copy(keyboardKeys = keyboardKeys, keyboardGroups = keyboardGroups)
             next
@@ -126,11 +134,12 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
         if (page.type == PageType.KEYBOARD) {
             KeyboardSetupSections(keyboardKeys, { keyboardKeys = it }, keyboardGroups, { keyboardGroups = it })
         }
-        FormSection("Behavior") {
-            ToggleRow("Express sentence bar", express) { express = it }
+        FormSection("Behavior", "A page that is switched off stays in the book and in the editor, but the arrows skip it when talking - useful while a page is half built.") {
+            ToggleRow("Sentence bar on this page", express) { express = it }
+            ToggleRow("Show this page when talking", enabled) { enabled = it }
         }
         FormSection(footer = "Sends this page as a file you can message, email or save - another Talk Tiles device can add it to their book.") {
-            FormButton("Share This Page", tint = BoardTheme.ink, icon = Icons.Default.Share) {
+            FormButton("Share this page", tint = BoardTheme.ink, icon = Icons.Default.Share) {
                 shareFile(context, BookBackup.writePage(context, store.currentPage))
             }
         }
@@ -236,7 +245,7 @@ private fun TemplateCard(template: PageTemplate?, selected: Boolean, onClick: ()
             .clip(RoundedCornerShape(14.dp))
             .background(hexColor("#F8FAFC"))
             .border(if (selected) 3.dp else 1.5.dp, if (selected) BoardTheme.green else hexColor(accent).copy(alpha = 0.45f), RoundedCornerShape(14.dp))
-            .plainClickable(onClick = onClick)
+            .accessibleClickable(label = template?.title ?: "Blank grid", role = androidx.compose.ui.semantics.Role.RadioButton, shape = RoundedCornerShape(14.dp), onClick = onClick)
             .padding(12.dp)
     ) {
         Column(Modifier.fillMaxSize()) {
@@ -255,47 +264,158 @@ private fun TemplateCard(template: PageTemplate?, selected: Boolean, onClick: ()
     }
 }
 
-// MARK: - Pages navigator
+// MARK: - Find (pages + words)
 
-/** Pages list with its own Edit/Done control. */
+/**
+ * One place to go anywhere in the book: type a page name or a word. A word
+ * result opens the page it lives on - it is never spoken from here. In the
+ * editor the same sheet manages the pages: switch on/off, move, delete.
+ */
 @Composable
-fun PagesListSheet(store: AACStore, onDismiss: () -> Unit) {
-    var editing by remember { mutableStateOf(false) }
+fun FindSheet(store: AACStore, onDismiss: () -> Unit) {
+    val c = TT.colors
+    var query by remember { mutableStateOf("") }
     var refused by remember { mutableStateOf(false) }
+    val editing = store.isEditMode
+    val pageHits = remember(query, store.pages, editing) { VocabularySearch.pages(store.pages, query, editing) }
+    val wordHits = remember(query, store.pages, editing) { VocabularySearch.search(store.pages, query, editing).take(60) }
 
-    val navBottom = LocalNavBarBottom.current
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
-        androidx.activity.compose.BackHandler { onDismiss() }
-        Column(Modifier.fillMaxSize().background(BoardTheme.background).padding(bottom = navBottom)) {
-            Box(Modifier.fillMaxWidth().background(Color.White).height(56.dp).padding(horizontal = 12.dp)) {
-                Text(if (editing) "Done" else "Edit", color = BoardTheme.blue, fontSize = 17.sp, modifier = Modifier.align(Alignment.CenterStart).plainClickable { editing = !editing }.padding(8.dp))
-                Text("Pages in this Book", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink, modifier = Modifier.align(Alignment.Center))
-                Text("Done", color = BoardTheme.green, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterEnd).plainClickable(onClick = onDismiss).padding(8.dp))
+    ModalSheet(title = if (editing) "Pages in this book" else "Find a page or word", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss, scroll = false) {
+        Row(Modifier.fillMaxWidth().clip(TTShape.medium).background(c.surface).border(1.dp, c.line, TTShape.medium).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Search, null, tint = c.inkSoft)
+            PlainTextField(query, { query = it }, "Page name or word", Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(TTSpace.m))
+        LazyColumn(Modifier.fillMaxSize()) {
+            if (query.isBlank() || pageHits.isNotEmpty()) {
+                item { Text("PAGES", style = TTType.overline, color = c.inkSoft, modifier = Modifier.padding(start = 16.dp, bottom = 6.dp)) }
             }
-            LazyColumn(Modifier.fillMaxSize().padding(16.dp).clip(RoundedCornerShape(12.dp)).background(Color.White)) {
-                items(store.pages.size, key = { store.pages[it].id }) { index ->
-                    val page = store.pages[index]
-                    FormRow(onClick = { store.currentPageIndex = index; onDismiss() }) {
-                        if (editing) {
-                            Icon(Icons.Default.Delete, "Delete", tint = BoardTheme.danger, modifier = Modifier.plainClickable {
-                                if (store.pages.size <= 1) refused = true else store.removePage(index)
-                            }.padding(end = 12.dp))
-                        }
-                        Text("${index + 1}.", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = BoardTheme.green, modifier = Modifier.width(32.dp))
+            items(pageHits, key = { it.id }) { page ->
+                val index = store.pages.indexOf(page)
+                val current = page.id == store.currentPage.id
+                Column(Modifier.fillMaxWidth().padding(bottom = TTSpace.s).clip(TTShape.medium).background(c.surface).border(1.dp, c.line, TTShape.medium)) {
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = TTSpace.chrome)
+                            .accessibleClickable(label = "Open ${page.title}", ripple = true) { if (store.goToPage(page.id)) onDismiss() }
+                            .padding(horizontal = TTSpace.l, vertical = TTSpace.m),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("${index + 1}", style = TTType.bodyStrong, color = c.primary, modifier = Modifier.width(32.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(page.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink)
-                            Text("${page.type.displayName} • ${page.gridSize} buttons", fontSize = 12.sp, color = BoardTheme.slate)
+                            Text(page.title, style = TTType.bodyStrong, color = if (page.enabled) c.ink else c.inkFaint)
+                            Text("${page.type.displayName} · ${if (page.type == PageType.KEYBOARD) "${page.keyboardKeys ?: SymbolWordBank.defaultKeyCount} keys" else "${page.gridSize} buttons"}" +
+                                if (!page.enabled) " · off when talking" else "", style = TTType.caption, color = c.inkSoft)
                         }
-                        if (index == store.currentPageIndex) Icon(Icons.Default.CheckCircle, null, tint = BoardTheme.green)
+                        if (current) Icon(Icons.Default.CheckCircle, "Current page", tint = c.success)
+                    }
+                    if (editing) {
+                        Divider()
+                        Row(Modifier.fillMaxWidth().padding(horizontal = TTSpace.s, vertical = TTSpace.xs), verticalAlignment = Alignment.CenterVertically) {
+                            Text("Show when talking", style = TTType.label, color = c.inkSoft, modifier = Modifier.padding(start = TTSpace.s).weight(1f))
+                            androidx.compose.material3.Switch(checked = page.enabled, onCheckedChange = { on -> store.updatePage(page.id) { it.copy(enabled = on) } },
+                                modifier = Modifier.semantics { contentDescription = "Show ${page.title} when talking" })
+                            IconAction(Icons.Default.KeyboardArrowUp, "Move ${page.title} up", enabled = index > 0) { store.movePage(index, index - 1) }
+                            IconAction(Icons.Default.KeyboardArrowDown, "Move ${page.title} down", enabled = index < store.pages.size - 1) { store.movePage(index, index + 1) }
+                            IconAction(Icons.Default.Delete, "Delete ${page.title}", tint = c.danger) {
+                                if (store.pages.size <= 1) refused = true else store.removePage(index)
+                            }
+                        }
                     }
                 }
             }
+            if (query.isNotBlank()) {
+                item { Text("WORDS", style = TTType.overline, color = c.inkSoft, modifier = Modifier.padding(start = 16.dp, top = TTSpace.s, bottom = 6.dp)) }
+                if (wordHits.isEmpty()) item { Text("No button says \"$query\".", style = TTType.body, color = c.inkSoft, modifier = Modifier.padding(16.dp)) }
+                items(wordHits.size, key = { "w-${wordHits[it].pageId}-${wordHits[it].kind}-${wordHits[it].label}-$it" }) { i ->
+                    val hit = wordHits[i]
+                    Row(
+                        Modifier.fillMaxWidth().padding(bottom = TTSpace.s).clip(TTShape.medium).background(c.surface).border(1.dp, c.line, TTShape.medium)
+                            .heightIn(min = TTSpace.chrome)
+                            .accessibleClickable(label = "Go to ${hit.label} on ${hit.pageTitle}") {
+                                if (store.goToPage(hit.pageId)) { if (hit.kind == VocabularySearch.Kind.KEY) store.requestedKeyGroup = hit.keyGroupId; onDismiss() }
+                            }
+                            .padding(horizontal = TTSpace.l, vertical = TTSpace.m),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(TTSpace.m)
+                    ) {
+                        TileThumbnail(hit.photoData, hit.symbolName, hit.label, "#FFFFFF", "#D6DDE4", "#16202B", size = 44, key = "find-$i")
+                        Column(Modifier.weight(1f)) {
+                            Text(hit.label, style = TTType.bodyStrong, color = c.ink)
+                            val what = when (hit.kind) { VocabularySearch.Kind.TILE -> "Button"; VocabularySearch.Kind.HOTSPOT -> "Talking spot"; VocabularySearch.Kind.KEY -> "Keyboard word" }
+                            Text("$what on ${hit.pageTitle}" + if (hit.spoken != hit.label) " · says \"${hit.spoken}\"" else "", style = TTType.caption, color = c.inkSoft, maxLines = 2)
+                        }
+                    }
+                }
+            }
+            item { Spacer(Modifier.height(TTSpace.xxl)) }
         }
     }
     if (refused) {
         AlertDialog(onDismissRequest = { refused = false }, confirmButton = { TextButton({ refused = false }) { Text("OK") } },
             title = { Text("Keep at least one page") },
             text = { Text("A communication book needs somewhere to put buttons. Add another page before removing this one.") })
+    }
+}
+
+/** Kept for older call sites. */
+@Composable
+fun PagesListSheet(store: AACStore, onDismiss: () -> Unit) = FindSheet(store, onDismiss)
+
+// MARK: - Saved phrases
+
+/**
+ * Sentences kept for later. Tapping one puts it in the bar and speaks it -
+ * exactly as it was saved. Saving needs no PIN: it is the person's own
+ * speech. Deleting is an editor job.
+ */
+@Composable
+fun PhrasesSheet(store: AACStore, onDismiss: () -> Unit) {
+    val c = TT.colors
+    val library = PhraseLibrary.shared
+    var name by remember { mutableStateOf("") }
+    val current = store.sentence.items
+
+    ModalSheet(title = "Saved phrases", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss, scroll = false) {
+        if (current.isNotEmpty()) {
+            FormSection("Save what is in the bar", "The phrase is kept exactly as it was built, recordings included, and works without any connection.") {
+                FormRow { PlainTextField(name, { name = it }, current.joinToString(" ") { it.label }, Modifier.weight(1f)) }
+                FormButton("Save this sentence", tint = c.primary, icon = Icons.Default.Bookmark) {
+                    library.add(current, name); name = ""
+                }
+            }
+        }
+        if (library.items.isEmpty()) {
+            FormSection {
+                Column(Modifier.padding(16.dp)) {
+                    Text("No saved phrases yet", style = TTType.heading, color = c.ink)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Build a sentence in the bar, open this sheet and save it. It will be one tap from then on.", style = TTType.body, color = c.inkSoft)
+                }
+            }
+        } else {
+            LazyColumn(Modifier.fillMaxSize()) {
+                items(library.items, key = { it.id }) { phrase ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(bottom = TTSpace.s).clip(TTShape.medium).background(c.surface).border(1.dp, c.line, TTShape.medium)
+                            .heightIn(min = TTSpace.chrome)
+                            .accessibleClickable(label = "Say ${phrase.name}") {
+                                store.sentence.replaceWith(phrase.items); store.speakSentence(); onDismiss()
+                            }
+                            .padding(start = TTSpace.l, end = TTSpace.s, top = TTSpace.m, bottom = TTSpace.m),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(TTSpace.m)
+                    ) {
+                        Icon(Icons.Default.PlayArrow, null, tint = c.primary)
+                        Column(Modifier.weight(1f)) {
+                            Text(phrase.name, style = TTType.bodyStrong, color = c.ink)
+                            if (phrase.spokenText != phrase.name) Text(phrase.spokenText, style = TTType.caption, color = c.inkSoft, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                        if (store.isEditMode) IconAction(Icons.Default.Delete, "Delete ${phrase.name}", tint = c.danger) { library.remove(phrase.id) }
+                    }
+                }
+                item { Spacer(Modifier.height(TTSpace.xxl)) }
+            }
+        }
     }
 }
 
@@ -310,7 +430,7 @@ fun GallerySheet(store: AACStore, onDismiss: () -> Unit) {
         t.title.lowercase().contains(q) || t.summary.lowercase().contains(q) || t.tiles.any { it.label.lowercase().contains(q) }
     }
 
-    ModalSheet(title = "Template Gallery", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss, scroll = false) {
+    ModalSheet(title = "Page library", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss, scroll = false) {
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Search, null, tint = BoardTheme.slate)
             PlainTextField(search, { search = it }, "Search templates", Modifier.weight(1f))
@@ -331,10 +451,8 @@ fun GallerySheet(store: AACStore, onDismiss: () -> Unit) {
                             Pill("${t.buttonCount} buttons"); Spacer(Modifier.width(6.dp)); Pill("${t.gridSize}-grid")
                             Spacer(Modifier.weight(1f))
                             val done = installed == t.id
-                            Text(if (done) "✓ Added" else "Add to Book", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(hexColor(if (done) "#94A3B8" else "#008369"))
-                                    .plainClickable { store.addPage(t.makePage()); installed = t.id }
-                                    .padding(horizontal = 14.dp, vertical = 6.dp))
+                            if (done) Badge("Added", color = TT.colors.success, onColor = Color.White)
+                            else PrimaryButton("Add to book", minHeight = TTSpace.touch) { store.addPage(t.makePage()); installed = t.id }
                         }
                     }
                 }
@@ -354,48 +472,50 @@ private fun Pill(text: String) {
 private data class HelpTopic(val icon: ImageVector, val color: String, val title: String, val body: String)
 
 private val helpTopics = listOf(
-    HelpTopic(Icons.Default.PlayArrow, "#F5893B", "Player",
-        "Player is the screen a child uses. Tap a tile and it speaks. On the top bar, the round arrow steps back one page, the orange house returns to this menu, and tapping the page name opens the list of every page in the book so you can jump straight to one. Nothing on the Player screen can change a page by accident."),
-    HelpTopic(Icons.Default.ChatBubble, "#4DB2FF", "The sentence bar",
-        "Pages with the sentence bar switched on collect words as tiles are tapped - \"I want + Eat + Pizza\". Press the round PLAY button to hear the whole sentence, or tap the words themselves. The red X clears it. Turn the bar on or off for any page in Page Options, under Behavior."),
-    HelpTopic(Icons.Default.Edit, "#4DB2FF", "Page Editor",
-        "Page Editor is the same board with editing switched on. Tap any tile - filled or empty - to open the button editor. On the top bar: the arrow steps back a page, the house goes home, the sliders open Page Options, and the orange + starts a new page. Tap the page name to rename it right there; the small arrow next to it opens the page list."),
-    HelpTopic(Icons.Default.GridView, "#2EC98A", "Editing a button",
-        "Two boxes at the top: \"On the button\" is the word shown on the tile, \"Voice says\" is what is spoken - leave it empty and the voice reads the button's word. Below that: Play Preview, record your own voice, a photo from the camera or library, thousands of picture symbols to search, button and text colours, and word size. Saved Buttons keeps a finished button so you can drop it onto any page later."),
-    HelpTopic(Icons.Default.Add, "#F5893B", "New pages and page kinds",
-        "The + button opens the New Page Wizard. Give the page a name and pick a kind. A Standard Grid is a board of buttons - choose how many (1 to 48) and start blank or from a ready-made board. A Visual Scene Display is a photo with talking spots on it. A Symbol Keyboard is a keyboard made of pictures instead of letters, grouped as People, Actions, Describing, Things and so on - press pictures to build a sentence."),
-    HelpTopic(Icons.Default.Photo, "#9B7BFF", "Visual scenes",
-        "A scene page shows a photo - the living room, the playground - with invisible talking spots over things in it. In the editor, Add Hotspot puts a new spot on the picture; drag it into place and drag its corner handle to size it. Tap a spot to name it and choose what it says. The picture itself is changed in Page Options."),
-    HelpTopic(Icons.Default.Tune, "#4DB2FF", "Page Options",
-        "The sliders button in the editor. Rename the page, pick its background colour, change how many buttons a grid has, switch the sentence bar on, and Share This Page as a file another Talk Tiles device can add to its book."),
-    HelpTopic(Icons.Default.Download, "#2EC98A", "Downloads",
-        "Ready-made boards - food, feelings, school, bedtime and more - each with pictures already on every button. Tap Add to Book and the board appears as a new page you can then change however you like."),
-    HelpTopic(Icons.Default.RecordVoiceOver, "#9B7BFF", "Voice and touch",
-        "In Settings you can choose the voice and how fast it speaks, and test it. Bella is the app's own recorded voice. Under Touch: Hold to speak makes a tile wait until the finger has rested on it, so a brushing hand does not talk; Pause before repeat stops one press landing five times; Speak when the finger lifts waits for the release."),
-    HelpTopic(Icons.Default.Lock, "#FF6B6B", "Child Lock",
-        "Lock editing in Settings hides every way into the Page Editor behind a PIN, so the board cannot be changed by the child using it. To stop the child leaving Talk Tiles altogether, use Android's own screen pinning: Settings > Security > App pinning, then pin Talk Tiles from the recent apps view."),
-    HelpTopic(Icons.Default.Backup, "#FFC93C", "Backing up",
-        "Settings > Backup writes the whole book - every page, button, photo and recording - to one file you can email to yourself or keep in your files. Restore reads it back onto any tablet or iPad running Talk Tiles. Do this whenever you have spent real time building, and always before changing devices. Reset to the starter book, at the bottom of Settings, erases everything and cannot be undone.")
+    HelpTopic(Icons.Default.PlayArrow, "#0F6E8C", "Talking",
+        "Start talking opens the book on the page it was last on. Tap a button and it speaks. The top bar has Home, Previous page and Next page, the page name with its place in the book, and Find. Nothing on the talking screen can change a page by accident."),
+    HelpTopic(Icons.Default.Search, "#0F6E8C", "Find a page or word",
+        "Tap Find (or the page name) and type. Pages match by name; buttons, talking spots and keyboard words match by what is on them or what they say. Choosing a result opens that page - it does not speak the word."),
+    HelpTopic(Icons.Default.ChatBubble, "#0F6E8C", "The sentence bar",
+        "Pages with the sentence bar on collect words as buttons are tapped. Speak says the whole sentence in order - a button that has your own recording plays that recording. Stop halts it. Remove last word takes off the last one; Clear empties the bar and Undo brings it back. The bar keeps the sentence when you turn the page. Saved phrases keeps a sentence for one-tap use later."),
+    HelpTopic(Icons.Default.Edit, "#C4731F", "Edit pages",
+        "Edit pages is the same board with editing switched on. Tap any button, filled or empty, to open the button editor. Previous and Next step through every page, including ones switched off. Page options changes this page; New page adds one; the page name opens the page list, where pages can be switched on or off, moved and deleted."),
+    HelpTopic(Icons.Default.GridView, "#C4731F", "Editing a button",
+        "\"On the button\" is the word shown; \"Voice says\" is what is spoken - leave it empty and the voice reads the word. Below that: Play preview, record your own voice, a photo from the camera or library, thousands of pictures to search, button and text colours, word size. Saved buttons keeps a finished button so it can be put on any page later."),
+    HelpTopic(Icons.Default.Add, "#C4731F", "New pages and page kinds",
+        "New page asks for a name and a kind. A Standard Grid is a board of 1 to 48 buttons, blank or from a ready-made board. A Visual Scene is a photo with talking spots on it. A Symbol Keyboard is a keyboard made of pictures, grouped as People, Actions, Describing, Things and so on."),
+    HelpTopic(Icons.Default.Photo, "#C4731F", "Visual scenes",
+        "A scene page shows a photo with talking spots over things in it. In the editor, Add talking spot puts a new one on the picture; drag it into place and drag its corner handle to size it. Tap a spot to name it and choose what it does: speak, play a recording, or open another page. The picture itself is changed in Page options."),
+    HelpTopic(Icons.Default.Tune, "#C4731F", "Page options",
+        "Rename the page, pick its background, change how many buttons a grid has, switch the sentence bar on, switch the page off while it is half built, and Share this page as a file another Talk Tiles can add to its book."),
+    HelpTopic(Icons.Default.Download, "#C4731F", "Page library",
+        "Ready-made boards - food, feelings, school, bedtime and more - each with pictures on every button. Add to book puts the board in as a new page you can then change however you like."),
+    HelpTopic(Icons.Default.RecordVoiceOver, "#1E7B4E", "Voice and touch",
+        "Settings › Voice chooses the voice and how fast it speaks. Bella is the app's own recorded voice; device voices read anything typed. Under Touch: Hold to speak makes a button wait until the finger has rested on it, with a ring that fills as it waits; Pause before repeat stops one press landing five times; Speak when the finger lifts waits for the release, so a press that slides off does not speak."),
+    HelpTopic(Icons.Default.Lock, "#1E7B4E", "Protect editing",
+        "Settings › Protect editing puts a four-digit PIN on Edit pages, Page library and Settings, so the book cannot be changed by the person using it. Talking, Find and the sentence bar are never behind the PIN. To keep Talk Tiles on the screen, Settings › Keep on screen uses Android's screen pinning; to leave, hold Back and Overview together."),
+    HelpTopic(Icons.Default.Backup, "#1E7B4E", "Backing up",
+        "Settings › Backup writes the whole book - every page, button, photo, recording, saved button and saved phrase - to one file. Save it to Files or share it. Restore reads it back onto any tablet or iPad running Talk Tiles; the book being replaced is kept in a snapshot first. Reset to the starter book erases everything, after a snapshot.")
 )
 
 @Composable
 fun HelpSheet(onDismiss: () -> Unit) {
     ModalSheet(title = "Help", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss) {
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(BoardTheme.sentence).padding(18.dp)) {
-            Text("TALK TILES GUIDE", fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.5.sp, color = BoardTheme.ink)
-            Text("How each part of the app works, for parents, teachers and therapists.", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = BoardTheme.inkSoft)
+        Column(Modifier.fillMaxWidth().clip(TTShape.large).background(TT.colors.primarySoft).padding(18.dp)) {
+            Text("Talk Tiles guide", style = TTType.title, color = TT.colors.ink)
+            Text("How each part of the app works, for the person talking and for the people who help.", style = TTType.body, color = TT.colors.inkSoft)
         }
         Spacer(Modifier.height(14.dp))
         for (t in helpTopics) {
-            Row(Modifier.fillMaxWidth().padding(bottom = 14.dp).shadow(3.dp, RoundedCornerShape(20.dp)).clip(RoundedCornerShape(20.dp)).background(Color.White).padding(16.dp)) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 14.dp).clip(TTShape.medium).background(TT.colors.surface).border(1.dp, TT.colors.line, TTShape.medium).padding(16.dp)) {
                 Box(Modifier.size(44.dp).clip(CircleShape).background(hexColor(t.color)), contentAlignment = Alignment.Center) {
                     Icon(t.icon, null, tint = Color.White, modifier = Modifier.size(22.dp))
                 }
                 Spacer(Modifier.width(14.dp))
                 Column {
-                    Text(t.title, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink)
+                    Text(t.title, style = TTType.heading, color = TT.colors.ink)
                     Spacer(Modifier.height(6.dp))
-                    Text(t.body, fontSize = 16.sp, color = hexColor("#334155"), lineHeight = 22.sp)
+                    Text(t.body, style = TTType.body, color = TT.colors.inkSoft)
                 }
             }
         }
@@ -406,6 +526,7 @@ fun HelpSheet(onDismiss: () -> Unit) {
 
 @Composable
 fun PinPromptSheet(expected: String, onDismiss: () -> Unit, onUnlocked: () -> Unit) {
+    val c = TT.colors
     var entered by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
 
@@ -418,22 +539,29 @@ fun PinPromptSheet(expected: String, onDismiss: () -> Unit, onUnlocked: () -> Un
         if (entered == expected) { onUnlocked(); onDismiss() } else { wrong = true; entered = "" }
     }
 
-    ModalSheet(title = "Locked", onDismiss = onDismiss, leading = null, trailing = "Cancel", onTrailing = onDismiss) {
-        Column(Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.dp)) {
-            Icon(Icons.Default.Lock, null, tint = BoardTheme.green, modifier = Modifier.size(42.dp))
-            Text("Enter the PIN to edit", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink)
-            Text("This keeps the board safe from accidental changes.", fontSize = 15.sp, color = BoardTheme.slate)
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                for (i in 0 until 4) Box(Modifier.size(18.dp).clip(CircleShape).background(if (i < entered.length) BoardTheme.green else hexColor("#E2E8F0")))
+    ModalSheet(title = "Protect editing", onDismiss = onDismiss, leading = "Cancel") {
+        Column(Modifier.fillMaxWidth().padding(top = TTSpace.xl), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TTSpace.l)) {
+            Box(Modifier.size(64.dp).clip(CircleShape).background(c.primarySoft), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Lock, null, tint = c.primaryDeep, modifier = Modifier.size(32.dp))
             }
-            if (wrong) Text("That PIN is not right. Try again.", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = BoardTheme.danger)
-            Column(Modifier.widthIn(max = 300.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Enter the editing PIN", style = TTType.title, color = c.ink)
+            Text("Editing is protected so the book cannot change by accident. Talking never needs the PIN.", style = TTType.body, color = c.inkSoft, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 360.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.semantics { contentDescription = "${entered.length} of 4 digits entered" }) {
+                for (i in 0 until 4) Box(Modifier.size(18.dp).clip(CircleShape).background(if (i < entered.length) c.primary else c.line))
+            }
+            if (wrong) Text("That PIN is not right. Try again.", style = TTType.bodyStrong, color = c.danger)
+            Column(Modifier.widthIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(TTSpace.m)) {
                 for (row in listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf("", "0", "⌫"))) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(TTSpace.m)) {
                         for (key in row) {
-                            if (key.isEmpty()) Spacer(Modifier.size(74.dp, 58.dp))
-                            else Box(Modifier.size(74.dp, 58.dp).clip(RoundedCornerShape(10.dp)).background(hexColor("#F1F5F9")).plainClickable { press(key) }, contentAlignment = Alignment.Center) {
-                                Text(key, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = hexColor("#1E293B"))
+                            if (key.isEmpty()) Spacer(Modifier.size(84.dp, 64.dp))
+                            else Box(
+                                Modifier.size(84.dp, 64.dp).clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small)
+                                    .semantics { contentDescription = if (key == "⌫") "Delete digit" else "Key $key" }
+                                    .accessibleClickable { press(key) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(key, style = TTType.title, color = c.ink)
                             }
                         }
                     }

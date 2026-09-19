@@ -50,6 +50,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.focusable
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -75,7 +81,7 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
         val live = store.currentPage   // not `page`: gesture blocks outlive one composition
         if (!TouchAccess.shouldFire("${live.id}-hotspot-${spot.id}", store.settings.repeatLockout)) return
         activeId = spot.id
-        if (live.express) store.addExpressChip(spot.label.ifEmpty { spot.tts })
+        if (live.express) store.sentence.add(SentenceItem.from(spot))
         when (spot.action) {
             HotspotAction.RECORDED -> {
                 val a = spot.audioData
@@ -83,8 +89,7 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
                 else SpeechManager.shared.speak(spot.spoken, store.settings.speechRate.toFloat(), store.settings.voiceId)
             }
             HotspotAction.JUMP -> {
-                val idx = store.pages.indexOfFirst { it.id == spot.jumpPageId }
-                if (idx >= 0) store.currentPageIndex = idx
+                store.goToPage(spot.jumpPageId)   // refused quietly if that page is switched off
             }
             HotspotAction.TTS -> SpeechManager.shared.speak(spot.spoken, store.settings.speechRate.toFloat(), store.settings.voiceId)
         }
@@ -136,11 +141,29 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
             } else {
                 Modifier.pointerInput(spot.id) { detectTapGestures { trigger(store.currentPage.hotspots.firstOrNull { it.id == spot.id } ?: spot) } }
             }
+            val description = when {
+                store.isEditMode -> "Edit talking spot ${spot.label}"
+                spot.action == HotspotAction.JUMP -> "${spot.label}. Opens a page"
+                spot.spoken != spot.label && spot.spoken.isNotEmpty() -> "${spot.label}. Says: ${spot.spoken}"
+                else -> spot.label
+            }
+            val semanticsModifier = Modifier
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    contentDescription = description
+                    onClick {
+                        val live = store.currentPage.hotspots.firstOrNull { it.id == spot.id } ?: spot
+                        if (store.isEditMode) onSelectHotspot(live) else trigger(live)
+                        true
+                    }
+                }
+                .focusable()
 
             Box(
                 Modifier
                     .offset { IntOffset(xPx.roundToInt(), yPx.roundToInt()) }
                     .size(with(density) { max(wPx, 1f).toDp() }, with(density) { max(hPx, 1f).toDp() })
+                    .then(semanticsModifier)
                     .then(gesture),
                 contentAlignment = Alignment.Center
             ) {
@@ -232,15 +255,9 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
                 Icon(Icons.Default.TouchApp, null, tint = hexColor("#475569"), modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 val n = page.hotspots.size
-                Text(if (n == 0) "No hotspots yet" else "$n hotspot${if (n == 1) "" else "s"}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = hexColor("#475569"))
+                Text(if (n == 0) "No talking spots yet" else "$n talking spot${if (n == 1) "" else "s"}", style = TTType.label, color = TT.colors.inkSoft)
                 Spacer(Modifier.weight(1f))
-                Row(
-                    Modifier.clip(RoundedCornerShape(9.dp)).background(BoardTheme.green).plainClickable(onClick = onAddHotspot).padding(horizontal = 13.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Default.AddCircle, null, tint = Color.White, modifier = Modifier.size(16.dp))
-                    Text("Add Hotspot", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
+                PrimaryButton("Add talking spot", icon = Icons.Default.AddCircle, minHeight = TTSpace.touch, onClick = onAddHotspot)
             }
         }
     }
