@@ -36,12 +36,14 @@ class SentenceBarTest {
     }
 
     @Test
-    fun theOnlyControlsAreSpeakAndTheWords() {
+    fun theControlsAreTheWordsBackspaceAndSpeak() {
         val s = store()
         s.sentence.add(SentenceItem("Hi", "Hi"))
         rule.setContent { TalkTilesTheme { SentenceBar(s) } }
-        rule.onNodeWithContentDescription("Speak sentence").assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
-        for (gone in listOf("Remove last word", "Clear sentence", "Saved phrases", "Undo clear")) {
+        rule.onNodeWithContentDescription("Speak sentence").assertWidthIsAtLeast(44.dp).assertHeightIsAtLeast(44.dp)
+        rule.onNodeWithContentDescription("Remove last word").assertWidthIsAtLeast(44.dp).performClick()
+        assertEquals(0, s.sentence.items.size)
+        for (gone in listOf("Clear sentence", "Saved phrases", "Undo clear")) {
             assertEquals(0, rule.onAllNodesWithContentDescription(gone).fetchSemanticsNodes().size)
         }
     }

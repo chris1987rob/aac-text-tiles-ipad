@@ -36,7 +36,7 @@ class BoardLayoutRegressionTest {
         val root = rule.onRoot().fetchSemanticsNode().size
         val bar = rule.onNodeWithContentDescription("Next page").fetchSemanticsNode().boundsInRoot
         assertTrue("toolbar must sit at the top, was top=${bar.top / density}dp", bar.top / density < 24f)
-        assertTrue("toolbar button must have size", bar.height / density >= 48f)
+        assertTrue("toolbar button must have size", bar.height / density >= 40f)
         val isButton = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
         val tiles = rule.onAllNodes(isButton and hasContentDescription("Says: Word", substring = true)).fetchSemanticsNodes()
         assertEquals("every button of the page is in the tree", expectedTiles, tiles.size)
@@ -49,7 +49,7 @@ class BoardLayoutRegressionTest {
             assertTrue("tile above/left of the viewport: $b", b.top >= bar.bottom - 0.5f && b.left >= 0f)
         }
         val sentence = rule.onAllNodes(hasContentDescription("Speak sentence")).fetchSemanticsNodes()
-        for (s in sentence) assertTrue("sentence bar has no height", s.boundsInRoot.height / density >= 48f)
+        for (s in sentence) assertTrue("sentence bar has no height", s.boundsInRoot.height / density >= 40f)
     }
 
     @Test

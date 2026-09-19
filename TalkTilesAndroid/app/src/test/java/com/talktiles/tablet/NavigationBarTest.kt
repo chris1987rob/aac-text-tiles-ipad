@@ -31,7 +31,7 @@ class NavigationBarTest {
         rule.setContent { TalkTilesTheme { NavigationBarView(s, onOpenFind = {}, onOpenOptions = {}, onOpenNewPage = {}, onGoHome = {}) } }
         rule.onNodeWithText("Core").assertIsDisplayed()
         rule.onNodeWithText("1 of 2").assertIsDisplayed()
-        rule.onNodeWithContentDescription("Next page").assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp).performClick()
+        rule.onNodeWithContentDescription("Next page").assertWidthIsAtLeast(40.dp).assertHeightIsAtLeast(40.dp).performClick()
         assertEquals("C", s.currentPage.id)
         rule.onNodeWithText("2 of 2").assertIsDisplayed()
         rule.onNodeWithContentDescription("Previous page").performClick()

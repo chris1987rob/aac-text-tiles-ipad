@@ -151,6 +151,8 @@ object TTSpace {
     /** Smallest touch target anywhere; communication chrome is bigger. */
     val touch = 48.dp
     val chrome = 56.dp
+    /** Bar chrome on the talking screen - Chris wants it low; the grid gets the height. */
+    val compact = 40.dp
 }
 
 /** The theme root. Wrap every screen (and every test) in this. */
@@ -258,7 +260,7 @@ fun BarButton(
     val content = tint ?: if (filled) c.onPrimary else c.ink
     Box(
         modifier
-            .size(size.coerceAtLeast(TTSpace.touch))
+            .size(size.coerceAtLeast(TTSpace.compact))
             .shadow(if (c.highContrast) 0.dp else 2.dp, CircleShape)
             .clip(CircleShape)
             .background(if (enabled) background else c.surfaceSunken)

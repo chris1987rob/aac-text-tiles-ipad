@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
@@ -151,28 +152,28 @@ fun NavigationBarView(
             .shadow(if (c.highContrast) 0.dp else 3.dp)
             .background(c.surface)
             .border(if (c.highContrast) 1.dp else 0.dp, if (c.highContrast) c.ink else Color.Transparent)
-            .heightIn(min = 56.dp)
-            .padding(horizontal = TTSpace.s, vertical = TTSpace.xs),
+            .heightIn(min = 46.dp)
+            .padding(horizontal = TTSpace.s, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TTSpace.s)
     ) {
-        BarButton(Icons.Default.Home, "Home", size = TTSpace.touch) { onGoHome() }
-        BarButton(Icons.Default.ChevronLeft, "Previous page", size = TTSpace.touch, enabled = canStep) { store.prevPage() }
-        BarButton(Icons.Default.ChevronRight, "Next page", size = TTSpace.touch, enabled = canStep) { store.nextPage() }
+        BarButton(Icons.Default.Home, "Home", size = TTSpace.compact) { onGoHome() }
+        BarButton(Icons.Default.ChevronLeft, "Previous page", size = TTSpace.compact, enabled = canStep) { store.prevPage() }
+        BarButton(Icons.Default.ChevronRight, "Next page", size = TTSpace.compact, enabled = canStep) { store.nextPage() }
 
         // Title block: shrinks before it ellipsises, never under 17sp.
         // Never fillMaxHeight here: the bar's max height is unbounded and the title would take the screen.
         // The page name is the book menu: a pill that looks pressable, with a chevron.
-        Box(Modifier.weight(1f).heightIn(min = TTSpace.touch), contentAlignment = Alignment.Center) {
+        Box(Modifier.weight(1f).heightIn(min = TTSpace.compact), contentAlignment = Alignment.Center) {
             val title = store.currentPage.title
-            val titleSize = when { title.length > 20 -> 16.sp; title.length > 12 -> 18.sp; else -> 20.sp }
+            val titleSize = when { title.length > 20 -> 15.sp; title.length > 12 -> 16.sp; else -> 18.sp }
             val doorLabel = if (store.isEditMode) "Pages" else "Book menu"
             Row(
-                Modifier.heightIn(min = TTSpace.touch).clip(TTShape.medium)
+                Modifier.heightIn(min = TTSpace.compact).clip(TTShape.medium)
                     .background(c.surfaceSunken)
                     .border(if (c.highContrast) 2.dp else 1.dp, if (c.highContrast) c.ink else c.line, TTShape.medium)
                     .accessibleClickable(label = doorLabel, shape = TTShape.medium, onClick = onOpenFind)
-                    .padding(horizontal = TTSpace.m, vertical = TTSpace.xs),
+                    .padding(horizontal = TTSpace.m, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.xs)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -185,8 +186,8 @@ fun NavigationBarView(
         }
 
         if (store.isEditMode) {
-            BarButton(Icons.Default.Tune, "Page options", size = TTSpace.touch) { onOpenOptions() }
-            BarButton(Icons.Default.Add, "New page", filled = true, size = TTSpace.touch) { onOpenNewPage() }
+            BarButton(Icons.Default.Tune, "Page options", size = TTSpace.compact) { onOpenOptions() }
+            BarButton(Icons.Default.Add, "New page", filled = true, size = TTSpace.compact) { onOpenNewPage() }
         }
     }
 }
@@ -194,8 +195,8 @@ fun NavigationBarView(
 // MARK: - Sentence bar
 
 /**
- * The sentence being built. One control: Speak (Stop while it talks). A word
- * is taken out by tapping it, so the bar stays low and the grid gets the room.
+ * The sentence being built: the words, Backspace (takes off the last word) and
+ * Speak (Stop while it talks). A word can also be taken out by tapping it.
  */
 @Composable
 fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
@@ -216,7 +217,7 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
         Row(
             Modifier
                 .weight(1f)
-                .heightIn(min = TTSpace.touch)
+                .heightIn(min = 44.dp)
                 .clip(TTShape.medium)
                 .accessibleClickable(label = if (items.isEmpty()) "Sentence, empty" else "Speak sentence again", ripple = false) { store.speakSentence() }
                 // Words scroll sideways; the hint does not, so at a large font it wraps instead of being cut off.
@@ -233,10 +234,11 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
                 }
             }
         }
+        BarButton(Icons.Default.Backspace, "Remove last word", size = 44.dp, enabled = items.isNotEmpty()) { store.sentence.removeLast() }
         if (speaking) {
-            BarButton(Icons.Default.Stop, "Stop speaking", filled = true, size = TTSpace.touch, fill = c.accent) { SpeechManager.shared.stop() }
+            BarButton(Icons.Default.Stop, "Stop speaking", filled = true, size = 44.dp, fill = c.accent) { SpeechManager.shared.stop() }
         } else {
-            BarButton(Icons.Default.PlayArrow, "Speak sentence", filled = true, size = TTSpace.touch, enabled = items.isNotEmpty()) { store.speakSentence() }
+            BarButton(Icons.Default.PlayArrow, "Speak sentence", filled = true, size = 44.dp, enabled = items.isNotEmpty()) { store.speakSentence() }
         }
     }
 }
@@ -246,7 +248,7 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
 fun SentenceWord(item: SentenceItem, key: String, onRemove: () -> Unit) {
     val c = TT.colors
     Row(
-        Modifier.heightIn(min = 40.dp).clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small)
+        Modifier.heightIn(min = 36.dp).clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small)
             .semantics(mergeDescendants = true) { contentDescription = "Remove ${item.label}" }
             .accessibleClickable(label = "Remove ${item.label}", shape = TTShape.small, onClick = onRemove)
             .padding(horizontal = 10.dp, vertical = 4.dp),

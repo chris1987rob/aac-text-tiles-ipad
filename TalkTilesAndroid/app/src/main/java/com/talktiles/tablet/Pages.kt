@@ -511,7 +511,7 @@ private val helpTopics = listOf(
     HelpTopic(Icons.Default.Search, "#0F6E8C", "The book menu",
         "Tap the page name at the top to open the book menu: every page, your saved phrases, and a search box. Type to find a page by name or a button, talking spot or keyboard word by what is on it or what it says. Choosing a result opens that page - it does not speak the word."),
     HelpTopic(Icons.Default.ChatBubble, "#0F6E8C", "The sentence bar",
-        "Pages with the sentence bar on collect words as buttons are tapped. Speak says the whole sentence in order - a button that has your own recording plays that recording. Stop halts it. Tap a word in the bar to take it out. The bar keeps the sentence when you turn the page. Saved phrases, in the book menu, keeps a sentence for one-tap use later."),
+        "Pages with the sentence bar on collect words as buttons are tapped. Speak says the whole sentence in order - a button that has your own recording plays that recording. Stop halts it. Backspace takes off the last word; tapping a word takes out that one. The bar keeps the sentence when you turn the page. Saved phrases, in the book menu, keeps a sentence for one-tap use later."),
     HelpTopic(Icons.Default.Edit, "#C4731F", "Edit pages",
         "Edit pages is the same board with editing switched on. Tap any button, filled or empty, to open the button editor. Previous and Next step through every page, including ones switched off. Page options changes this page; New page adds one; the page name opens the page list, where pages can be switched on or off, moved and deleted."),
     HelpTopic(Icons.Default.GridView, "#C4731F", "Editing a button",
