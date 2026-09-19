@@ -131,4 +131,22 @@ class BoardInteractionTest {
         rule.onNodeWithText("Start talking").assertIsDisplayed()
         rule.onNodeWithText("Help").assertIsDisplayed()
     }
+
+    @Test
+    fun deletingAPageAsksFirstAndOnlyThenRemovesIt() {
+        // One stray tap in a scrolling list must not take a page and its recordings with it.
+        val s = TestBook.store(tmp.root, listOf(food, PageModel(id = "B", title = "Bedtime", tiles = mapOf(1 to TileModel(1, "Sleep")))))
+        s.isEditMode = true
+        rule.setContent { TalkTilesTheme { FindSheet(s, onDismiss = {}) } }
+        rule.onNodeWithContentDescription("Delete Bedtime").performClick()
+        rule.waitForIdle()
+        assertEquals(listOf("F", "B"), s.pages.map { it.id })          // still there: a question was asked
+        rule.onNodeWithText("Keep it").performClick()
+        rule.waitForIdle()
+        assertEquals(listOf("F", "B"), s.pages.map { it.id })
+        rule.onNodeWithContentDescription("Delete Bedtime").performClick()
+        rule.onNodeWithText("Delete page").performClick()
+        rule.waitForIdle()
+        assertEquals(listOf("F"), s.pages.map { it.id })
+    }
 }

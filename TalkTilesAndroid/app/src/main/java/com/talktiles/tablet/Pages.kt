@@ -276,6 +276,8 @@ fun FindSheet(store: AACStore, onDismiss: () -> Unit) {
     val c = TT.colors
     var query by remember { mutableStateOf("") }
     var refused by remember { mutableStateOf(false) }
+    /** The page whose Delete was tapped; nothing goes until the question is answered. */
+    var confirmDelete by remember { mutableStateOf<PageModel?>(null) }
     val editing = store.isEditMode
     val pageHits = remember(query, store.pages, editing) { VocabularySearch.pages(store.pages, query, editing) }
     val wordHits = remember(query, store.pages, editing) { VocabularySearch.search(store.pages, query, editing).take(60) }
@@ -317,7 +319,7 @@ fun FindSheet(store: AACStore, onDismiss: () -> Unit) {
                             IconAction(Icons.Default.KeyboardArrowUp, "Move ${page.title} up", enabled = index > 0) { store.movePage(index, index - 1) }
                             IconAction(Icons.Default.KeyboardArrowDown, "Move ${page.title} down", enabled = index < store.pages.size - 1) { store.movePage(index, index + 1) }
                             IconAction(Icons.Default.Delete, "Delete ${page.title}", tint = c.danger) {
-                                if (store.pages.size <= 1) refused = true else store.removePage(index)
+                                if (store.pages.size <= 1) refused = true else confirmDelete = page
                             }
                         }
                     }
@@ -354,6 +356,25 @@ fun FindSheet(store: AACStore, onDismiss: () -> Unit) {
         AlertDialog(onDismissRequest = { refused = false }, confirmButton = { TextButton({ refused = false }) { Text("OK") } },
             title = { Text("Keep at least one page") },
             text = { Text("A communication book needs somewhere to put buttons. Add another page before removing this one.") })
+    }
+    confirmDelete?.let { page ->
+        val what = when (page.type) {
+            PageType.SCENE -> "${page.hotspots.size} talking spots"
+            PageType.KEYBOARD -> "its keyboard changes"
+            else -> "${page.tiles.size} buttons"
+        } + " and any photos and recordings on them"
+        AlertDialog(
+            onDismissRequest = { confirmDelete = null },
+            confirmButton = {
+                TextButton({
+                    val index = store.pages.indexOfFirst { it.id == page.id }
+                    confirmDelete = null
+                    if (index >= 0) { if (store.pages.size <= 1) refused = true else store.removePage(index) }
+                }) { Text("Delete page", color = c.danger) }
+            },
+            dismissButton = { TextButton({ confirmDelete = null }) { Text("Keep it") } },
+            title = { Text("Delete \"${page.title}\"?") },
+            text = { Text("This takes $what out of the book. A backup file is the only way to get it back.") })
     }
 }
 

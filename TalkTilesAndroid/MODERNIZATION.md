@@ -120,7 +120,7 @@ Ticked = a test in `app/src/test` or a build log in `../evidence/` proves it. Se
 - [x] Export via CreateDocument and the share export both write `BookBackup.encode(...)`. (BookBackupTest covers encode; the two Settings buttons call it — not separately tested)
 
 ### Build
-- [x] `./gradlew testDebugUnitTest` green from a clean run: 111 tests, 0 failures (evidence/full-suite-final-2.log).
+- [x] `./gradlew testDebugUnitTest` green from a clean run: 113 tests, 0 failures (evidence/full-suite-final-4.log).
 - [x] `./gradlew assembleRelease bundleRelease` signed with the Talk Tiles key (cert SHA-256 `f3db689c…0ab098`); fails loudly if the key is missing. (evidence/release-build.log; guard exercised by hand)
 - [x] versionName `2.0-preview`, versionCode 4, applicationId `com.talktiles.app`. (aapt2 badging in STATUS.md)
 
@@ -131,6 +131,20 @@ Ticked = a test in `app/src/test` or a build log in `../evidence/` proves it. Se
 ### Touch (added after code review, 2026-09-19)
 - [x] A tile whose press controller survives a page turn (same button data in the same slot on two pages) fires the action of the page now on screen, not the one it was created on. (TileViewSemanticsTest.aTouchCallsTheActionOfThePageNowOnScreen — RED on candidate 2: evidence/slice12-staletap-red.log)
 
+### Found on the tablet, fixed test-first (2026-09-19, candidates 3→5)
+- [x] The editor's page list (switch off / move / delete) was unreachable: the bar hides Find in the editor and the title tap was inline-rename. The title now opens the page list in both modes, as Help says; renaming stays in Page options. (NavigationBarTest.thePageNameOpensThePageListInTheEditor — RED evidence/slice13-pagelist-red.log)
+- [x] Deleting a page asks first ("Delete "X"? … Keep it / Delete page"); one stray tap in a scrolling list no longer removes a page and its recordings. (BoardInteractionTest.deletingAPageAsksFirstAndOnlyThenRemovesIt — RED evidence/slice14-deleteconfirm-red.log)
+- [x] Empty sentence-bar hint wraps at large font instead of scrolling out of view ("build a ser").
+- [x] Keep-on-screen row follows Android's real lock-task state (it flipped to "Stop keeping on screen" before the system's Got it / No thanks was answered).
+
+### Verified on the tablet (candidates 3–5, 2026-09-19 01:50–02:25)
+- [x] Landscape: nav bar, 2×1 and 3×3 grids, sentence bar all inside the viewport (evidence/device/c3-landscape*.png).
+- [x] Large font (1.3×): Home and board usable, nothing clipped after the hint fix (c5-largefont-core.png).
+- [x] Protect editing: on → "PIN protected" on all three doors; Edit pages asks; wrong PIN refused ("That PIN is not right. Try again."); 1234 opens the editor; Start talking re-locks; off again at the end.
+- [x] Editor: New page wizard → grid page; tile editor label; Record Own Voice (mic permission prompt → 19.7 s AAC m4a stored in the tile, played back without error — content was room silence, audible round-trip needs a person); Take Photo with Camera (system camera, photo lands on the tile); Choose from Photo Library opens the photo picker; Page options "Show this page when talking" off → player skips it and counts 7 of 7; page deleted from the page list; book byte-identical to the pre-upgrade export afterwards.
+- [x] Backup: Save to Files → Downloads/TalkTiles-Backup-….json (pages identical to the pre-upgrade export, phrases included); Restore from that file → summary "7 pages · 52 buttons · … · 1 phrases" → "Restored 7 pages.", `snapshots/aac_pages-pre-restore-….json` written first and equal to the book.
+- [x] Keep on screen: startLockTask → Android's "App is pinned" sheet → Got it → `mLockTaskModeState=PINNED`; Stop keeping on screen → NONE; No thanks → row stays "Keep Talk Tiles on screen".
+
 ### Verified on the tablet (candidate 2, 2026-09-18 23:44–00:00, Claude Code after Hermes' review session ended)
 - [x] `adb install -r` over candidate 1: `aac_pages.json` and `aac_settings.json` byte-identical before and after (evidence/post-candidate2-data-preservation.json).
 - [x] Home, board (toolbar at top, 3×3 grid full height, tile colours/positions identical to v1.2), Talking Keyboard, Feelings — evidence/device/c2-*.png.
@@ -139,7 +153,7 @@ Ticked = a test in `app/src/test` or a build log in `../evidence/` proves it. Se
 - [x] Find: typing "bath" lists the Core Words button and two keyboard words with what they say; choosing one opens Core Words with no playback.
 - [x] Saved phrases: save from the bar, tap to speak (audio captured, ~0.7 s "Eat food"). Deleting a phrase is an editor action — the test phrase "Eat" is still on the tablet.
 - [x] Stop: five-item sentence, Stop tapped 2.7 s in, audio ended within ~0.1 s of the tap (evidence/device/c2-stop-audio2.json level strip).
-- Not reached before the tablet was unplugged: landscape, large font, protect-editing PIN gate, editor sheets, camera/photo/recording, backup save-to-Files + restore, keep-on-screen. Candidate 3 (this source) is NOT yet on the tablet.
+- (Those items were reached later the same night — see the candidates 3–5 section above.)
 
 ### Not claimed
 - Hotspots use plain tap (as in v1.2): the hold-to-speak / speak-on-lift settings apply to grid buttons, not talking spots.

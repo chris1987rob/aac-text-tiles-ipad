@@ -1,5 +1,6 @@
 package com.talktiles.tablet
 
+import kotlinx.coroutines.delay
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +50,10 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
     var confirmReset by remember { mutableStateOf(false) }
     var showPin by remember { mutableStateOf(false) }
     var showVoiceMenu by remember { mutableStateOf(false) }
+    // What Android says, not what was asked for: startLockTask() first shows a system
+    // question ("Got it" / "No thanks"), so the row must follow the real state.
     var pinned by remember { mutableStateOf(context.isInLockTask()) }
+    LaunchedEffect(Unit) { while (true) { pinned = context.isInLockTask(); delay(500) } }
     var pendingRestore by remember { mutableStateOf<Pair<BookArchive, BookBackup.Summary>?>(null) }
     var restoreError by remember { mutableStateOf<String?>(null) }
     var backupNote by remember { mutableStateOf<String?>(null) }
@@ -161,7 +166,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
                 val activity = context.findActivity()
                 try {
                     if (pinned) activity?.stopLockTask() else activity?.startLockTask()
-                    pinned = !pinned
+                    pinned = context.isInLockTask()
                 } catch (e: Exception) { restoreError = "Screen pinning is not available on this device." }
             }
         }

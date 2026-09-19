@@ -49,4 +49,16 @@ class NavigationBarTest {
         rule.onNodeWithContentDescription("Page options").assertIsDisplayed()
         rule.onNodeWithContentDescription("New page").assertIsDisplayed()
     }
+
+    @Test
+    fun thePageNameOpensThePageListInTheEditor() {
+        // Help says so, and it is the only door to switching pages off, moving and deleting them.
+        val s = TestBook.store(tmp.root, pages)
+        s.isEditMode = true
+        var opened = 0
+        rule.setContent { TalkTilesTheme { NavigationBarView(s, onOpenFind = { opened++ }, onOpenOptions = {}, onOpenNewPage = {}, onGoHome = {}) } }
+        rule.onNodeWithText("Core").performClick()
+        rule.waitForIdle()
+        assertEquals(1, opened)
+    }
 }

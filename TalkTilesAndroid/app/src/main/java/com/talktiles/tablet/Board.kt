@@ -26,19 +26,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
@@ -49,7 +45,6 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,8 +57,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -84,7 +77,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -139,8 +131,10 @@ fun BoardView(
 
 /**
  * Home and the page arrows on the left, the page name and its place in the
- * book in the middle. Player: Find on the right. Editor: the name renames on
- * tap, Page options and New page on the right.
+ * book in the middle - tapping it opens the page list (Find while talking;
+ * in the editor the same list switches pages on and off, moves and deletes
+ * them). Player: Find on the right. Editor: Page options (which renames the
+ * page) and New page on the right.
  */
 @Composable
 fun NavigationBarView(
@@ -151,21 +145,6 @@ fun NavigationBarView(
     onGoHome: () -> Unit
 ) {
     val c = TT.colors
-    var isRenaming by remember { mutableStateOf(false) }
-    var draft by remember { mutableStateOf("") }
-    val focus = remember { FocusRequester() }
-
-    LaunchedEffect(store.currentPageIndex, store.isEditMode) { isRenaming = false }
-
-    fun commitRename() {
-        if (!isRenaming) return
-        isRenaming = false
-        val trimmed = draft.trim()
-        if (trimmed.isNotEmpty() && trimmed != store.currentPage.title) {
-            store.updateCurrentPage { it.copy(title = trimmed) }
-        }
-    }
-
     val position = store.pagePosition
     val positionText = if (position.index == 0) "${position.total} pages" else "${position.index} of ${position.total}"
     val canStep = store.canStep
@@ -182,60 +161,34 @@ fun NavigationBarView(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TTSpace.s)
     ) {
-        BarButton(Icons.Default.Home, "Home") { commitRename(); onGoHome() }
-        BarButton(Icons.Default.ChevronLeft, "Previous page", enabled = canStep) { commitRename(); store.prevPage() }
-        BarButton(Icons.Default.ChevronRight, "Next page", enabled = canStep) { commitRename(); store.nextPage() }
+        BarButton(Icons.Default.Home, "Home") { onGoHome() }
+        BarButton(Icons.Default.ChevronLeft, "Previous page", enabled = canStep) { store.prevPage() }
+        BarButton(Icons.Default.ChevronRight, "Next page", enabled = canStep) { store.nextPage() }
 
         // Title block: shrinks before it ellipsises, never under 17sp.
         // Never fillMaxHeight here: the bar's max height is unbounded and the title would take the screen.
         Box(Modifier.weight(1f).heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
-            if (store.isEditMode && isRenaming) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.s)) {
-                    BasicTextField(
-                        value = draft,
-                        onValueChange = { draft = it },
-                        singleLine = true,
-                        textStyle = TTType.heading.copy(color = c.ink, textAlign = TextAlign.Center),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { commitRename() }),
-                        modifier = Modifier
-                            .weight(1f, fill = false)
-                            .widthIn(min = 120.dp, max = 320.dp)
-                            .heightIn(min = TTSpace.touch)
-                            .clip(TTShape.small)
-                            .background(c.surfaceSunken)
-                            .padding(horizontal = TTSpace.m)
-                            .focusRequester(focus)
-                            .semantics { contentDescription = "Page name" },
-                        decorationBox = { inner -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { inner() } }
-                    )
-                    BarButton(Icons.Default.Check, "Done renaming", filled = true, size = TTSpace.touch) { commitRename() }
+            val title = store.currentPage.title
+            val titleSize = when { title.length > 20 -> 17.sp; title.length > 12 -> 19.sp; else -> 22.sp }
+            val doorLabel = if (store.isEditMode) "Pages" else "Find a page or word"
+            Column(
+                Modifier.heightIn(min = TTSpace.touch).clip(TTShape.small)
+                    .accessibleClickable(label = doorLabel, ripple = false, onClick = onOpenFind)
+                    .padding(horizontal = TTSpace.s),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.xs)) {
+                    Text(title, fontSize = titleSize, fontWeight = FontWeight.Bold, color = c.ink, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = (titleSize.value + 4).sp)
+                    if (store.isEditMode) Icon(Icons.Default.List, null, tint = c.inkSoft, modifier = Modifier.size(16.dp))
                 }
-                LaunchedEffect(Unit) { focus.requestFocus() }
-            } else {
-                val title = store.currentPage.title
-                val titleSize = when { title.length > 20 -> 17.sp; title.length > 12 -> 19.sp; else -> 22.sp }
-                val titleModifier = if (store.isEditMode)
-                    Modifier.heightIn(min = TTSpace.touch).clip(TTShape.small)
-                        .accessibleClickable(label = "Rename page", ripple = false) { draft = store.currentPage.title; isRenaming = true }
-                        .padding(horizontal = TTSpace.s)
-                else Modifier.heightIn(min = TTSpace.touch).clip(TTShape.small)
-                        .accessibleClickable(label = "Find a page or word", ripple = false, onClick = onOpenFind)
-                        .padding(horizontal = TTSpace.s)
-                Column(titleModifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.xs)) {
-                        Text(title, fontSize = titleSize, fontWeight = FontWeight.Bold, color = c.ink, maxLines = 1,
-                            overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = (titleSize.value + 4).sp)
-                        if (store.isEditMode) Icon(Icons.Default.Edit, null, tint = c.inkSoft, modifier = Modifier.size(16.dp))
-                    }
-                    Text(positionText, style = TTType.caption, color = c.inkSoft, maxLines = 1)
-                }
+                Text(positionText, style = TTType.caption, color = c.inkSoft, maxLines = 1)
             }
         }
 
         if (store.isEditMode) {
-            BarButton(Icons.Default.Tune, "Page options") { commitRename(); onOpenOptions() }
-            BarButton(Icons.Default.Add, "New page", filled = true) { commitRename(); onOpenNewPage() }
+            BarButton(Icons.Default.Tune, "Page options") { onOpenOptions() }
+            BarButton(Icons.Default.Add, "New page", filled = true) { onOpenNewPage() }
         } else {
             BarButton(Icons.Default.Search, "Find a page or word") { onOpenFind() }
         }
@@ -272,14 +225,15 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
                 .heightIn(min = TTSpace.chrome)
                 .clip(TTShape.medium)
                 .accessibleClickable(label = if (items.isEmpty()) "Sentence, empty" else "Speak sentence again", ripple = false) { store.speakSentence() }
-                .horizontalScroll(rememberScrollState())
+                // Words scroll sideways; the hint does not, so at a large font it wraps instead of being cut off.
+                .then(if (items.isEmpty()) Modifier else Modifier.horizontalScroll(rememberScrollState()))
                 .padding(horizontal = TTSpace.m),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TTSpace.s)
         ) {
             if (items.isEmpty()) {
                 Text(if (canUndo) "Sentence cleared" else "Tap buttons to build a sentence",
-                    style = TTType.body, color = c.inkSoft, maxLines = 1)
+                    style = TTType.body, color = c.inkSoft, maxLines = 2, overflow = TextOverflow.Ellipsis)
             } else {
                 for ((i, item) in items.withIndex()) {
                     SentenceWord(item, key = "sentence-$i")
