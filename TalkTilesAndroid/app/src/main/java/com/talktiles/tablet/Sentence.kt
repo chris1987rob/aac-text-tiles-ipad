@@ -61,6 +61,9 @@ class SentenceBuilder {
 
     fun removeLast() { if (list.isNotEmpty()) list.removeAt(list.size - 1) }
 
+    /** Takes one word out - the word the person tapped in the bar. */
+    fun removeAt(index: Int) { if (index in list.indices) list.removeAt(index) }
+
     /** Empties the bar, keeping what was there for one undo. Nothing is confirmed per word. */
     fun clear() {
         if (list.isEmpty()) return

@@ -29,19 +29,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Backspace
-import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -115,7 +110,7 @@ fun BoardView(
         NavigationBarView(store, onOpenFind, onOpenOptions, onOpenNewPage, onGoHome)
         // The keyboard always builds a sentence; a grid or scene does when the page asks for it.
         if (page.express || page.type == PageType.KEYBOARD) {
-            Box(Modifier.padding(horizontal = TTSpace.m, vertical = TTSpace.s)) { SentenceBar(store, onOpenPhrases = onOpenPhrases) }
+            Box(Modifier.padding(horizontal = TTSpace.s, vertical = TTSpace.xs)) { SentenceBar(store, onOpenPhrases = onOpenPhrases) }
         }
         Box(Modifier.fillMaxSize().weight(1f)) {
             when (page.type) {
@@ -156,41 +151,42 @@ fun NavigationBarView(
             .shadow(if (c.highContrast) 0.dp else 3.dp)
             .background(c.surface)
             .border(if (c.highContrast) 1.dp else 0.dp, if (c.highContrast) c.ink else Color.Transparent)
-            .heightIn(min = 68.dp)
-            .padding(horizontal = TTSpace.m, vertical = TTSpace.s),
+            .heightIn(min = 56.dp)
+            .padding(horizontal = TTSpace.s, vertical = TTSpace.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TTSpace.s)
     ) {
-        BarButton(Icons.Default.Home, "Home") { onGoHome() }
-        BarButton(Icons.Default.ChevronLeft, "Previous page", enabled = canStep) { store.prevPage() }
-        BarButton(Icons.Default.ChevronRight, "Next page", enabled = canStep) { store.nextPage() }
+        BarButton(Icons.Default.Home, "Home", size = TTSpace.touch) { onGoHome() }
+        BarButton(Icons.Default.ChevronLeft, "Previous page", size = TTSpace.touch, enabled = canStep) { store.prevPage() }
+        BarButton(Icons.Default.ChevronRight, "Next page", size = TTSpace.touch, enabled = canStep) { store.nextPage() }
 
         // Title block: shrinks before it ellipsises, never under 17sp.
         // Never fillMaxHeight here: the bar's max height is unbounded and the title would take the screen.
-        Box(Modifier.weight(1f).heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
+        // The page name is the book menu: a pill that looks pressable, with a chevron.
+        Box(Modifier.weight(1f).heightIn(min = TTSpace.touch), contentAlignment = Alignment.Center) {
             val title = store.currentPage.title
-            val titleSize = when { title.length > 20 -> 17.sp; title.length > 12 -> 19.sp; else -> 22.sp }
-            val doorLabel = if (store.isEditMode) "Pages" else "Find a page or word"
-            Column(
-                Modifier.heightIn(min = TTSpace.touch).clip(TTShape.small)
-                    .accessibleClickable(label = doorLabel, ripple = false, onClick = onOpenFind)
-                    .padding(horizontal = TTSpace.s),
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+            val titleSize = when { title.length > 20 -> 16.sp; title.length > 12 -> 18.sp; else -> 20.sp }
+            val doorLabel = if (store.isEditMode) "Pages" else "Book menu"
+            Row(
+                Modifier.heightIn(min = TTSpace.touch).clip(TTShape.medium)
+                    .background(c.surfaceSunken)
+                    .border(if (c.highContrast) 2.dp else 1.dp, if (c.highContrast) c.ink else c.line, TTShape.medium)
+                    .accessibleClickable(label = doorLabel, shape = TTShape.medium, onClick = onOpenFind)
+                    .padding(horizontal = TTSpace.m, vertical = TTSpace.xs),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.xs)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.xs)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(title, fontSize = titleSize, fontWeight = FontWeight.Bold, color = c.ink, maxLines = 1,
-                        overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = (titleSize.value + 4).sp)
-                    if (store.isEditMode) Icon(Icons.Default.List, null, tint = c.inkSoft, modifier = Modifier.size(16.dp))
+                        overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = (titleSize.value + 2).sp)
+                    Text(positionText, style = TTType.caption, color = c.inkSoft, maxLines = 1)
                 }
-                Text(positionText, style = TTType.caption, color = c.inkSoft, maxLines = 1)
+                Icon(Icons.Default.ExpandMore, null, tint = c.inkSoft, modifier = Modifier.size(22.dp))
             }
         }
 
         if (store.isEditMode) {
-            BarButton(Icons.Default.Tune, "Page options") { onOpenOptions() }
-            BarButton(Icons.Default.Add, "New page", filled = true) { onOpenNewPage() }
-        } else {
-            BarButton(Icons.Default.Search, "Find a page or word") { onOpenFind() }
+            BarButton(Icons.Default.Tune, "Page options", size = TTSpace.touch) { onOpenOptions() }
+            BarButton(Icons.Default.Add, "New page", filled = true, size = TTSpace.touch) { onOpenNewPage() }
         }
     }
 }
@@ -198,16 +194,14 @@ fun NavigationBarView(
 // MARK: - Sentence bar
 
 /**
- * The sentence being built, with the same controls wherever it appears:
- * the words (tap to hear them again), remove-last, saved phrases, Speak /
- * Stop, and Clear - which can be undone once, so there is no "are you sure?".
+ * The sentence being built. One control: Speak (Stop while it talks). A word
+ * is taken out by tapping it, so the bar stays low and the grid gets the room.
  */
 @Composable
 fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
     val c = TT.colors
     val items = store.sentence.items
     val speaking = SpeechManager.shared.isSpeaking
-    val canUndo = store.sentence.canUndoClear
 
     Row(
         Modifier
@@ -215,51 +209,47 @@ fun SentenceBar(store: AACStore, onOpenPhrases: () -> Unit = {}) {
             .clip(TTShape.large)
             .background(c.sentence)
             .border(if (c.highContrast) 2.dp else 1.dp, if (c.highContrast) c.ink else c.line, TTShape.large)
-            .padding(TTSpace.s),
+            .padding(horizontal = TTSpace.s, vertical = TTSpace.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TTSpace.s)
     ) {
         Row(
             Modifier
                 .weight(1f)
-                .heightIn(min = TTSpace.chrome)
+                .heightIn(min = TTSpace.touch)
                 .clip(TTShape.medium)
                 .accessibleClickable(label = if (items.isEmpty()) "Sentence, empty" else "Speak sentence again", ripple = false) { store.speakSentence() }
                 // Words scroll sideways; the hint does not, so at a large font it wraps instead of being cut off.
                 .then(if (items.isEmpty()) Modifier else Modifier.horizontalScroll(rememberScrollState()))
-                .padding(horizontal = TTSpace.m),
+                .padding(horizontal = TTSpace.s),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TTSpace.s)
+            horizontalArrangement = Arrangement.spacedBy(TTSpace.xs)
         ) {
             if (items.isEmpty()) {
-                Text(if (canUndo) "Sentence cleared" else "Tap buttons to build a sentence",
-                    style = TTType.body, color = c.inkSoft, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("Tap buttons to build a sentence", style = TTType.body, color = c.inkSoft, maxLines = 2, overflow = TextOverflow.Ellipsis)
             } else {
                 for ((i, item) in items.withIndex()) {
-                    SentenceWord(item, key = "sentence-$i")
+                    SentenceWord(item, key = "sentence-$i") { store.sentence.removeAt(i) }
                 }
             }
         }
-        if (canUndo) {
-            BarButton(Icons.Default.Undo, "Undo clear", size = TTSpace.touch, fill = c.accentSoft, tint = c.accent) { store.sentence.undoClear() }
-        }
-        BarButton(Icons.Default.Backspace, "Remove last word", size = TTSpace.touch, enabled = items.isNotEmpty()) { store.sentence.removeLast() }
-        BarButton(Icons.Default.Bookmark, "Saved phrases", size = TTSpace.touch, onClick = onOpenPhrases)
         if (speaking) {
-            BarButton(Icons.Default.Stop, "Stop speaking", filled = true, size = TTSpace.chrome, fill = c.accent) { SpeechManager.shared.stop() }
+            BarButton(Icons.Default.Stop, "Stop speaking", filled = true, size = TTSpace.touch, fill = c.accent) { SpeechManager.shared.stop() }
         } else {
-            BarButton(Icons.Default.PlayArrow, "Speak sentence", filled = true, size = TTSpace.chrome, enabled = items.isNotEmpty()) { store.speakSentence() }
+            BarButton(Icons.Default.PlayArrow, "Speak sentence", filled = true, size = TTSpace.touch, enabled = items.isNotEmpty()) { store.speakSentence() }
         }
-        BarButton(Icons.Default.Close, "Clear sentence", size = TTSpace.touch, fill = c.dangerSoft, tint = c.danger, enabled = items.isNotEmpty()) { store.sentence.clear() }
     }
 }
 
-/** One word in the bar: its picture if it has one, and the label. */
+/** One word in the bar. Tapping it takes it out of the sentence. */
 @Composable
-fun SentenceWord(item: SentenceItem, key: String) {
+fun SentenceWord(item: SentenceItem, key: String, onRemove: () -> Unit) {
     val c = TT.colors
     Row(
-        Modifier.clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small).padding(horizontal = 10.dp, vertical = 6.dp),
+        Modifier.heightIn(min = 40.dp).clip(TTShape.small).background(c.surface).border(1.dp, c.line, TTShape.small)
+            .semantics(mergeDescendants = true) { contentDescription = "Remove ${item.label}" }
+            .accessibleClickable(label = "Remove ${item.label}", shape = TTShape.small, onClick = onRemove)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -292,18 +282,17 @@ fun gridDimensions(size: Int, isLandscape: Boolean): Pair<Int, Int> = when (size
 }
 
 private fun spacingFor(gridSize: Int): Dp = when {
-    gridSize <= 4 -> 16.dp
-    gridSize <= 9 -> 12.dp
-    gridSize <= 16 -> 10.dp
-    gridSize <= 25 -> 8.dp
-    else -> 6.dp
+    gridSize <= 4 -> 8.dp
+    gridSize <= 9 -> 6.dp
+    gridSize <= 16 -> 5.dp
+    gridSize <= 25 -> 4.dp
+    else -> 3.dp
 }
 
 private fun paddingFor(gridSize: Int): Dp = when {
-    gridSize <= 4 -> 16.dp
-    gridSize <= 9 -> 12.dp
-    gridSize <= 16 -> 10.dp
-    else -> 8.dp
+    gridSize <= 4 -> 8.dp
+    gridSize <= 16 -> 6.dp
+    else -> 4.dp
 }
 
 @Composable
@@ -380,7 +369,7 @@ fun TileView(
     val reduceMotion = TT.reduceMotion
     val minDim = min(cellWidth.value, cellHeight.value)
     val corner = min(26f, max(10f, minDim * 0.13f)).dp
-    val pad = max(4f, min(14f, minDim * 0.05f)).dp
+    val pad = max(3f, min(8f, minDim * 0.03f)).dp
     val scope = rememberCoroutineScope()
 
     // The controller outlives recompositions whose keys match (two pages with an
@@ -526,7 +515,8 @@ private val emojiFallbacks = mapOf(
 
 @Composable
 fun TileSymbol(t: TileModel, hasLabel: Boolean, minDim: Float) {
-    val symSize = if (hasLabel) min(80f, max(28f, minDim * 0.38f)) else min(110f, max(36f, minDim * 0.58f))
+    // The picture is the button: it takes most of the cell, the word sits under it.
+    val symSize = if (hasLabel) min(170f, max(28f, minDim * 0.56f)) else min(220f, max(36f, minDim * 0.76f))
     val photo = PhotoCache.bitmap(t.photoData, "tile-${t.id}")
     val name = t.symbolName
     when {

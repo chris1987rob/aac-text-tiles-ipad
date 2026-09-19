@@ -71,7 +71,7 @@ class BoardInteractionTest {
         val s = TestBook.store(tmp.root, listOf(keyboard, food, PageModel(id = "OFF", title = "Off", enabled = false, tiles = mapOf(1 to TileModel(1, "Secret")))))
         var closed = false
         rule.setContent { TalkTilesTheme { FindSheet(s, onDismiss = { closed = true }) } }
-        rule.onNodeWithText("Page name or word").performTextInput("drink")
+        rule.onNodeWithText("Find a page or word").performTextInput("drink")
         rule.onNode(hasText("Drink")).assertHasClickAction().performClick()
         rule.waitForIdle()
         assertEquals("F", s.currentPage.id)
@@ -85,7 +85,7 @@ class BoardInteractionTest {
         val s = TestBook.store(tmp.root, listOf(food, PageModel(id = "OFF", title = "Off", enabled = false, tiles = mapOf(1 to TileModel(1, "Secret")))))
         rule.setContent { TalkTilesTheme { FindSheet(s, onDismiss = {}) } }
         assertTrue(rule.onAllNodes(hasText("Off")).fetchSemanticsNodes().isEmpty())
-        rule.onNodeWithText("Page name or word").performTextInput("secret")
+        rule.onNodeWithText("Find a page or word").performTextInput("secret")
         rule.onNodeWithText("No button says \"secret\".").assertIsDisplayed()
     }
 

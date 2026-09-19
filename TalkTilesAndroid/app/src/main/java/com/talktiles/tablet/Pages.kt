@@ -272,7 +272,7 @@ private fun TemplateCard(template: PageTemplate?, selected: Boolean, onClick: ()
  * editor the same sheet manages the pages: switch on/off, move, delete.
  */
 @Composable
-fun FindSheet(store: AACStore, onDismiss: () -> Unit) {
+fun FindSheet(store: AACStore, onDismiss: () -> Unit, onOpenPhrases: (() -> Unit)? = null) {
     val c = TT.colors
     var query by remember { mutableStateOf("") }
     var refused by remember { mutableStateOf(false) }
@@ -282,10 +282,23 @@ fun FindSheet(store: AACStore, onDismiss: () -> Unit) {
     val pageHits = remember(query, store.pages, editing) { VocabularySearch.pages(store.pages, query, editing) }
     val wordHits = remember(query, store.pages, editing) { VocabularySearch.search(store.pages, query, editing).take(60) }
 
-    ModalSheet(title = if (editing) "Pages in this book" else "Find a page or word", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss, scroll = false) {
+    ModalSheet(title = if (editing) "Pages in this book" else "Book menu", onDismiss = onDismiss, leading = null, trailing = "Done", onTrailing = onDismiss, scroll = false) {
         Row(Modifier.fillMaxWidth().clip(TTShape.medium).background(c.surface).border(1.dp, c.line, TTShape.medium).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Search, null, tint = c.inkSoft)
-            PlainTextField(query, { query = it }, "Page name or word", Modifier.weight(1f))
+            PlainTextField(query, { query = it }, "Find a page or word", Modifier.weight(1f))
+        }
+        if (!editing && onOpenPhrases != null && query.isBlank()) {
+            Spacer(Modifier.height(TTSpace.s))
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = TTSpace.chrome).clip(TTShape.medium).background(c.surface).border(1.dp, c.line, TTShape.medium)
+                    .accessibleClickable(label = "Saved phrases", ripple = true) { onOpenPhrases() }
+                    .padding(horizontal = TTSpace.l, vertical = TTSpace.m),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TTSpace.m)
+            ) {
+                Icon(Icons.Default.Bookmark, null, tint = c.primary)
+                Text("Saved phrases", style = TTType.bodyStrong, color = c.ink, modifier = Modifier.weight(1f))
+                Text("${PhraseLibrary.shared.items.size}", style = TTType.caption, color = c.inkSoft)
+            }
         }
         Spacer(Modifier.height(TTSpace.m))
         LazyColumn(Modifier.fillMaxSize()) {
@@ -494,11 +507,11 @@ private data class HelpTopic(val icon: ImageVector, val color: String, val title
 
 private val helpTopics = listOf(
     HelpTopic(Icons.Default.PlayArrow, "#0F6E8C", "Talking",
-        "Start talking opens the book on the page it was last on. Tap a button and it speaks. The top bar has Home, Previous page and Next page, the page name with its place in the book, and Find. Nothing on the talking screen can change a page by accident."),
-    HelpTopic(Icons.Default.Search, "#0F6E8C", "Find a page or word",
-        "Tap Find (or the page name) and type. Pages match by name; buttons, talking spots and keyboard words match by what is on them or what they say. Choosing a result opens that page - it does not speak the word."),
+        "Start talking opens the book on the page it was last on. Tap a button and it speaks. The top bar has Home, Previous page and Next page, and the page name, which opens the book menu. Nothing on the talking screen can change a page by accident."),
+    HelpTopic(Icons.Default.Search, "#0F6E8C", "The book menu",
+        "Tap the page name at the top to open the book menu: every page, your saved phrases, and a search box. Type to find a page by name or a button, talking spot or keyboard word by what is on it or what it says. Choosing a result opens that page - it does not speak the word."),
     HelpTopic(Icons.Default.ChatBubble, "#0F6E8C", "The sentence bar",
-        "Pages with the sentence bar on collect words as buttons are tapped. Speak says the whole sentence in order - a button that has your own recording plays that recording. Stop halts it. Remove last word takes off the last one; Clear empties the bar and Undo brings it back. The bar keeps the sentence when you turn the page. Saved phrases keeps a sentence for one-tap use later."),
+        "Pages with the sentence bar on collect words as buttons are tapped. Speak says the whole sentence in order - a button that has your own recording plays that recording. Stop halts it. Tap a word in the bar to take it out. The bar keeps the sentence when you turn the page. Saved phrases, in the book menu, keeps a sentence for one-tap use later."),
     HelpTopic(Icons.Default.Edit, "#C4731F", "Edit pages",
         "Edit pages is the same board with editing switched on. Tap any button, filled or empty, to open the button editor. Previous and Next step through every page, including ones switched off. Page options changes this page; New page adds one; the page name opens the page list, where pages can be switched on or off, moved and deleted."),
     HelpTopic(Icons.Default.GridView, "#C4731F", "Editing a button",

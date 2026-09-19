@@ -133,7 +133,7 @@ fun RootView(store: AACStore) {
         RootSheet.PageOptions -> PageOptionsSheet(store, dismiss)
         RootSheet.PageWizard -> PageWizardSheet(store, dismiss)
         RootSheet.Gallery -> GallerySheet(store, dismiss)
-        RootSheet.Find -> FindSheet(store, dismiss)
+        RootSheet.Find -> FindSheet(store, dismiss, onOpenPhrases = { sheet = RootSheet.Phrases })
         RootSheet.Phrases -> PhrasesSheet(store, dismiss)
         RootSheet.Help -> HelpSheet(dismiss)
         RootSheet.Settings -> SettingsSheet(store, dismiss)
