@@ -1,5 +1,6 @@
 package com.talktiles.tablet
 
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -164,20 +165,22 @@ fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
             val cellW = ((maxWidth - pad * 2 - spacing * (cols - 1)) / cols).coerceAtLeast(48.dp)
             val cellH = ((maxHeight - pad * 2 - spacing * (rows - 1)) / rows).coerceAtLeast(48.dp)
             val words = wordsOnScreen
+            val fullW = maxWidth
 
             Column(Modifier.fillMaxSize().padding(pad), verticalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterVertically)) {
                 for (r in 0 until rows) {
+                    // A short last row (15 words in a 4 x 4 grid) stretches its keys
+                    // across the width, so the board never shows an empty space.
+                    val inRow = min(cols, max(0, words.size - r * cols))
+                    if (inRow == 0) continue
+                    val rowCellW = if (inRow < cols)
+                        ((fullW - pad * 2 - spacing * (inRow - 1)) / inRow).coerceAtLeast(48.dp) else cellW
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally)) {
-                        for (col in 0 until cols) {
-                            val i = r * cols + col
-                            if (i < words.size) {
-                                val word = words[i]
-                                SymbolKey(word, cellW, cellH, editing = store.isEditMode, hidden = store.isEditMode && isHidden(word),
-                                    pressed = justPressed == word.id) {
-                                    if (store.isEditMode) onSelectKey(word.id) else press(word)
-                                }
-                            } else {
-                                Spacer(Modifier.size(cellW, cellH))
+                        for (col in 0 until inRow) {
+                            val word = words[r * cols + col]
+                            SymbolKey(word, rowCellW, cellH, editing = store.isEditMode, hidden = store.isEditMode && isHidden(word),
+                                pressed = justPressed == word.id) {
+                                if (store.isEditMode) onSelectKey(word.id) else press(word)
                             }
                         }
                     }
@@ -209,7 +212,9 @@ private fun SymbolKey(word: SymbolWord, width: Dp, height: Dp, editing: Boolean,
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             KeyPicture(word, iconSize)
             Spacer(Modifier.height(4.dp))
-            Text(word.label, fontSize = labelSize.sp, fontWeight = FontWeight.Bold, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // A key recoloured dark (a navy "I") gets white words, not ink on navy.
+            val keyInk = if (hexColor(word.color).luminance() < 0.35f) Color.White else c.ink
+            Text(word.label, fontSize = labelSize.sp, fontWeight = FontWeight.Bold, color = keyInk, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (editing) {
             Box(
