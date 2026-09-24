@@ -15,7 +15,12 @@ import java.util.Locale
 import java.util.TimeZone
 
 /** The book: every page, the page on screen, edit mode, settings, the sentence bar. */
-class AACStore(context: Context, val storage: BookStorage = BookStorage(context.applicationContext.filesDir)) {
+class AACStore(
+    context: Context,
+    val storage: BookStorage = BookStorage(context.applicationContext.filesDir),
+    /** Free / trial / Pro. See Pro.kt. */
+    val pro: ProAccess = ProAccess(storage.licenceFile)
+) {
     private val handler = Handler(Looper.getMainLooper())
 
     var pages by mutableStateOf<List<PageModel>>(emptyList())

@@ -25,7 +25,7 @@ android {
         applicationId = "com.talktiles.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
+        versionCode = 5
         versionName = "2.0-preview"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -122,6 +122,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // Talk Tiles Pro, the one-time in-app purchase. Play requires Billing 8+ for updates from Aug 2026.
+    implementation("com.android.billingclient:billing:8.0.0")
 
     // Tests: plain JUnit for the models, navigation, sentence and speech
     // state machines; Robolectric + Compose UI test for semantics and sheets.

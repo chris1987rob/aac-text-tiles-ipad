@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -50,6 +51,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
     var confirmReset by remember { mutableStateOf(false) }
     var showPin by remember { mutableStateOf(false) }
     var showVoiceMenu by remember { mutableStateOf(false) }
+    var showPro by remember { mutableStateOf(false) }
     // What Android says, not what was asked for: startLockTask() first shows a system
     // question ("Got it" / "No thanks"), so the row must follow the real state.
     var pinned by remember { mutableStateOf(context.isInLockTask()) }
@@ -226,6 +228,15 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
             }
         }
 
+        FormSection("Talk Tiles Pro") {
+            FormRow(onClick = { showPro = true }) {
+                Icon(Icons.Default.WorkspacePremium, null, tint = BoardTheme.blue)
+                Spacer(Modifier.width(12.dp))
+                Text(store.pro.statusLine, style = TTType.bodyStrong, color = BoardTheme.ink, modifier = Modifier.weight(1f))
+                Icon(Icons.Default.KeyboardArrowRight, null, tint = BoardTheme.line)
+            }
+        }
+
         FormSection("Start over", "Puts the original starter book back. The book that is there now is kept in a snapshot inside the app, but a backup file is still the safe way to keep it.") {
             FormButton("Reset to the starter book", tint = BoardTheme.danger) { confirmReset = true }
         }
@@ -247,6 +258,7 @@ fun SettingsSheet(store: AACStore, onDismiss: () -> Unit) {
             dismissButton = { TextButton({ confirmReset = false }) { Text("Cancel") } }
         )
     }
+    if (showPro) UpgradeSheet(store, onDismiss = { showPro = false })
     if (showPin) {
         PinChangeSheet(onDismiss = { showPin = false }) { pin -> store.updateSettings { it.copy(lockPIN = pin) } }
     }

@@ -195,7 +195,13 @@ fun PageWizardSheet(store: AACStore, onDismiss: () -> Unit) {
         store.addPage(page)
     }
 
-    ModalSheet(title = "New Page Wizard", onDismiss = onDismiss, trailing = "Create Page", onTrailing = { create(); onDismiss() }) {
+    var needPro by remember { mutableStateOf<ProBlock?>(null) }
+    if (needPro != null) UpgradeSheet(store, needPro, onDismiss = { needPro = null })
+
+    ModalSheet(title = "New Page Wizard", onDismiss = onDismiss, trailing = "Create Page", onTrailing = {
+        val block = store.pro.blockAddingPage(store.pages, type)
+        if (block != null) needPro = block else { create(); onDismiss() }
+    }) {
         FormSection("1. Page Title & Format") {
             FormRow { PlainTextField(title, { title = it }, "Page Title", Modifier.weight(1f)) }
             Box(Modifier.padding(12.dp)) { SegmentedPicker(PageType.values().toList(), type, { it.displayName }, { type = it }) }
@@ -459,6 +465,8 @@ fun PhrasesSheet(store: AACStore, onDismiss: () -> Unit) {
 fun GallerySheet(store: AACStore, onDismiss: () -> Unit) {
     var search by remember { mutableStateOf("") }
     var installed by remember { mutableStateOf<String?>(null) }
+    var needPro by remember { mutableStateOf<ProBlock?>(null) }
+    if (needPro != null) UpgradeSheet(store, needPro, onDismiss = { needPro = null })
     val q = search.trim().lowercase()
     val matches = if (q.isEmpty()) PageTemplateCatalog.all else PageTemplateCatalog.all.filter { t ->
         t.title.lowercase().contains(q) || t.summary.lowercase().contains(q) || t.tiles.any { it.label.lowercase().contains(q) }
@@ -486,7 +494,10 @@ fun GallerySheet(store: AACStore, onDismiss: () -> Unit) {
                             Spacer(Modifier.weight(1f))
                             val done = installed == t.id
                             if (done) Badge("Added", color = TT.colors.success, onColor = Color.White)
-                            else PrimaryButton("Add to book", minHeight = TTSpace.touch) { store.addPage(t.makePage()); installed = t.id }
+                            else PrimaryButton("Add to book", minHeight = TTSpace.touch) {
+                                val block = store.pro.blockAddingPage(store.pages)
+                                if (block != null) needPro = block else { store.addPage(t.makePage()); installed = t.id }
+                            }
                         }
                     }
                 }

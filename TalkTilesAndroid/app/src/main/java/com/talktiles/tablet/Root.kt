@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,12 +58,13 @@ sealed class RootSheet {
     object Phrases : RootSheet()
     object Help : RootSheet()
     object Settings : RootSheet()
+    object Upgrade : RootSheet()
     /** The PIN prompt, and what opens once it is right. */
     data class Pin(val then: Protected) : RootSheet()
 }
 
 /** The doors that "Protect editing" puts a PIN on. Talking is never one of them. */
-enum class Protected { EDITOR, SETTINGS, LIBRARY }
+enum class Protected { EDITOR, SETTINGS, LIBRARY, UPGRADE }
 
 @Composable
 fun RootView(store: AACStore) {
@@ -76,6 +78,7 @@ fun RootView(store: AACStore) {
             Protected.EDITOR -> { store.isEditMode = true; showingHome = false; sheet = null }
             Protected.SETTINGS -> sheet = RootSheet.Settings
             Protected.LIBRARY -> sheet = RootSheet.Gallery
+            Protected.UPGRADE -> sheet = RootSheet.Upgrade
         }
     }
     fun request(target: Protected) {
@@ -98,7 +101,8 @@ fun RootView(store: AACStore) {
                 onEditPages = { request(Protected.EDITOR) },
                 onOpenLibrary = { request(Protected.LIBRARY) },
                 onOpenSettings = { request(Protected.SETTINGS) },
-                onOpenHelp = { sheet = RootSheet.Help }
+                onOpenHelp = { sheet = RootSheet.Help },
+                onOpenPro = { request(Protected.UPGRADE) }
             )
         } else {
             // Back from the board returns to the menu rather than leaving the app.
@@ -137,6 +141,7 @@ fun RootView(store: AACStore) {
         RootSheet.Phrases -> PhrasesSheet(store, dismiss)
         RootSheet.Help -> HelpSheet(dismiss)
         RootSheet.Settings -> SettingsSheet(store, dismiss)
+        RootSheet.Upgrade -> UpgradeSheet(store, onDismiss = dismiss)
         is RootSheet.Pin -> PinPromptSheet(store.settings.lockPIN, dismiss) { unlocked = true; open(s.then) }
     }
 }
@@ -153,7 +158,8 @@ fun HomeView(
     onEditPages: () -> Unit,
     onOpenLibrary: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenHelp: () -> Unit
+    onOpenHelp: () -> Unit,
+    onOpenPro: () -> Unit = {}
 ) {
     val c = TT.colors
     val hasHistory = store.settings.lastPageId != null || !store.sentence.isEmpty
@@ -209,6 +215,8 @@ fun HomeView(
                     HomeCard("Page library", "Ready-made boards to add", Icons.Default.LibraryBooks, lockNote, onOpenLibrary)
                     HomeCard("Settings", "Voice, touch, protection, backup", Icons.Default.Settings, lockNote, onOpenSettings)
                     HomeCard("Help", "How everything works", Icons.Default.HelpOutline, null, onOpenHelp)
+                    // Gone once bought; Settings still shows it.
+                    if (!store.pro.isPro) HomeCard("Talk Tiles Pro", store.pro.statusLine, Icons.Default.WorkspacePremium, lockNote, onOpenPro)
                 }
             }
 

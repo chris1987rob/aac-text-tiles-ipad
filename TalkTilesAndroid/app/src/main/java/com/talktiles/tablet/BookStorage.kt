@@ -36,6 +36,8 @@ class BookStorage(private val dir: File, private val clock: () -> Long = System:
     val settingsFile = File(dir, "aac_settings.json")
     val favoritesFile = File(dir, "aac_favorites.json")
     val phrasesFile = File(dir, "aac_phrases.json")
+    /** Trial start and the cached Pro purchase. Not part of a backup. */
+    val licenceFile = File(dir, "aac_licence.json")
     private val snapshotDir = File(dir, "snapshots")
 
     /** Plain-language notes about files that had to be moved aside, for Settings to show. */

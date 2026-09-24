@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
         TileFavorites.init(storage)
         PhraseLibrary.init(storage)
         store = AACStore(this, storage)
+        PlayBilling.init(this, store.pro)
 
         // Keep the screen awake during communication.
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

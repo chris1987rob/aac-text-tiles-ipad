@@ -43,6 +43,46 @@ build** live.
 5. **Closed testing (personal accounts only)** — new personal developer accounts must run a closed test with **12 testers for 14 continuous days** before production is unlocked. Create a closed track, invite 12 Gmail addresses (family, colleagues, the school), have them install and keep it installed. After 14 days apply for production access in the console.
 6. **Production** — Production › Create release › the same bundle (or a newer one with a higher versionCode) › release notes below › Review › Start rollout. Review takes hours to a few days for a first submission.
 
+## Talk Tiles Pro — the in-app product (from versionCode 5)
+
+The app is **free with one in-app purchase**. Talking is never limited; Pro
+takes the limits off building. The code is done (`Pro.kt`, `ProSheet.kt`,
+tests `ProAccessTest` + `ProGateTest`); what is left is in the Play Console.
+
+| | Free | Pro (one-time) |
+|---|---|---|
+| Talking, every picture, Bella, keyboard, own photos + recordings, child lock, backup | yes | yes |
+| Pages beyond the starter book | 5 | unlimited |
+| Visual scene pages | 1 | unlimited |
+| Saving buttons (Saved Buttons) | — | yes |
+
+- Every install gets **14 days of Pro free**, counted from first launch
+  (clock-rollback safe). Losing Pro (trial over, refund) never removes
+  anything — a book over the limit keeps every page, it just can't add more.
+- Pro is cached on the device the moment Play reports it, so it works offline;
+  each launch with a connection re-checks with Play (that is how a refund lands).
+  "Restore purchase" in the Upgrade sheet does the same on demand.
+
+**Console steps (after the first upload of a build with versionCode ≥ 5 —
+Play only allows in-app products once a build carrying the BILLING
+permission has been uploaded to any track):**
+
+1. Settings › **Payments profile** — set one up (bank account, tax info). Without it nothing can be sold.
+2. Monetize › Products › **In-app products** › Create product:
+   - Product ID: **`talktiles_pro`** (must match `PlayBilling.PRO_PRODUCT_ID`; permanent)
+   - Name: `Talk Tiles Pro` · Description: `Unlimited pages and scenes, Saved Buttons, and every future Pro feature. One payment.`
+   - Default price: **$24.99** (Play converts other countries) › Save › **Activate**.
+3. Settings › **License testing** — add your Gmail and any testers. Their purchases
+   are free test purchases, so you can buy and refund Pro on the tablet without being charged.
+4. Opt into the **15% service fee** tier (Setup › Payments › Service fee enrollment) — otherwise Play takes 30%.
+
+Until the product is active and the app is installed from Play, the Upgrade
+sheet says "Talk Tiles Pro is not on sale yet" and the Get Pro button is off —
+that is expected on a sideloaded build.
+
+Data safety stays **"No data collected"**: the purchase goes through Google
+Play itself; the app keeps only the order id, on the device.
+
 ## Store listing text
 
 **App name:** Talk Tiles
@@ -62,7 +102,7 @@ WHAT YOU GET
 • A symbol keyboard: build sentences from pictures grouped as People, Actions, Describing, Things, Social, Questions
 • Visual scenes: put a photo of the living room, the playground or the classroom on a page and add talking spots to it
 • Your own photos and your own recorded voice on any button – a picture of the real dog, Mom saying "Mom"
-• Saved Buttons: build a button once, drop it on any page
+• Saved Buttons (Pro): build a button once, drop it on any page
 • Grids from 1 to 48 buttons, colours that follow the Fitzgerald key used across AAC systems
 
 MADE FOR UNSTEADY HANDS
@@ -70,6 +110,9 @@ MADE FOR UNSTEADY HANDS
 • Pause-before-repeat stops a tremor turning one press into five
 • Speak on release lets a child slide to the right button before committing
 • Child lock hides the editor behind a PIN
+
+FREE, WITH AN OPTIONAL PRO UPGRADE
+Everything above except Saved Buttons is free, and talking is never limited. The free version holds the starter book plus 5 pages of your own and 1 visual scene. Talk Tiles Pro – one payment, no subscription – adds unlimited pages and scenes and Saved Buttons. Every new install gets 14 days of Pro to try first, and if Pro ever ends nothing you made is removed.
 
 PRIVATE BY DESIGN
 Everything stays on the device. No account, no sign-in, no ads, no analytics, no internet needed. Back up the whole book to a single file you keep, and restore it on any tablet or on Talk Tiles for iPad – the two apps share one book format.

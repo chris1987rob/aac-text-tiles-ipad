@@ -76,6 +76,7 @@ fun QuickEditSheet(store: AACStore, slot: Int, onDismiss: () -> Unit) {
     var savedNote by remember { mutableStateOf<String?>(null) }
     var showSymbols by remember { mutableStateOf(false) }
     var showSaved by remember { mutableStateOf(false) }
+    var needPro by remember { mutableStateOf<ProBlock?>(null) }
     val recorder = remember { AudioRecorder(context) }
     LaunchedEffect(recorder.recordedData) { recorder.recordedData?.let { audioData = it } }
     val startRecording = rememberRecordPermission { recorder.start() }
@@ -189,6 +190,7 @@ fun QuickEditSheet(store: AACStore, slot: Int, onDismiss: () -> Unit) {
                 if (favorites.contains(favoriteNameToUse)) "Update Saved Button" else "Save This Button",
                 tint = BoardTheme.green, icon = Icons.Default.StarBorder, enabled = canSaveFavorite
             ) {
+                store.pro.blockSavingButton()?.let { needPro = it; return@FormButton }
                 val saved = favorites.add(SavedTile(
                     name = favoriteNameToUse, label = label, tts = tts.ifEmpty { label }, symbolName = symbol,
                     photoData = photoData, audioData = audioData, bgHex = bgHex, borderHex = borderHex,
@@ -209,6 +211,7 @@ fun QuickEditSheet(store: AACStore, slot: Int, onDismiss: () -> Unit) {
             }
         }
     }
+    if (needPro != null) UpgradeSheet(store, needPro, onDismiss = { needPro = null })
     if (showSaved) {
         SavedButtonPickerSheet(onDismiss = { showSaved = false }) { saved ->
             label = saved.label; tts = saved.tts; symbol = saved.symbolName; photoData = saved.photoData
