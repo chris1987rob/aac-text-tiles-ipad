@@ -556,11 +556,17 @@ class AudioRecorder(private val context: Context) {
         try { recorder?.release() } catch (e: Exception) { }
         recorder = null
         isRecording = false
-        val f = file
-        if (f != null && f.exists() && f.length() > 0) {
-            recordedData = f.readBytes()
-            f.delete()
-        }
+        val f = file ?: return
         file = null
+        if (!f.exists() || f.length() == 0L) return
+        // The silence before and after the voice is cut off, so a tap on the
+        // button speaks at once. Off the main thread: decoding takes a moment.
+        Thread {
+            val trimmed = File(f.path.removeSuffix(".m4a") + "-trim.m4a")
+            val bytes = if (RecordingTrim.trim(f, trimmed)) trimmed.readBytes() else f.readBytes()
+            trimmed.delete()
+            f.delete()
+            recordedData = bytes
+        }.start()
     }
 }

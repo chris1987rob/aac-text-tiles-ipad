@@ -1,5 +1,6 @@
 package com.talktiles.tablet
 
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -489,16 +490,34 @@ fun TileView(
 @Composable
 private fun TileLabel(t: TileModel, hasSymbol: Boolean, minDim: Float) {
     val base = if (hasSymbol) min(32f, max(15f, minDim * 0.13f)) else min(44f, max(18f, minDim * 0.22f))
-    Text(
-        t.label,
-        fontSize = (base * t.labelSize).sp,
-        fontWeight = FontWeight.SemiBold,
-        color = hexColor(t.labelHex),
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
-        textAlign = TextAlign.Center,
-        lineHeight = (base * t.labelSize * 1.1f).sp
-    )
+    val wanted = (base * t.labelSize).toFloat()
+    // A word is never broken across lines ("Strawberri / es"): the label
+    // shrinks until its widest word fits the button, down to 10sp.
+    BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val measurer = rememberTextMeasurer()
+        val widthPx = constraints.maxWidth
+        val size = remember(t.label, wanted, widthPx) {
+            val words = t.label.split(Regex("\\s+")).filter { it.isNotEmpty() }
+            var s = wanted
+            val floor = if (wanted < 10f) wanted else 10f
+            while (s > floor) {
+                val style = TextStyle(fontSize = s.sp, fontWeight = FontWeight.SemiBold)
+                if (words.all { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width <= widthPx }) break
+                s -= 1f
+            }
+            maxOf(s, floor)
+        }
+        Text(
+            t.label,
+            fontSize = size.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = hexColor(t.labelHex),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            lineHeight = (size * 1.1f).sp
+        )
+    }
 }
 
 private val emojiFallbacks = mapOf(

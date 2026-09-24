@@ -104,15 +104,16 @@ object PageTemplateCatalog {
         // coding gives way to the subject itself.
         PageTemplate(id = "colors", title = "Colors", summary = "Name and choose colours - each button is its own colour",
             category = "Essential", icon = "🎨", accent = "#E11D48", gridSize = 9, tiles = listOf(
-            T("Red", "Red", "🔴", "#FFB4B4"),
-            T("Orange", "Orange", "🟠", "#FFD1A3"),
-            T("Yellow", "Yellow", "🟡", "#FFF3A3"),
-            T("Green", "Green", "🟢", "#BDEBC8"),
-            T("Blue", "Blue", "🔵", "#B9DDFF"),
-            T("Purple", "Purple", "🟣", "#DCC9FF"),
-            T("Pink", "Pink", "🌸", "#FFC9E3"),
-            T("Brown", "Brown", "🟤", "#E2C9B0"),
-            T("Black", "Black", "⚫", "#D6D9E0")
+            // Our own paint-splat pictures: the emoji set has no pink circle, so Pink was a flower.
+            T("Red", "Red", "tt:red", "#FFB4B4"),
+            T("Orange", "Orange", "tt:orange_col", "#FFD1A3"),
+            T("Yellow", "Yellow", "tt:yellow", "#FFF3A3"),
+            T("Green", "Green", "tt:green", "#BDEBC8"),
+            T("Blue", "Blue", "tt:blue", "#B9DDFF"),
+            T("Purple", "Purple", "tt:purple", "#DCC9FF"),
+            T("Pink", "Pink", "tt:pink", "#FFC9E3"),
+            T("Brown", "Brown", "tt:brown", "#E2C9B0"),
+            T("Black", "Black", "tt:black", "#D6D9E0")
         )),
 
         PageTemplate(id = "help", title = "Help & Requests", summary = "Ask for help, a break, or attention",

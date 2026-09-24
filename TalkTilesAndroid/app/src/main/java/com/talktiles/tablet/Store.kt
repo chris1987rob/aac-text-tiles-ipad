@@ -250,10 +250,11 @@ class AACStore(
         fun defaultPages(): List<PageModel> {
             val first = listOf(
                 PageModel(title = "Colors", type = PageType.GRID, gridSize = 4, tiles = mapOf(
-                    1 to t(1, "Red", "Red", null, "#FF4D4D", "#D32F2F", "#FFFFFF"),
-                    2 to t(2, "Orange", "Orange", null, "#FFA500", "#E65100", "#FFFFFF"),
-                    3 to t(3, "Yellow", "Yellow", null, "#FFEB3B", "#FBC02D", "#1E293B"),
-                    4 to t(4, "Green", "Green", null, "#4CAF50", "#2E7D32", "#FFFFFF")
+                    // A picture on every button, on a pale ground so the picture shows.
+                    1 to t(1, "Red", "Red", "tt:red", "#FFB4B4", "#D32F2F", "#1E293B"),
+                    2 to t(2, "Orange", "Orange", "tt:orange_col", "#FFD1A3", "#E65100", "#1E293B"),
+                    3 to t(3, "Yellow", "Yellow", "tt:yellow", "#FFF3A3", "#FBC02D", "#1E293B"),
+                    4 to t(4, "Green", "Green", "tt:green", "#BDEBC8", "#2E7D32", "#1E293B")
                 )),
                 PageModel(title = "Yes / No", type = PageType.GRID, gridSize = 2, tiles = mapOf(
                     1 to t(1, "YES", "Yes", "yes", "#C8E6C9", "#2E7D32", "#1B5E20", 1.4),
