@@ -33,7 +33,7 @@ object ProRules {
     const val TRIAL_DAYS = 14
     /** Pages a free book may have beyond the starter book. */
     const val FREE_EXTRA_PAGES = 5
-    /** Visual scene pages a free book may have. The starter book has none. */
+    /** Visual scenes of your own photo a free book may have. The example scenes don't count. */
     const val FREE_SCENES = 1
     const val DAY_MS = 24L * 60 * 60 * 1000
 
@@ -41,7 +41,7 @@ object ProRules {
 
     /** Pages beyond the starter book's size. Deleting a starter page frees a place - that is fine. */
     fun ownPages(pages: List<PageModel>): Int = maxOf(0, pages.size - starterPageCount)
-    fun scenes(pages: List<PageModel>): Int = pages.count { it.type == PageType.SCENE }
+    fun scenes(pages: List<PageModel>): Int = pages.count { it.type == PageType.SCENE && it.scenePresetKey == null }
 }
 
 /** Why an action needs Pro, in words for the Upgrade sheet. */

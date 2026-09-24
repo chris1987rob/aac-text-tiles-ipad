@@ -277,7 +277,11 @@ class AACStore(
             val starters = PageTemplateCatalog.popular
                 .filter { it.title.lowercase() !in existing }
                 .map { it.makePage() }
-            return first + starters
+            // Two example scenes, so a new family sees what talking spots do.
+            val grids = first + starters
+            val ids = grids.associate { it.title to it.id }
+            val scenes = ExampleScenes.starterKeys.mapNotNull { ExampleScenes.byKey(it) }.map { ExampleScenes.makePage(it, ids) }
+            return grids + scenes
         }
     }
 }

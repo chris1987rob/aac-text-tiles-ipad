@@ -112,7 +112,9 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
     fun save() {
         store.updateCurrentPage { p ->
             var next = p.copy(title = title, gridSize = gridSize, bgHex = bgHex, express = express, enabled = enabled)
-            if (p.type == PageType.SCENE) next = next.copy(sceneImageData = scenePhotoData)
+            // Your own photo replaces an example picture, and then counts as your own scene.
+            if (p.type == PageType.SCENE) next = next.copy(sceneImageData = scenePhotoData,
+                scenePresetKey = if (scenePhotoData != null) null else p.scenePresetKey)
             if (p.type == PageType.KEYBOARD) next = next.copy(keyboardKeys = keyboardKeys, keyboardGroups = keyboardGroups)
             if (p.type == PageType.GRID && fillGaps) next = PageFill.fill(next)
             next
@@ -509,7 +511,32 @@ fun GallerySheet(store: AACStore, onDismiss: () -> Unit) {
                     }
                 }
             }
-            if (matches.isEmpty()) item { Text("No templates match \"$search\"", color = BoardTheme.slate, modifier = Modifier.padding(16.dp)) }
+            val sceneMatches = if (q.isEmpty()) ExampleScenes.all else ExampleScenes.all.filter { sc ->
+                sc.title.lowercase().contains(q) || sc.spots.any { it.label.lowercase().contains(q) }
+            }
+            if (sceneMatches.isNotEmpty()) {
+                item { Text("EXAMPLE SCENES", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = BoardTheme.slate, modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 6.dp)) }
+                items(sceneMatches, key = { "scene-" + it.key }) { sc ->
+                    Column(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(16.dp)) {
+                        Text(sc.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = BoardTheme.ink)
+                        Text("A picture with talking spots. Tap something in the picture and it speaks.", fontSize = 15.sp, color = BoardTheme.slate)
+                        Text(sc.summary, fontSize = 12.sp, color = hexColor("#94A3B8"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Pill("${sc.spots.size} talking spots")
+                            Spacer(Modifier.weight(1f))
+                            val id = "scene-" + sc.key
+                            if (installed == id) Badge("Added", color = TT.colors.success, onColor = Color.White)
+                            else PrimaryButton("Add to book", minHeight = TTSpace.touch) {
+                                val block = store.pro.blockAddingPage(store.pages)
+                                if (block != null) needPro = block
+                                else { store.addPage(ExampleScenes.makePage(sc, store.pages.associate { it.title to it.id })); installed = id }
+                            }
+                        }
+                    }
+                }
+            }
+            if (matches.isEmpty() && sceneMatches.isEmpty()) item { Text("No templates match \"$search\"", color = BoardTheme.slate, modifier = Modifier.padding(16.dp)) }
         }
     }
 }

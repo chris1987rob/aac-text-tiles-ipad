@@ -25,7 +25,7 @@ android {
         applicationId = "com.talktiles.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
+        versionCode = 10
         versionName = "2.0-preview"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -95,6 +95,12 @@ android {
         unitTests.isReturnDefaultValues = true
         unitTests.all {
             it.jvmArgs("-Xmx3g")
+            // Each test class in a fresh JVM: Compose's global recomposer state
+            // leaks between Robolectric classes, and past ~140 tests a later
+            // class could no longer reach idle (AppNotIdleException) although
+            // every class passes on its own.
+            it.setForkEvery(1L)
+            it.maxParallelForks = 4
             // Order and outcome of every test in the log, so a run can be audited.
             it.testLogging { events("started", "passed", "failed", "skipped") }
         }

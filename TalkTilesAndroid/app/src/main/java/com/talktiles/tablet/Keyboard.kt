@@ -164,23 +164,29 @@ fun KeyboardPageView(store: AACStore, onSelectKey: (String) -> Unit) {
             val pad = if (keys <= 12) 14.dp else 10.dp
             val cellW = ((maxWidth - pad * 2 - spacing * (cols - 1)) / cols).coerceAtLeast(48.dp)
             val cellH = ((maxHeight - pad * 2 - spacing * (rows - 1)) / rows).coerceAtLeast(48.dp)
-            val words = wordsOnScreen
-            val fullW = maxWidth
+            // A short last row is completed with more words for the group (15 people
+            // in a 4 x 4 grid get a 16th), so the keyboard never shows an empty space.
+            val group = visibleGroups.firstOrNull { it.id == groupId } ?: visibleGroups.firstOrNull()
+            val needed = rows * cols - wordsOnScreen.size
+            val words = if (group == null || needed <= 0) wordsOnScreen else wordsOnScreen +
+                SymbolWordBank.fillers(group, needed + 12).asSequence()
+                    .filter { store.isEditMode || !isHidden(it) }
+                    .map { it.applying(page.keyboardEdits?.get(it.id)) }
+                    .take(needed).toList()
 
             Column(Modifier.fillMaxSize().padding(pad), verticalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterVertically)) {
                 for (r in 0 until rows) {
-                    // A short last row (15 words in a 4 x 4 grid) stretches its keys
-                    // across the width, so the board never shows an empty space.
-                    val inRow = min(cols, max(0, words.size - r * cols))
-                    if (inRow == 0) continue
-                    val rowCellW = if (inRow < cols)
-                        ((fullW - pad * 2 - spacing * (inRow - 1)) / inRow).coerceAtLeast(48.dp) else cellW
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally)) {
-                        for (col in 0 until inRow) {
-                            val word = words[r * cols + col]
-                            SymbolKey(word, rowCellW, cellH, editing = store.isEditMode, hidden = store.isEditMode && isHidden(word),
-                                pressed = justPressed == word.id) {
-                                if (store.isEditMode) onSelectKey(word.id) else press(word)
+                        for (col in 0 until cols) {
+                            val i = r * cols + col
+                            if (i < words.size) {
+                                val word = words[i]
+                                SymbolKey(word, cellW, cellH, editing = store.isEditMode, hidden = store.isEditMode && isHidden(word),
+                                    pressed = justPressed == word.id) {
+                                    if (store.isEditMode) onSelectKey(word.id) else press(word)
+                                }
+                            } else {
+                                Spacer(Modifier.size(cellW, cellH))
                             }
                         }
                     }

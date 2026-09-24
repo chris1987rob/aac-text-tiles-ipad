@@ -1,5 +1,7 @@
 package com.talktiles.tablet
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -96,18 +98,27 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
         scope.launch { delay(500); activeId = null }
     }
 
+    val context = LocalContext.current
+    val picture = remember(page.id, page.sceneImageData, page.scenePresetKey) { ScenePictures.bitmap(context, page) }
+
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
-        val canvasW = with(density) { maxWidth.toPx() }
-        val canvasH = with(density) { maxHeight.toPx() }
+        val boxW = with(density) { maxWidth.toPx() }
+        val boxH = with(density) { maxHeight.toPx() }
+        // Talking spots are placed on the PICTURE, not the screen: the whole
+        // picture is shown (fitted) in either orientation, so a spot drawn on
+        // Grandma stays on Grandma when the tablet turns.
+        val fit = ScenePictures.fittedRect(picture?.width, picture?.height, boxW, boxH)
+        val offX = fit[0]; val offY = fit[1]
+        val canvasW = fit[2]; val canvasH = fit[3]
 
-        SceneBackground(page)
+        SceneBackground(page, picture)
 
         for (spot in page.hotspots) {
             val wPx = (spot.w / 100.0 * canvasW).toFloat()
             val hPx = (spot.h / 100.0 * canvasH).toFloat()
-            val xPx = (spot.x / 100.0 * canvasW).toFloat()
-            val yPx = (spot.y / 100.0 * canvasH).toFloat()
+            val xPx = offX + (spot.x / 100.0 * canvasW).toFloat()
+            val yPx = offY + (spot.y / 100.0 * canvasH).toFloat()
             val isActive = activeId == spot.id
             val isMoving = movingId == spot.id
 
@@ -203,8 +214,8 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
         // Resize handles, as siblings of the hotspots so the move gesture cannot claim them.
         if (store.isEditMode) {
             for (spot in page.hotspots) {
-                val hx = ((spot.x + spot.w) / 100.0 * canvasW).toFloat()
-                val hy = ((spot.y + spot.h) / 100.0 * canvasH).toFloat()
+                val hx = offX + ((spot.x + spot.w) / 100.0 * canvasW).toFloat()
+                val hy = offY + ((spot.y + spot.h) / 100.0 * canvasH).toFloat()
                 val handlePx = with(density) { 34.dp.toPx() }
                 Box(
                     Modifier
@@ -264,10 +275,13 @@ fun VisualSceneView(store: AACStore, onSelectHotspot: (HotspotModel) -> Unit, on
 }
 
 @Composable
-private fun SceneBackground(page: PageModel) {
-    val img = PhotoCache.bitmap(page.sceneImageData, "scene-${page.id}")
+private fun SceneBackground(page: PageModel, img: android.graphics.Bitmap?) {
     if (img != null) {
-        Image(img.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        val bmp = remember(img) { img.asImageBitmap() }
+        // The edges around the fitted picture are the same picture, soft and
+        // dimmed - so there is never an empty band, and the spots stay true.
+        Image(bmp, null, Modifier.fillMaxSize().blur(24.dp), contentScale = ContentScale.Crop, alpha = 0.55f)
+        Image(bmp, null, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
     } else {
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(hexColor("#DBEAFE"), hexColor("#BFDBFE"))))) {
             Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(180.dp).background(Brush.verticalGradient(listOf(hexColor("#B45309"), hexColor("#78350F")))))
@@ -283,5 +297,24 @@ private fun SceneBackground(page: PageModel) {
                 }
             }
         }
+    }
+}
+
+/** Where a scene's picture comes from, and where it sits on screen. */
+object ScenePictures {
+    /** The parent's own photo, else the built-in example picture, else none. */
+    fun bitmap(context: android.content.Context, page: PageModel): android.graphics.Bitmap? {
+        page.sceneImageData?.let { return PhotoCache.bitmap(it, "scene-${page.id}") }
+        val key = page.scenePresetKey ?: return null
+        val bytes = try { context.assets.open("Scenes/$key.webp").use { it.readBytes() } } catch (e: Exception) { return null }
+        return PhotoCache.bitmap(bytes, "scene-preset-$key")
+    }
+
+    /** [left, top, width, height] of a picture fitted inside the box; the whole box when there is no picture. */
+    fun fittedRect(imgW: Int?, imgH: Int?, boxW: Float, boxH: Float): FloatArray {
+        if (imgW == null || imgH == null || imgW <= 0 || imgH <= 0 || boxW <= 0f || boxH <= 0f) return floatArrayOf(0f, 0f, boxW, boxH)
+        val scale = min(boxW / imgW, boxH / imgH)
+        val w = imgW * scale; val h = imgH * scale
+        return floatArrayOf((boxW - w) / 2f, (boxH - h) / 2f, w, h)
     }
 }

@@ -93,5 +93,36 @@ object SymbolWordBank {
         return keyCountOptions.minByOrNull { kotlin.math.abs(it - count) } ?: defaultKeyCount
     }
 
-    fun word(id: String): SymbolWord? = groups.asSequence().flatMap { it.words.asSequence() }.firstOrNull { it.id == id }
+    /** Words kept in reserve per group, in order, to complete a short last row of keys. */
+    private val reserve = mapOf(
+        "People" to listOf("baby", "family", "boy", "girl", "nurse", "aunt", "uncle", "cousin"),
+        "Describing" to listOf("big", "little", "hot", "cold", "fast", "slow", "loud", "quiet", "wet", "dry", "clean", "dirty"),
+        "Questions" to listOf("where", "who", "when", "why", "how"),
+        "No & Stop" to listOf("stop", "no", "not", "wait", "finished", "dont_like", "all_done")
+    )
+    private val reserveCategory = mapOf("People" to "people", "Actions" to "actions", "Things" to "daily", "Social" to "social", "Describing" to "core", "Questions" to "core", "No & Stop" to "core")
+
+    /**
+     * `count` more words for a group, none already in it, as our own pictures
+     * with Bella's voice - so a group of 15 in a 4 x 4 grid gets a 16th key
+     * rather than an empty space.
+     */
+    fun fillers(group: Group, count: Int): List<SymbolWord> {
+        if (count <= 0 || !TalkTilesCatalog.isAvailable) return emptyList()
+        val taken = HashSet<String>()
+        for (w in group.words) { taken.add(SpokenText.normalisedPhrase(w.label)); taken.add(w.id) }
+        val named = reserve[group.id].orEmpty().mapNotNull { TalkTilesCatalog.byId[it] }
+        val cat = reserveCategory[group.id]
+        val more = if (cat == null) emptyList() else TalkTilesCatalog.symbols.filter { it.category == cat }
+        return (named + more).asSequence()
+            .filter { SpokenText.normalisedPhrase(it.label) !in taken && it.id !in taken }
+            .distinctBy { it.id }
+            .take(count)
+            .map { SymbolWord("tt-" + it.id, it.label, it.tts, SymbolLibrary.talkTilesName(it.id), group.color) }
+            .toList()
+    }
+
+    fun word(id: String): SymbolWord? =
+        groups.asSequence().flatMap { it.words.asSequence() }.firstOrNull { it.id == id }
+            ?: if (id.startsWith("tt-")) groups.asSequence().mapNotNull { g -> fillers(g, 60).firstOrNull { it.id == id } }.firstOrNull() else null
 }
