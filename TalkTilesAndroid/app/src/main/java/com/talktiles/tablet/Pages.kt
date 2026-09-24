@@ -100,6 +100,8 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
     var keyboardKeys by remember { mutableStateOf(SymbolWordBank.nearestKeyCount(page.keyboardKeys)) }
     var keyboardGroups by remember { mutableStateOf(page.keyboardGroups ?: SymbolWordBank.groups.map { it.id }) }
     var scenePhotoData by remember { mutableStateOf(page.sceneImageData) }
+    // On by default: a bigger grid gets matching pictures instead of empty spaces.
+    var fillGaps by remember { mutableStateOf(true) }
 
     val used = page.tiles.keys.count { it <= gridSize }
     val total = page.tiles.size
@@ -112,6 +114,7 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
             var next = p.copy(title = title, gridSize = gridSize, bgHex = bgHex, express = express, enabled = enabled)
             if (p.type == PageType.SCENE) next = next.copy(sceneImageData = scenePhotoData)
             if (p.type == PageType.KEYBOARD) next = next.copy(keyboardKeys = keyboardKeys, keyboardGroups = keyboardGroups)
+            if (p.type == PageType.GRID && fillGaps) next = PageFill.fill(next)
             next
         }
     }
@@ -124,6 +127,9 @@ fun PageOptionsSheet(store: AACStore, onDismiss: () -> Unit) {
         if (page.type == PageType.GRID) {
             FormSection("Button Grid Layout", gridFooter) {
                 Box(Modifier.padding(12.dp)) { SegmentedPicker(gridSizes, gridSize, { "$it" }, { gridSize = it }) }
+                if (page.tiles.isNotEmpty() && used < gridSize) {
+                    ToggleRow("Fill the ${gridSize - used} empty spaces with matching pictures", fillGaps) { fillGaps = it }
+                }
             }
         }
         if (page.type == PageType.SCENE) {
@@ -179,10 +185,11 @@ fun PageWizardSheet(store: AACStore, onDismiss: () -> Unit) {
     fun create() {
         val template = PageTemplateCatalog.all.firstOrNull { it.id == preset }
         val page: PageModel = if (type == PageType.GRID && template != null) {
-            template.makePage().copy(
+            // A grid bigger than the board gets matching pictures in the spare spaces, not gaps.
+            PageFill.fill(template.makePage().copy(
                 title = title.ifEmpty { template.title },
                 gridSize = maxOf(gridSize, template.buttonCount)
-            )
+            ))
         } else {
             var p = PageModel(title = title, type = type, gridSize = gridSize)
             if (type == PageType.SCENE) p = p.copy(sceneImageData = scenePhotoData)
